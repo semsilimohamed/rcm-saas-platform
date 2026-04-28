@@ -5,6 +5,11 @@ from app.database import engine
 from dotenv import load_dotenv
 import os
 
+from app.models import tenant
+from app.database import Base, engine
+
+# Create all tables in Supabase automatically
+Base.metadata.create_all(bind=engine)
 load_dotenv()
 
 app = FastAPI(
