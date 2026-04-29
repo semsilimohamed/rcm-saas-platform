@@ -7,7 +7,9 @@ import os
 load_dotenv()
 
 from app.database import Base, engine
-from app.models import tenant, user
+from app.models import tenant, user, patient, claim
+
+
 
 
 # Create all tables in Supabase automatically
