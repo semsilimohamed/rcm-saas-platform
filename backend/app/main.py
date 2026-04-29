@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from app.database import engine
 from dotenv import load_dotenv
 import os
 
-from app.models import tenant
+load_dotenv()
+
 from app.database import Base, engine
+from app.models import tenant, user
+
 
 # Create all tables in Supabase automatically
 Base.metadata.create_all(bind=engine)
-load_dotenv()
 
 app = FastAPI(
     title="RCM SaaS Platform",
@@ -46,3 +47,4 @@ def db_test():
         return {"database": "connected"}
     except Exception as e:
         return {"database": "error", "detail": str(e)}
+    
