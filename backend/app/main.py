@@ -9,9 +9,6 @@ load_dotenv()
 from app.database import Base, engine
 from app.models import tenant, user, patient, claim
 
-
-
-
 # Create all tables in Supabase automatically
 Base.metadata.create_all(bind=engine)
 
@@ -28,6 +25,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register routers
+from app.api import claims, tenants, patients
+app.include_router(claims.router)
+app.include_router(tenants.router) 
+app.include_router(patients.router)
 
 @app.get("/")
 def root():
