@@ -102,7 +102,7 @@ export default function Home() {
             <span style={styles.logoIcon}>⚕</span>
             <span style={styles.logoText}>Sihaty <strong>RCM</strong></span>
           </div>
-          <span style={styles.headerTag}>CHU Ibn Rochd · Casablanca</span>
+          <span style={styles.headerTag}>University Hospital · Casablanca</span>
         </div>
       </header>
 
