@@ -41,3 +41,23 @@ def get_claim(claim_id: UUID, db: Session = Depends(get_db)):
     if not claim:
         raise HTTPException(status_code=404, detail="Claim not found")
     return claim
+@router.get("/stats/summary")
+def get_stats(db: Session = Depends(get_db)):
+    from sqlalchemy import func
+
+    total = db.query(func.count(Claim.id)).scalar()
+    pending = db.query(func.count(Claim.id)).filter(Claim.status == "pending").scalar()
+    approved = db.query(func.count(Claim.id)).filter(Claim.status == "approved").scalar()
+    rejected = db.query(func.count(Claim.id)).filter(Claim.status == "rejected").scalar()
+    total_amount = db.query(func.sum(Claim.amount)).scalar() or 0.0
+
+    rejection_rate = round((rejected / total * 100), 1) if total > 0 else 0.0
+
+    return {
+        "total_claims": total,
+        "pending": pending,
+        "approved": approved,
+        "rejected": rejected,
+        "total_amount_mad": total_amount,
+        "rejection_rate": rejection_rate
+    }
