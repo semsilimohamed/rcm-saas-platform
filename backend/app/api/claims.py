@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.database import get_db
 from app.models.claim import Claim
+from app.models.patient import Patient
 from app.schemas.claim import ClaimCreate, ClaimResponse
 from typing import List
 from uuid import UUID
@@ -16,7 +18,7 @@ router = APIRouter(
 def create_claim(claim: ClaimCreate, db: Session = Depends(get_db)):
     new_claim = Claim(
         id=uuid.uuid4(),
-        tenant_id=uuid.UUID("6cebb8dc-c371-4025-801f-212217b0d9ca"),  # temporary — will come from auth later
+        tenant_id=uuid.UUID("6cebb8dc-c371-4025-801f-212217b0d9ca"),
         patient_id=claim.patient_id,
         claim_number=claim.claim_number,
         amount=claim.amount,
@@ -30,6 +32,49 @@ def create_claim(claim: ClaimCreate, db: Session = Depends(get_db)):
     db.refresh(new_claim)
     return new_claim
 
+@router.get("/stats/summary")
+def get_stats(db: Session = Depends(get_db)):
+    total = db.query(func.count(Claim.id)).scalar()
+    pending = db.query(func.count(Claim.id)).filter(Claim.status == "pending").scalar()
+    approved = db.query(func.count(Claim.id)).filter(Claim.status == "approved").scalar()
+    rejected = db.query(func.count(Claim.id)).filter(Claim.status == "rejected").scalar()
+    total_amount = db.query(func.sum(Claim.amount)).scalar() or 0.0
+    rejection_rate = round((rejected / total * 100), 1) if total > 0 else 0.0
+
+    return {
+        "total_claims": total,
+        "pending": pending,
+        "approved": approved,
+        "rejected": rejected,
+        "total_amount_mad": total_amount,
+        "rejection_rate": rejection_rate
+    }
+
+@router.get("/with-patients")
+def get_claims_with_patients(db: Session = Depends(get_db)):
+    results = (
+        db.query(Claim, Patient.full_name)
+        .join(Patient, Claim.patient_id == Patient.id)
+        .all()
+    )
+
+    claims_with_names = []
+    for claim, full_name in results:
+        claims_with_names.append({
+            "id": str(claim.id),
+            "claim_number": claim.claim_number,
+            "patient_name": full_name,
+            "amount": claim.amount,
+            "insurance_type": claim.insurance_type,
+            "service_type": claim.service_type,
+            "service_date": claim.service_date.isoformat(),
+            "status": claim.status,
+            "rejection_reason": claim.rejection_reason,
+            "created_at": claim.created_at.isoformat(),
+        })
+
+    return claims_with_names
+
 @router.get("/", response_model=List[ClaimResponse])
 def get_claims(db: Session = Depends(get_db)):
     claims = db.query(Claim).all()
@@ -41,23 +86,3 @@ def get_claim(claim_id: UUID, db: Session = Depends(get_db)):
     if not claim:
         raise HTTPException(status_code=404, detail="Claim not found")
     return claim
-@router.get("/stats/summary")
-def get_stats(db: Session = Depends(get_db)):
-    from sqlalchemy import func
-
-    total = db.query(func.count(Claim.id)).scalar()
-    pending = db.query(func.count(Claim.id)).filter(Claim.status == "pending").scalar()
-    approved = db.query(func.count(Claim.id)).filter(Claim.status == "approved").scalar()
-    rejected = db.query(func.count(Claim.id)).filter(Claim.status == "rejected").scalar()
-    total_amount = db.query(func.sum(Claim.amount)).scalar() or 0.0
-
-    rejection_rate = round((rejected / total * 100), 1) if total > 0 else 0.0
-
-    return {
-        "total_claims": total,
-        "pending": pending,
-        "approved": approved,
-        "rejected": rejected,
-        "total_amount_mad": total_amount,
-        "rejection_rate": rejection_rate
-    }
