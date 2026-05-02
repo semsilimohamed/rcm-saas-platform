@@ -128,7 +128,10 @@ export default function Home() {
         <div style={styles.headerInner}>
           <div style={styles.logo}>
             <span style={styles.logoIcon}>⚕</span>
-            <span style={styles.logoText}>Sihaty <strong>RCM</strong></span>
+            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
+  <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em" }}>SihaIQ</span>
+  <span style={{ fontSize: 11, fontWeight: 700, color: "#3b82f6", letterSpacing: "0.15em", textTransform: "uppercase" }}>RCM</span>
+</div>
           </div>
           <span style={styles.headerTag}>University Hospital · Casablanca</span>
         </div>
