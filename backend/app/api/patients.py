@@ -15,7 +15,7 @@ router = APIRouter(
 def create_patient(patient: PatientCreate, db: Session = Depends(get_db)):
     new_patient = Patient(
         id=uuid.uuid4(),
-        tenant_id=uuid.UUID("6cebb8dc-c371-4025-801f-212217b0d9ca"),
+        tenant_id=patient.tenant_id,
         full_name=patient.full_name,
         cin=patient.cin,
         phone=patient.phone,
@@ -28,5 +28,5 @@ def create_patient(patient: PatientCreate, db: Session = Depends(get_db)):
     return new_patient
 
 @router.get("/", response_model=List[PatientResponse])
-def get_patients(db: Session = Depends(get_db)):
-    return db.query(Patient).all()
+def get_patients(tenant_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.query(Patient).filter(Patient.tenant_id == tenant_id).all()

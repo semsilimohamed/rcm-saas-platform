@@ -18,7 +18,7 @@ router = APIRouter(
 def create_claim(claim: ClaimCreate, db: Session = Depends(get_db)):
     new_claim = Claim(
         id=uuid.uuid4(),
-        tenant_id=uuid.UUID("6cebb8dc-c371-4025-801f-212217b0d9ca"),
+        tenant_id=claim.tenant_id,
         patient_id=claim.patient_id,
         claim_number=claim.claim_number,
         amount=claim.amount,
@@ -33,12 +33,12 @@ def create_claim(claim: ClaimCreate, db: Session = Depends(get_db)):
     return new_claim
 
 @router.get("/stats/summary")
-def get_stats(db: Session = Depends(get_db)):
-    total = db.query(func.count(Claim.id)).scalar()
-    pending = db.query(func.count(Claim.id)).filter(Claim.status == "pending").scalar()
-    approved = db.query(func.count(Claim.id)).filter(Claim.status == "approved").scalar()
-    rejected = db.query(func.count(Claim.id)).filter(Claim.status == "rejected").scalar()
-    total_amount = db.query(func.sum(Claim.amount)).scalar() or 0.0
+def get_stats(tenant_id: UUID, db: Session = Depends(get_db)):
+    total = db.query(func.count(Claim.id)).filter(Claim.tenant_id == tenant_id).scalar()
+    pending = db.query(func.count(Claim.id)).filter(Claim.tenant_id == tenant_id, Claim.status == "pending").scalar()
+    approved = db.query(func.count(Claim.id)).filter(Claim.tenant_id == tenant_id, Claim.status == "approved").scalar()
+    rejected = db.query(func.count(Claim.id)).filter(Claim.tenant_id == tenant_id, Claim.status == "rejected").scalar()
+    total_amount = db.query(func.sum(Claim.amount)).filter(Claim.tenant_id == tenant_id).scalar() or 0.0
     rejection_rate = round((rejected / total * 100), 1) if total > 0 else 0.0
 
     return {
@@ -51,13 +51,13 @@ def get_stats(db: Session = Depends(get_db)):
     }
 
 @router.get("/with-patients")
-def get_claims_with_patients(db: Session = Depends(get_db)):
+def get_claims_with_patients(tenant_id: UUID, db: Session = Depends(get_db)):
     results = (
         db.query(Claim, Patient.full_name)
         .join(Patient, Claim.patient_id == Patient.id)
+        .filter(Claim.tenant_id == tenant_id)
         .all()
     )
-
     claims_with_names = []
     for claim, full_name in results:
         claims_with_names.append({
@@ -72,13 +72,11 @@ def get_claims_with_patients(db: Session = Depends(get_db)):
             "rejection_reason": claim.rejection_reason,
             "created_at": claim.created_at.isoformat(),
         })
-
     return claims_with_names
 
 @router.get("/", response_model=List[ClaimResponse])
-def get_claims(db: Session = Depends(get_db)):
-    claims = db.query(Claim).all()
-    return claims
+def get_claims(tenant_id: UUID, db: Session = Depends(get_db)):
+    return db.query(Claim).filter(Claim.tenant_id == tenant_id).all()
 
 @router.get("/{claim_id}", response_model=ClaimResponse)
 def get_claim(claim_id: UUID, db: Session = Depends(get_db)):

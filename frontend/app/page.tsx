@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID || "6cebb8dc-c371-4025-801f-212217b0d9ca";
 
 interface Claim {
   id: string;
@@ -48,9 +49,9 @@ export default function Home() {
   async function fetchData() {
     try {
       const [claimsRes, statsRes, patientsRes] = await Promise.all([
-        fetch(`${API_URL}/claims/with-patients`),
-        fetch(`${API_URL}/claims/stats/summary`),
-        fetch(`${API_URL}/patients`),
+        fetch(`${API_URL}/claims/with-patients?tenant_id=${TENANT_ID}`),
+        fetch(`${API_URL}/claims/stats/summary?tenant_id=${TENANT_ID}`),
+        fetch(`${API_URL}/patients?tenant_id=${TENANT_ID}`),
       ]);
       if (!claimsRes.ok) throw new Error("Failed to fetch claims");
       if (!statsRes.ok) throw new Error("Failed to fetch stats");
