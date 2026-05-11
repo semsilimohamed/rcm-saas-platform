@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
 interface Claim {
   id: string;
   claim_number: string;
@@ -34,7 +36,6 @@ export default function Home() {
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // Form state
   const [form, setForm] = useState({
     patient_id: "",
     claim_number: "",
@@ -47,9 +48,9 @@ export default function Home() {
   async function fetchData() {
     try {
       const [claimsRes, statsRes, patientsRes] = await Promise.all([
-        fetch("http://127.0.0.1:8000/claims/with-patients"),
-        fetch("http://127.0.0.1:8000/claims/stats/summary"),
-        fetch("http://127.0.0.1:8000/patients"),
+        fetch(`${API_URL}/claims/with-patients`),
+        fetch(`${API_URL}/claims/stats/summary`),
+        fetch(`${API_URL}/patients`),
       ]);
       if (!claimsRes.ok) throw new Error("Failed to fetch claims");
       if (!statsRes.ok) throw new Error("Failed to fetch stats");
@@ -70,10 +71,9 @@ export default function Home() {
       alert("Please fill in all fields.");
       return;
     }
-
     setSubmitting(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/claims/", {
+      const res = await fetch(`${API_URL}/claims/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -85,14 +85,11 @@ export default function Home() {
           service_date: new Date(form.service_date).toISOString(),
         }),
       });
-
       if (!res.ok) {
         const err = await res.json();
         alert("Error: " + JSON.stringify(err.detail));
         return;
       }
-
-      // Reset form and refresh data
       setForm({ patient_id: "", claim_number: "", amount: "", insurance_type: "AMO", service_type: "consultation", service_date: "" });
       setShowForm(false);
       setSubmitSuccess(true);
@@ -123,15 +120,14 @@ export default function Home() {
 
   return (
     <div style={styles.page}>
-      {/* HEADER */}
       <header style={styles.header}>
         <div style={styles.headerInner}>
           <div style={styles.logo}>
             <span style={styles.logoIcon}>⚕</span>
             <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
-  <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em" }}>SihaIQ</span>
-  <span style={{ fontSize: 11, fontWeight: 700, color: "#3b82f6", letterSpacing: "0.15em", textTransform: "uppercase" }}>RCM</span>
-</div>
+              <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em" }}>SihaIQ</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#3b82f6", letterSpacing: "0.15em", textTransform: "uppercase" }}>RCM</span>
+            </div>
           </div>
           <span style={styles.headerTag}>University Hospital · Casablanca</span>
         </div>
@@ -139,10 +135,7 @@ export default function Home() {
 
       <main style={styles.main}>
         {error && <div style={styles.errorBanner}>⚠ {error}</div>}
-
-        {submitSuccess && (
-          <div style={styles.successBanner}>✓ Claim submitted successfully and added to dashboard</div>
-        )}
+        {submitSuccess && <div style={styles.successBanner}>✓ Claim submitted successfully</div>}
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 32 }}>
           <div>
@@ -154,34 +147,27 @@ export default function Home() {
           </button>
         </div>
 
-        {/* CLAIM SUBMISSION FORM */}
         {showForm && (
           <div style={styles.formCard}>
             <h2 style={styles.formTitle}>Submit New Claim</h2>
             <div style={styles.formGrid}>
-
               <div style={styles.formGroup}>
                 <label style={styles.label}>Patient</label>
                 <select style={styles.input} value={form.patient_id} onChange={e => setForm({ ...form, patient_id: e.target.value })}>
                   <option value="">Select a patient</option>
-                  {patients.map(p => (
-                    <option key={p.id} value={p.id}>{p.full_name}</option>
-                  ))}
+                  {patients.map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
                 </select>
               </div>
-
               <div style={styles.formGroup}>
                 <label style={styles.label}>Claim Number</label>
                 <input style={styles.input} placeholder="CLM-2026-016" value={form.claim_number}
                   onChange={e => setForm({ ...form, claim_number: e.target.value })} />
               </div>
-
               <div style={styles.formGroup}>
                 <label style={styles.label}>Amount (MAD)</label>
                 <input style={styles.input} type="number" placeholder="1500" value={form.amount}
                   onChange={e => setForm({ ...form, amount: e.target.value })} />
               </div>
-
               <div style={styles.formGroup}>
                 <label style={styles.label}>Insurance Type</label>
                 <select style={styles.input} value={form.insurance_type} onChange={e => setForm({ ...form, insurance_type: e.target.value })}>
@@ -191,7 +177,6 @@ export default function Home() {
                   <option value="RAMED">RAMED</option>
                 </select>
               </div>
-
               <div style={styles.formGroup}>
                 <label style={styles.label}>Service Type</label>
                 <select style={styles.input} value={form.service_type} onChange={e => setForm({ ...form, service_type: e.target.value })}>
@@ -203,15 +188,12 @@ export default function Home() {
                   <option value="kinesitherapie">Kinésithérapie</option>
                 </select>
               </div>
-
               <div style={styles.formGroup}>
                 <label style={styles.label}>Service Date</label>
                 <input style={styles.input} type="date" value={form.service_date}
                   onChange={e => setForm({ ...form, service_date: e.target.value })} />
               </div>
-
             </div>
-
             <div style={{ marginTop: 20 }}>
               <button style={submitting ? styles.disabledBtn : styles.primaryBtn} onClick={handleSubmit} disabled={submitting}>
                 {submitting ? "Submitting..." : "Submit Claim"}
@@ -220,7 +202,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* STAT CARDS */}
         <div style={styles.statsGrid}>
           <StatCard label="Total Claims" value={loading ? "—" : String(stats?.total_claims ?? 0)} color="#3b82f6" />
           <StatCard label="Pending" value={loading ? "—" : String(stats?.pending ?? 0)} color="#f59e0b" />
@@ -231,7 +212,6 @@ export default function Home() {
             color={(stats?.rejection_rate ?? 0) > 20 ? "#ef4444" : "#10b981"} />
         </div>
 
-        {/* CLAIMS TABLE */}
         <div style={styles.tableCard}>
           <h2 style={styles.tableTitle}>Recent Claims</h2>
           {loading ? (
@@ -253,9 +233,7 @@ export default function Home() {
                     <tr key={claim.id} style={styles.tr}>
                       <td style={styles.td}><strong>{claim.claim_number}</strong></td>
                       <td style={styles.td}>{claim.patient_name}</td>
-                      <td style={styles.td}>
-                        <span style={styles.insuranceBadge}>{claim.insurance_type}</span>
-                      </td>
+                      <td style={styles.td}><span style={styles.insuranceBadge}>{claim.insurance_type}</span></td>
                       <td style={styles.td}>{claim.service_type}</td>
                       <td style={styles.td}>{formatMAD(claim.amount)}</td>
                       <td style={styles.td}>{formatDate(claim.service_date)}</td>
