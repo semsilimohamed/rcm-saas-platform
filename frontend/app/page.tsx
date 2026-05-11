@@ -64,7 +64,11 @@ export default function Home() {
     }
   }
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { 
+  const loadData = async () => {
+    await fetchData();
+  };
+  loadData();}, []);
 
   async function handleSubmit() {
     if (!form.patient_id || !form.claim_number || !form.amount || !form.service_date) {
