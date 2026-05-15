@@ -5,6 +5,7 @@ from app.database import get_db
 from app.models.claim import Claim
 from app.models.patient import Patient
 from app.schemas.claim import ClaimCreate, ClaimResponse
+from datetime import timedelta, date
 from typing import List
 from uuid import UUID
 import uuid
@@ -16,6 +17,8 @@ router = APIRouter(
 
 @router.post("/", response_model=ClaimResponse)
 def create_claim(claim: ClaimCreate, db: Session = Depends(get_db)):
+    service_date = claim.service_date if isinstance(claim.service_date, date) else claim.service_date.date()
+    
     new_claim = Claim(
         id=uuid.uuid4(),
         tenant_id=claim.tenant_id,
@@ -25,7 +28,9 @@ def create_claim(claim: ClaimCreate, db: Session = Depends(get_db)):
         insurance_type=claim.insurance_type,
         service_type=claim.service_type,
         service_date=claim.service_date,
-        status="pending"
+        status="pending",
+        forclusion_deadline=service_date + timedelta(days=60),
+        days_in_ar=(date.today() - service_date).days
     )
     db.add(new_claim)
     db.commit()
