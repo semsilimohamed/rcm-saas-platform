@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from dotenv import load_dotenv
+from app.ml import predict
 import os
 
 load_dotenv()
@@ -31,7 +32,7 @@ from app.api import claims, tenants, patients
 app.include_router(claims.router)
 app.include_router(tenants.router) 
 app.include_router(patients.router)
-
+app.include_router(predict.router)
 @app.get("/")
 def root():
     return {
