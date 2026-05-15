@@ -16,5 +16,7 @@ starlette==1.0.0
 anyio==4.13.0
 httptools==0.7.1
 watchdog==4.0.2
-python-jose[cryptography]
-passlib[bcrypt]
+python-jose==3.5.0
+passlib==1.7.4
+bcrypt==4.0.1
+pydantic-settings==2.9.1
