@@ -42,7 +42,7 @@ export default function LandingPage() {
       <section style={s.hero}>
         <div style={s.heroTag}>
           <span style={s.heroTagDot}/>
-          Conçu pour les hôpitaux  marocains · CNOPS · CNSS · AMO
+          Conçu pour les hôpitaux  marocains · CNOPS · CNSS · AMO · AMO TADAMON
         </div>
         <h1 style={s.heroH1}>
           Business intelligence<br/>
