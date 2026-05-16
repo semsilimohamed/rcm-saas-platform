@@ -1,6 +1,14 @@
 "use client";
-
+import { useEffect, useState } from "react";
 export default function LandingPage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+  const checkAuth = () => {
+    const token = localStorage.getItem("sihaiq_token");
+    setIsLoggedIn(!!token);
+  };
+  checkAuth();
+}, []);
   return (
     <div style={s.page}>
 
@@ -33,7 +41,9 @@ export default function LandingPage() {
           </div>
           <div style={s.navCtas}>
             <a href="/auth/login" style={s.navLogin}>Connexion</a>
-            <a href="/dashboard" style={s.navDash}>Tableau de bord</a>
+            {isLoggedIn && (
+              <a href="/dashboard" style={s.navDash}>Tableau de bord</a>
+            )}
             <a href="/auth/register" style={s.navDemo}>Demander une démo</a>
           </div>
         </div>

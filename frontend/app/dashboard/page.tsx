@@ -112,6 +112,11 @@ export default function DashboardPage() {
   const [showAlert, setShowAlert] = useState(true);
 
   useEffect(() => {
+    const token = localStorage.getItem("sihaiq_token");
+    if (!token) {
+        window.location.href = "/auth/login";
+        return;
+    }
     const load = async () => {
       try {
         const [cr, sr] = await Promise.all([
@@ -205,6 +210,17 @@ export default function DashboardPage() {
               <div style={s.sbUrole}>Administrateur</div>
             </div>
           </div>
+          <button
+            style={s.logoutBtn}
+            onClick={()=> {
+                localStorage.removeItem("sihaiq_token");
+                localStorage.removeItem("sihaiq_tenant_id");
+                localStorage.removeItem("sihaiq_user");
+                window.location.href = "/auth/login";
+            }}
+          >
+            Se déconnecter
+          </button>
         </div>
       </aside>
 
@@ -435,7 +451,7 @@ const s: Record<string, React.CSSProperties> = {
   sbAvatar:     { width: 26, height: 26, borderRadius: "50%", background: "#E6F1FB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "#0F62FE", flexShrink: 0 },
   sbUname:      { fontSize: 11, fontWeight: 500, color: "#1A1D23" },
   sbUrole:      { fontSize: 10, color: "#9EA3AE" },
-
+  logoutBtn: { width: "100%", padding: "8px", borderRadius: 7, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit", marginTop: 8 },
   // main
   main:    { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
   topbar:  { background: "#fff", borderBottom: "0.5px solid #E2E4E9", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
