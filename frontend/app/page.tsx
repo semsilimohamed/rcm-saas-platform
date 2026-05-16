@@ -33,6 +33,7 @@ export default function LandingPage() {
           </div>
           <div style={s.navCtas}>
             <a href="/auth/login" style={s.navLogin}>Connexion</a>
+            <a href="/dashboard" style={s.navDash}>Tableau de bord</a>
             <a href="/auth/register" style={s.navDemo}>Demander une démo</a>
           </div>
         </div>
@@ -56,6 +57,7 @@ export default function LandingPage() {
         </p>
         <div style={s.heroCtas}>
           <a href="/auth/register" style={s.btnPrimary}>Démarrer gratuitement</a>
+          <a href="/dashboard" style={{...s.btnSecondary, background:"#DCFCE7", color:"#16A34A"}}>Accéder au tableau de bord →</a>
           <a href="#solutions" style={s.btnSecondary}>Découvrir les solutions →</a>
         </div>
         <div style={s.heroStats}>
@@ -347,7 +349,7 @@ const s: Record<string, React.CSSProperties> = {
   navCtas: { display:"flex", alignItems:"center", gap:10 },
   navLogin: { fontSize:13, fontWeight:500, color:BLUE_MID, cursor:"pointer", padding:"7px 14px", textDecoration:"none" },
   navDemo: { fontSize:13, fontWeight:600, color:"#fff", background:BLUE, padding:"8px 18px", borderRadius:8, cursor:"pointer", textDecoration:"none" },
-
+  navDash: { fontSize:13, fontWeight:500, color:"#16A34A", cursor:"pointer", padding:"7px 14px", textDecoration:"none", background:"#DCFCE7", borderRadius:7 },
   // HERO
   hero: { background:"#F8FBFF", padding:"64px 24px 56px", textAlign:"center" as const, borderBottom:"0.5px solid #E6F1FB" },
   heroTag: { display:"inline-flex", alignItems:"center", gap:8, fontSize:12, fontWeight:500, color:"#185FA5", background:BLUE_LIGHT, padding:"5px 14px", borderRadius:20, marginBottom:20 },
