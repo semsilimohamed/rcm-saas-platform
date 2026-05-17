@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID || "b32546f4-bb8d-4ed6-b353-b80fb1d8a80f";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"; 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Claim {
@@ -112,27 +111,34 @@ export default function DashboardPage() {
   const [showAlert, setShowAlert] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("sihaiq_token");
-    if (!token) {
-        window.location.href = "/auth/login";
-        return;
+  const token = localStorage.getItem("sihaiq_token");
+  if (!token) {
+    window.location.href = "/auth/login";
+    return;
+  }
+
+  const tenantId = localStorage.getItem("sihaiq_tenant_id");
+  if (!tenantId) {
+    window.location.href = "/auth/login";
+    return;
+  }
+
+  const load = async () => {
+    try {
+      const [cr, sr] = await Promise.all([
+        fetch(`${API_URL}/claims/with-patients?tenant_id=${tenantId}`),
+        fetch(`${API_URL}/claims/stats/summary?tenant_id=${tenantId}`),
+      ]);
+      if (cr.ok) setClaims(await cr.json());
+      if (sr.ok) setStats(await sr.json());
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-    const load = async () => {
-      try {
-        const [cr, sr] = await Promise.all([
-          fetch(`${API_URL}/claims/with-patients?tenant_id=${TENANT_ID}`),
-          fetch(`${API_URL}/claims/stats/summary?tenant_id=${TENANT_ID}`),
-        ]);
-        if (cr.ok) setClaims(await cr.json());
-        if (sr.ok) setStats(await sr.json());
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
+  };
+  load();
+}, []);
 
   const now = new Date().getTime();
   const forclusion = claims.filter(c => {
@@ -204,11 +210,23 @@ export default function DashboardPage() {
 
         <div style={s.sbFooter}>
           <div style={s.sbUser}>
-            <div style={s.sbAvatar}>MS</div>
+            <div style={s.sbAvatar}>
+                {typeof window !== "undefined"
+                ? (JSON.parse(localStorage.getItem("sihaiq_user") || "{}").name || "U").split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase(): 
+                "U"}
+                </div>
             <div>
-              <div style={s.sbUname}>M. Semsili</div>
-              <div style={s.sbUrole}>Administrateur</div>
-            </div>
+              <div style={s.sbUname}>
+                {typeof window != "undefined"
+                ? JSON.parse(localStorage.getItem("sihaiq_user") || "{}").name || "Utilisateur"
+                : "Utilisateur"}
+              </div>
+              <div style={s.sbUrole}>
+                {typeof window != "undefined"
+                ? JSON.parse(localStorage.getItem("sihaiq_user") || "{}").role || " Staff"
+                : "Staff"}
+              </div>
+           </div>
           </div>
           <button
             style={s.logoutBtn}
@@ -232,7 +250,9 @@ export default function DashboardPage() {
           <div>
             <div style={s.topTitle}>Tableau de bord</div>
             <div style={s.topDate}>
-              Clinique SEMSILI · {new Date().toLocaleDateString("fr-MA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {typeof window !== "undefined" 
+              ? JSON.parse(localStorage.getItem("sihaiq_user") || "{}").name || "Mon établissement"
+              : "Mon établissement"} · {new Date().toLocaleDateString("fr-MA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </div>
           </div>
           <div style={s.topBtns}>
