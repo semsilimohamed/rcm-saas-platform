@@ -144,3 +144,70 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
+class PasswordResetRequest(BaseModel):
+    email: str
+    new_password: str
+    admin_secret: str
+
+@router.post("/admin/reset-password")
+def admin_reset_password(request: PasswordResetRequest, db: Session = Depends(get_db)):
+    # Simple secret to prevent unauthorized resets
+    if request.admin_secret != "sihaiq-admin-2026":
+        raise HTTPException(status_code=403, detail="Secret invalide")
+    
+    user = db.query(User).filter(User.email == request.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+    
+    user.hashed_password = hash_password(request.new_password)
+    db.commit()
+    return {"message": f"Mot de passe réinitialisé pour {request.email}"}
+import secrets
+from datetime import datetime, timedelta
+
+# Store reset tokens temporarily (in production use Redis or DB table)
+reset_tokens = {}
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+@router.post("/forgot-password")
+def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == request.email).first()
+    if not user:
+        # Don't reveal if email exists
+        return {"message": "Si cet email existe, un lien de réinitialisation a été envoyé."}
+    
+    token = secrets.token_urlsafe(32)
+    reset_tokens[token] = {
+        "email": request.email,
+        "expires": datetime.utcnow() + timedelta(minutes=30)
+    }
+    # In production: send email. For now return token directly.
+    return {
+        "message": "Token de réinitialisation généré.",
+        "reset_token": token,
+        "reset_url": f"http://localhost:3000/auth/reset-password?token={token}"
+    }
+
+@router.post("/reset-password")
+def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    token_data = reset_tokens.get(request.token)
+    if not token_data:
+        raise HTTPException(status_code=400, detail="Token invalide ou expiré")
+    if datetime.utcnow() > token_data["expires"]:
+        del reset_tokens[request.token]
+        raise HTTPException(status_code=400, detail="Token expiré")
+    
+    user = db.query(User).filter(User.email == token_data["email"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+    
+    user.hashed_password = hash_password(request.new_password)
+    db.commit()
+    del reset_tokens[request.token]
+    return {"message": "Mot de passe réinitialisé avec succès"}

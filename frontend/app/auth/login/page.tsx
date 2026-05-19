@@ -100,7 +100,11 @@ export default function LoginPage() {
           >
             {loading ? "Connexion en cours..." : "Se connecter"}
           </button>
-
+          <div style={{ textAlign: "center", marginTop: 12 }}>
+            <Link href="/auth/forgot-password" style={s.linkMuted}>
+              Mot de passe oublié ?
+            </Link>
+          </div>
           <div style={s.footer}>
             Pas encore de compte ?{" "}
             <Link href="/auth/register" style={s.link}>Créer un compte</Link>

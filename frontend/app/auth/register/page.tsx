@@ -39,11 +39,15 @@ export default function RegisterPage() {
   function update(key: string, val: string) {
     setForm(f => ({ ...f, [key]: val }));
   }
-
+  
   async function handleRegister() {
     if (!form.hospital_name || !form.hospital_email || !form.full_name || !form.password) {
-      setError("Veuillez remplir tous les champs."); return;
-    }
+  setError("Veuillez remplir tous les champs."); return;
+}
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(form.hospital_email)) {
+  setError("Adresse email invalide."); return;
+}
     if (form.password !== form.confirm_password) {
       setError("Les mots de passe ne correspondent pas."); return;
     }
