@@ -82,10 +82,13 @@ export default function ForclusionPage() {
     load();
   }, []);
   
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("sihaiq_user") || "{}");
-    setUserName(user.name || "Utilisateur");
-}, []);
+  useEffect(() => { 
+    const loadUser =() => {
+      const user = JSON.parse(localStorage.getItem("sihaiq_user") || "{}");
+       setUserName(user.name || "Utilisateur");
+    };
+    loadUser();
+  }, []);
 
   const filtered = claims.filter(c => {
     const days = daysUntil(c.forclusion_deadline);
