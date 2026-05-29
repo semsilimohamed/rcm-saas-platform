@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.patient import Patient
+from app.models.claim import Claim
 from app.schemas.patient import PatientCreate, PatientResponse
 from typing import List
 import uuid
@@ -30,3 +31,14 @@ def create_patient(patient: PatientCreate, db: Session = Depends(get_db)):
 @router.get("/", response_model=List[PatientResponse])
 def get_patients(tenant_id: uuid.UUID, db: Session = Depends(get_db)):
     return db.query(Patient).filter(Patient.tenant_id == tenant_id).all()
+
+@router.delete("/{patient_id}")
+def delete_patient(patient_id: uuid.UUID, db: Session = Depends(get_db)):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient introuvable")
+    # Delete all claims belonging to this patient first
+    db.query(Claim).filter(Claim.patient_id == patient_id).delete()
+    db.delete(patient)
+    db.commit()
+    return { "message": f"Patient {patient.full_name} et ses dossiers supprimés." }

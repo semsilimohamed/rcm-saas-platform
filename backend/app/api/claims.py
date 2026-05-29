@@ -241,3 +241,13 @@ def update_claim_status(
         "resolved_at": claim.resolved_at.isoformat(),
         "training_feedback_saved": True
     }
+@router.delete("/{claim_id}")
+def delete_claim(claim_id: UUID, db: Session = Depends(get_db)):
+    claim = db.query(Claim).filter(Claim.id == claim_id).first()
+    if not claim:
+        raise HTTPException(status_code=404, detail="Dossier introuvable")
+    # Delete training feedback rows first to avoid foreign key violation
+    db.execute(text("DELETE FROM training_feedback WHERE claim_id = :cid"), {"cid": str(claim_id)})
+    db.delete(claim)
+    db.commit()
+    return { "message": f"Dossier {claim.claim_number} supprimé." }
