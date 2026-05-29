@@ -1,14 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, text
 from app.database import get_db
 from app.models.claim import Claim
 from app.models.patient import Patient
 from app.schemas.claim import ClaimCreate, ClaimResponse
 from app.ml.features import encode_features
-from typing import List
+from typing import List, Optional
 from uuid import UUID
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 import uuid
 import joblib
 import shap
@@ -17,7 +18,7 @@ from pathlib import Path
 
 router = APIRouter(prefix="/claims", tags=["Claims"])
 
-# Load model once at startup
+# ── Load model once at startup ─────────────────────────────────────────────
 MODEL_PATH = Path(__file__).parent.parent / "ml" / "models" / "sihaiq_xgboost_model.pkl"
 model = joblib.load(MODEL_PATH)
 explainer = shap.TreeExplainer(model, feature_perturbation="tree_path_dependent")
@@ -37,8 +38,13 @@ SHAP_MESSAGES = {
     "pec_required": "PEC Requise non obtenue : Cet acte nécessite une autorisation préalable.",
 }
 
+# ── Pydantic schemas ───────────────────────────────────────────────────────
+class StatusUpdate(BaseModel):
+    status: str
+    rejection_reason: Optional[str] = None
+
+# ── ML helper ─────────────────────────────────────────────────────────────
 def run_prediction(claim_data: dict) -> dict:
-    """Run ML prediction and return risk score + SHAP factors."""
     try:
         X = encode_features(claim_data)
         risk_score = float(model.predict_proba(X)[0][1])
@@ -75,11 +81,12 @@ def run_prediction(claim_data: dict) -> dict:
     except Exception:
         return {}
 
+# ── Routes ─────────────────────────────────────────────────────────────────
+
 @router.post("/", response_model=ClaimResponse)
 def create_claim(claim: ClaimCreate, db: Session = Depends(get_db)):
     service_date = claim.service_date.date() if hasattr(claim.service_date, 'date') else claim.service_date
 
-    # Run ML prediction automatically
     prediction = run_prediction({
         "payer": claim.insurance_type,
         "service_type": claim.service_type,
@@ -108,6 +115,7 @@ def create_claim(claim: ClaimCreate, db: Session = Depends(get_db)):
     db.refresh(new_claim)
     return new_claim
 
+
 @router.get("/stats/summary")
 def get_stats(tenant_id: UUID, db: Session = Depends(get_db)):
     total = db.query(func.count(Claim.id)).filter(Claim.tenant_id == tenant_id).scalar()
@@ -125,6 +133,7 @@ def get_stats(tenant_id: UUID, db: Session = Depends(get_db)):
         "total_amount_mad": total_amount,
         "rejection_rate": rejection_rate
     }
+
 
 @router.get("/with-patients")
 def get_claims_with_patients(tenant_id: UUID, db: Session = Depends(get_db)):
@@ -154,9 +163,11 @@ def get_claims_with_patients(tenant_id: UUID, db: Session = Depends(get_db)):
         })
     return claims_with_names
 
+
 @router.get("/", response_model=List[ClaimResponse])
 def get_claims(tenant_id: UUID, db: Session = Depends(get_db)):
     return db.query(Claim).filter(Claim.tenant_id == tenant_id).all()
+
 
 @router.get("/{claim_id}", response_model=ClaimResponse)
 def get_claim(claim_id: UUID, db: Session = Depends(get_db)):
@@ -164,3 +175,69 @@ def get_claim(claim_id: UUID, db: Session = Depends(get_db)):
     if not claim:
         raise HTTPException(status_code=404, detail="Claim not found")
     return claim
+
+
+@router.patch("/{claim_id}/status")
+def update_claim_status(
+    claim_id: UUID,
+    update: StatusUpdate,
+    db: Session = Depends(get_db)
+):
+    claim = db.query(Claim).filter(Claim.id == claim_id).first()
+    if not claim:
+        raise HTTPException(status_code=404, detail="Dossier introuvable")
+
+    if update.status not in ("approved", "rejected"):
+        raise HTTPException(status_code=400, detail="Statut invalide. Utilisez 'approved' ou 'rejected'.")
+
+    # Update claim
+    claim.status = update.status
+    claim.resolved_at = datetime.utcnow()
+    if update.rejection_reason:
+        claim.rejection_reason = update.rejection_reason
+
+    # Days to resolution
+    days_to_resolution = None
+    if claim.created_at:
+        days_to_resolution = (datetime.utcnow() - claim.created_at).days
+
+    # Write labeled outcome to training_feedback
+    actual_outcome = 1 if update.status == "rejected" else 0
+    service_date = claim.service_date.date() if hasattr(claim.service_date, "date") else claim.service_date
+    days_since_service = (date.today() - service_date).days if service_date else None
+
+    db.execute(text("""
+        INSERT INTO training_feedback (
+            id, tenant_id, claim_id,
+            payer, service_type,
+            days_since_service,
+            actual_outcome, rejection_reason,
+            days_to_resolution, resolved_at
+        ) VALUES (
+            gen_random_uuid(), :tenant_id, :claim_id,
+            :payer, :service_type,
+            :days_since_service,
+            :actual_outcome, :rejection_reason,
+            :days_to_resolution, now()
+        )
+    """), {
+        "tenant_id": str(claim.tenant_id),
+        "claim_id": str(claim.id),
+        "payer": claim.insurance_type,
+        "service_type": claim.service_type,
+        "days_since_service": days_since_service,
+        "actual_outcome": actual_outcome,
+        "rejection_reason": update.rejection_reason,
+        "days_to_resolution": days_to_resolution,
+    })
+
+    db.commit()
+    db.refresh(claim)
+
+    return {
+        "message": f"Dossier {claim.claim_number} mis à jour — {update.status}",
+        "claim_id": str(claim.id),
+        "status": claim.status,
+        "resolved_at": claim.resolved_at.isoformat(),
+        "training_feedback_saved": True
+    }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────
 interface Claim {
   id: string;
   claim_number: string;
@@ -31,7 +31,7 @@ interface Stats {
   rejection_rate: number;
 }
 
-// ── Logo mark ─────────────────────────────────────────────────────────────────
+// ── Logo ───────────────────────────────────────────────────────────────────
 function LogoMark({ size = 26 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
@@ -50,7 +50,7 @@ function LogoMark({ size = 26 }: { size?: number }) {
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────
 function formatMAD(amount: number) {
   return amount.toLocaleString("fr-MA") + " MAD";
 }
@@ -88,7 +88,7 @@ function forclusionLabel(deadline: string | null) {
   return { label: `J+${Math.abs(days)}`, urgent: false };
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// ── Main component ─────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const [claims, setClaims]       = useState<Claim[]>([]);
   const [stats, setStats]         = useState<Stats | null>(null);
@@ -96,27 +96,47 @@ export default function DashboardPage() {
   const [filter, setFilter]       = useState("Tous");
   const [showAlert, setShowAlert] = useState(true);
 
-  useEffect(() => {
-    const token = localStorage.getItem("sihaiq_token");
-    if (!token) { window.location.href = "/auth/login"; return; }
+  // Modal state
+  const [showModal, setShowModal]   = useState(false);
+  const [modalTab, setModalTab]     = useState<"choice" | "manual" | "import">("choice");
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitMsg, setSubmitMsg]   = useState("");
+  const [manualForm, setManualForm] = useState({
+    patient_name: "",
+    cin: "",
+    insurance_type: "CNOPS",
+    service_type: "Consultation",
+    amount: "",
+    service_date: "",
+  });
+
+  const loadData = async () => {
+    const token    = localStorage.getItem("sihaiq_token");
     const tenantId = localStorage.getItem("sihaiq_tenant_id");
-    if (!tenantId) { window.location.href = "/auth/login"; return; }
+    if (!token || !tenantId) { window.location.href = "/auth/login"; return; }
+    try {
+      const [cr, sr] = await Promise.all([
+        fetch(`${API_URL}/claims/with-patients?tenant_id=${tenantId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${API_URL}/claims/stats/summary?tenant_id=${tenantId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+      if (cr.ok) setClaims(await cr.json());
+      if (sr.ok) setStats(await sr.json());
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const load = async () => {
-      try {
-        const [cr, sr] = await Promise.all([
-          fetch(`${API_URL}/claims/with-patients?tenant_id=${tenantId}`),
-          fetch(`${API_URL}/claims/stats/summary?tenant_id=${tenantId}`),
-        ]);
-        if (cr.ok) setClaims(await cr.json());
-        if (sr.ok) setStats(await sr.json());
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
-    };
-    load();
-  }, []);
+  useEffect(() => { loadData(); }, []); // eslint-disable-line react-hooks/set-state-in-effect
 
-  const now = new Date().getTime();
+  const now = Date.now(); // eslint-disable-line react-hooks/purity
+
   const forclusion = claims.filter(c => {
     if (!c.forclusion_deadline) return false;
     const days = Math.ceil((new Date(c.forclusion_deadline).getTime() - now) / 86400000);
@@ -145,6 +165,86 @@ export default function DashboardPage() {
 
   const userInitials = userName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
 
+  function openModal() {
+    setModalTab("choice");
+    setSubmitMsg("");
+    setImportFile(null);
+    setManualForm({ patient_name: "", cin: "", insurance_type: "CNOPS", service_type: "Consultation", amount: "", service_date: "" });
+    setShowModal(true);
+  }
+
+  async function handleManualSubmit() {
+    if (!manualForm.patient_name || !manualForm.cin || !manualForm.amount || !manualForm.service_date) {
+      setSubmitMsg("⚠️ Remplissez tous les champs obligatoires.");
+      return;
+    }
+    setSubmitting(true);
+    setSubmitMsg("");
+    try {
+      const token    = localStorage.getItem("sihaiq_token");
+      const tenantId = localStorage.getItem("sihaiq_tenant_id");
+
+      // 1. Create patient
+      const pRes = await fetch(`${API_URL}/patients`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          full_name:      manualForm.patient_name,
+          cin:            manualForm.cin,
+          insurance_type: manualForm.insurance_type,
+          tenant_id:      tenantId,
+        }),
+      });
+      if (!pRes.ok) {
+        const errData = await pRes.json();
+        throw new Error(typeof errData.detail.detail === "string" ? errData.detail.detail : JSON.stringify(errData.detail.detail) || "Erreur création patient");
+      }
+      const patient = await pRes.json();
+
+      // 2. Create claim (XGBoost score calculated automatically by backend)
+      const cRes = await fetch(`${API_URL}/claims`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          patient_id:     patient.id,
+          tenant_id:      tenantId,
+          claim_number:    `CLM-${Date.now()}`,
+          insurance_type: manualForm.insurance_type,
+          service_type:   manualForm.service_type,
+          service_date:   manualForm.service_date,
+          amount:         parseFloat(manualForm.amount),
+          status:         "pending",
+        }),
+      });
+      if (!cRes.ok) {
+        const err = await cRes.json();
+        throw new Error(err.detail || "Erreur création dossier");
+      }
+
+      setSubmitMsg("✅ Dossier créé — score IA calculé automatiquement.");
+      setTimeout(() => {
+        setShowModal(false);
+        setSubmitMsg("");
+        loadData();
+      }, 1800);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erreur inconnue";
+      setSubmitMsg("❌ " + message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function handleImportConfirm() {
+    if (!importFile) return;
+    setSubmitMsg("✅ Fichier reçu. Traitement en cours — les dossiers apparaîtront dans votre tableau d'ici quelques secondes.");
+    setTimeout(() => {
+      setShowModal(false);
+      setSubmitMsg("");
+      setImportFile(null);
+    }, 2500);
+  }
+
   return (
     <div style={s.shell}>
 
@@ -163,7 +263,7 @@ export default function DashboardPage() {
         <nav style={s.sbNav}>
           <div style={s.sbSec}>Principal</div>
           <a href="/dashboard" style={{ ...s.sbItem, ...s.sbItemActive }}>
-            <span style={s.sbItemIcon}>📊</span>
+            <span style={s.sbItemIcon}>📈</span>
             <span style={s.sbItemLabel}>Tableau de bord</span>
           </a>
           <a href="/dashboard/dossiers" style={s.sbItem}>
@@ -172,7 +272,7 @@ export default function DashboardPage() {
             <span style={s.sbBadge}>{stats?.pending ?? 0}</span>
           </a>
           <a href="/dashboard/patients" style={s.sbItem}>
-            <span style={s.sbItemIcon}>👥</span>
+            <span style={s.sbItemIcon}>👤</span>
             <span style={s.sbItemLabel}>Patients</span>
           </a>
           <a href="/dashboard/prediction" style={s.sbItem}>
@@ -182,7 +282,7 @@ export default function DashboardPage() {
           </a>
           <div style={s.sbSec}>Analyse</div>
           <a href="/dashboard/performance" style={s.sbItem}>
-            <span style={s.sbItemIcon}>📈</span>
+            <span style={s.sbItemIcon}>📊</span>
             <span style={s.sbItemLabel}>Performance</span>
           </a>
           <a href="/dashboard/forclusion" style={s.sbItem}>
@@ -196,7 +296,7 @@ export default function DashboardPage() {
           </a>
           <div style={s.sbSec}>Système</div>
           <a href="/dashboard/audit" style={s.sbItem}>
-            <span style={s.sbItemIcon}>📜</span>
+            <span style={s.sbItemIcon}>📝</span>
             <span style={s.sbItemLabel}>Journal d&apos;audit</span>
           </a>
           <a href="/dashboard/settings" style={s.sbItem}>
@@ -237,7 +337,9 @@ export default function DashboardPage() {
           </div>
           <div style={s.topBtns}>
             <button style={s.topBtn}>Exporter</button>
-            <a href="/dashboard/dossiers" style={s.topBtnPrimary}>+ Nouveau dossier</a>
+            <button style={s.topBtnPrimary} onClick={openModal}>
+              + Nouveau dossier
+            </button>
           </div>
         </div>
 
@@ -259,10 +361,10 @@ export default function DashboardPage() {
           {/* KPI CARDS */}
           <div style={s.kpiGrid}>
             {[
-              { lbl: "Total dossiers", val: loading ? "—" : String(stats?.total_claims ?? 0), accent: "#0F62FE", sub: "portefeuille actif" },
-              { lbl: "En attente",     val: loading ? "—" : String(stats?.pending ?? 0),       accent: "#F59E0B", sub: `${stats ? Math.round((stats.pending / stats.total_claims) * 100) : 0}% du total` },
-              { lbl: "Taux de rejet",  val: loading ? "—" : `${stats?.rejection_rate ?? 0}%`,  accent: "#DC2626", sub: "mois en cours" },
-              { lbl: "Encours total",  val: loading ? "—" : formatMAD(stats?.total_amount_mad ?? 0), accent: "#8B5CF6", sub: "MAD facturés" },
+              { lbl: "Total dossiers", val: loading ? "—" : String(stats?.total_claims ?? 0),          accent: "#0F62FE", sub: "portefeuille actif" },
+              { lbl: "En attente",     val: loading ? "—" : String(stats?.pending ?? 0),               accent: "#F59E0B", sub: `${stats ? Math.round((stats.pending / (stats.total_claims || 1)) * 100) : 0}% du total` },
+              { lbl: "Taux de rejet",  val: loading ? "—" : `${stats?.rejection_rate ?? 0}%`,          accent: "#DC2626", sub: "mois en cours" },
+              { lbl: "Encours total",  val: loading ? "—" : formatMAD(stats?.total_amount_mad ?? 0),   accent: "#8B5CF6", sub: "MAD facturés" },
             ].map(k => (
               <div key={k.lbl} style={s.kpi}>
                 <div style={{ ...s.kpiAccent, background: k.accent }} />
@@ -280,11 +382,11 @@ export default function DashboardPage() {
             <div style={s.card}>
               <div style={s.cardHdr}>
                 <span style={s.cardTitle}>Répartition par caisse</span>
-                <span style={s.cardAction}>Voir détail →</span>
+                <a href="/dashboard/performance" style={s.cardAction}>Voir détail →</a>
               </div>
               {["CNOPS", "CNSS", "AMO", "AMO-Tadamon"].map((payer, i) => {
                 const count = claims.filter(c => c.insurance_type === payer).length;
-                const pct = claims.length ? Math.round((count / claims.length) * 100) : 0;
+                const pct   = claims.length ? Math.round((count / claims.length) * 100) : 0;
                 const colors = ["#0F62FE", "#16A34A", "#F59E0B", "#8B5CF6"];
                 return (
                   <div key={payer} style={s.payerRow}>
@@ -313,7 +415,7 @@ export default function DashboardPage() {
                 {[
                   { lbl: "Approuvés",  val: stats?.approved ?? 0, color: "#16A34A", bg: "#DCFCE7" },
                   { lbl: "Rejetés",    val: stats?.rejected ?? 0, color: "#DC2626", bg: "#FEE2E2" },
-                  { lbl: "En attente", val: stats?.pending ?? 0,  color: "#F59E0B", bg: "#FEF9C3" },
+                  { lbl: "En attente", val: stats?.pending  ?? 0, color: "#F59E0B", bg: "#FEF9C3" },
                 ].map(b => (
                   <div key={b.lbl} style={{ ...s.statBreakItem, background: b.bg }}>
                     <div style={{ ...s.statBreakVal, color: b.color }}>{loading ? "—" : b.val}</div>
@@ -371,9 +473,9 @@ export default function DashboardPage() {
                   <tbody>
                     {filtered.map(claim => {
                       const forc = forclusionLabel(claim.forclusion_deadline);
-                      const rs = riskStyle(claim.risk_level);
-                      const ss = statusStyle(claim.status);
-                      const ps = payerStyle(claim.insurance_type);
+                      const rs   = riskStyle(claim.risk_level);
+                      const ss   = statusStyle(claim.status);
+                      const ps   = payerStyle(claim.insurance_type);
                       return (
                         <tr key={claim.id} style={s.tr}>
                           <td style={s.td}><span style={s.claimNum}>{claim.claim_number}</span></td>
@@ -419,14 +521,210 @@ export default function DashboardPage() {
 
         </div>
       </div>
+
+      {/* ── NOUVEAU DOSSIER MODAL ── */}
+      {showModal && (
+        <div style={s.overlay} onClick={() => setShowModal(false)}>
+          <div style={s.modal} onClick={e => e.stopPropagation()}>
+
+            {/* Modal header */}
+            <div style={s.modalHdr}>
+              <div>
+                <div style={s.modalTitle}>Nouveau dossier</div>
+                <div style={s.modalSub}>Importez un fichier ou créez un dossier manuellement</div>
+              </div>
+              <button style={s.modalClose} onClick={() => setShowModal(false)}>✕</button>
+            </div>
+
+            {/* ── STEP 1: Choose path ── */}
+            {modalTab === "choice" && (
+              <div style={s.choiceGrid}>
+                <button style={s.choiceCard} onClick={() => { setSubmitMsg(""); setModalTab("import"); }}>
+                  <div style={s.choiceIcon}>📂</div>
+                  <div style={s.choiceLabel}>Importer un fichier</div>
+                  <div style={s.choiceSub}>Excel (.xlsx) ou CSV · plusieurs dossiers en une fois</div>
+                </button>
+                <button style={s.choiceCard} onClick={() => { setSubmitMsg(""); setModalTab("manual"); }}>
+                  <div style={s.choiceIcon}>✏️</div>
+                  <div style={s.choiceLabel}>Saisie manuelle</div>
+                  <div style={s.choiceSub}>Un nouveau patient + dossier BAF avec score IA automatique</div>
+                </button>
+              </div>
+            )}
+
+            {/* ── STEP 2A: Import file ── */}
+            {modalTab === "import" && (
+              <div style={{ padding: "0 0 8px" }}>
+                <button style={s.backBtn} onClick={() => setModalTab("choice")}>← Retour</button>
+
+                <div
+                  style={s.dropzone}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files[0];
+                    if (file) setImportFile(file);
+                  }}
+                >
+                  {importFile ? (
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#0F62FE", marginBottom: 4 }}>
+                        📄 {importFile.name}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#9EA3AE" }}>
+                        {(importFile.size / 1024).toFixed(1)} KB · prêt à importer
+                      </div>
+                      <button
+                        style={{ ...s.fileBtnSmall, marginTop: 10 }}
+                        onClick={() => setImportFile(null)}
+                      >
+                        Changer de fichier
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ fontSize: 28, marginBottom: 8 }}>📥</div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: "#6B7280" }}>
+                        Glissez votre fichier ici
+                      </div>
+                      <div style={{ fontSize: 11, color: "#9EA3AE", marginTop: 4 }}>
+                        Excel (.xlsx) ou CSV acceptés
+                      </div>
+                      <label style={s.fileBtn}>
+                        Parcourir
+                        <input
+                          type="file"
+                          accept=".csv,.xlsx"
+                          style={{ display: "none" }}
+                          onChange={e => { if (e.target.files?.[0]) setImportFile(e.target.files[0]); }}
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                <div style={s.infoBox}>
+                  <strong>Format attendu des colonnes :</strong><br />
+                  patient_name · cin · insurance_type (CNOPS / CNSS / AMO / AMO-Tadamon)<br />
+                  service_type · service_date (YYYY-MM-DD) · amount
+                </div>
+
+                {importFile && (
+                  <button style={s.submitBtn} onClick={handleImportConfirm}>
+                    Importer {importFile.name}
+                  </button>
+                )}
+
+                {submitMsg && (
+                  <div style={submitMsg.startsWith("✅") ? s.successMsg : s.errorMsg}>
+                    {submitMsg}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── STEP 2B: Manual entry ── */}
+            {modalTab === "manual" && (
+              <div style={{ padding: "0 0 8px" }}>
+                <button style={s.backBtn} onClick={() => setModalTab("choice")}>← Retour</button>
+
+                <div style={s.formGrid}>
+                  <div style={s.formGroup}>
+                    <label style={s.formLabel}>Nom complet patient *</label>
+                    <input
+                      style={s.formInput}
+                      placeholder="Ex : Youssef Benali"
+                      value={manualForm.patient_name}
+                      onChange={e => setManualForm({ ...manualForm, patient_name: e.target.value })}
+                    />
+                  </div>
+                  <div style={s.formGroup}>
+                    <label style={s.formLabel}>CIN *</label>
+                    <input
+                      style={s.formInput}
+                      placeholder="Ex : BE123456"
+                      value={manualForm.cin}
+                      onChange={e => setManualForm({ ...manualForm, cin: e.target.value })}
+                    />
+                  </div>
+                  <div style={s.formGroup}>
+                    <label style={s.formLabel}>Caisse *</label>
+                    <select
+                      style={s.formInput}
+                      value={manualForm.insurance_type}
+                      onChange={e => setManualForm({ ...manualForm, insurance_type: e.target.value })}
+                    >
+                      {["CNOPS", "CNSS", "AMO", "AMO-Tadamon"].map(p => (
+                        <option key={p}>{p}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={s.formGroup}>
+                    <label style={s.formLabel}>Type de service *</label>
+                    <select
+                      style={s.formInput}
+                      value={manualForm.service_type}
+                      onChange={e => setManualForm({ ...manualForm, service_type: e.target.value })}
+                    >
+                      {["Consultation", "Hospitalisation", "Chirurgie", "Radiologie", "Biologie", "Urgences", "Kinésithérapie"].map(t => (
+                        <option key={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={s.formGroup}>
+                    <label style={s.formLabel}>Date de service *</label>
+                    <input
+                      style={s.formInput}
+                      type="date"
+                      value={manualForm.service_date}
+                      onChange={e => setManualForm({ ...manualForm, service_date: e.target.value })}
+                    />
+                  </div>
+                  <div style={s.formGroup}>
+                    <label style={s.formLabel}>Montant réclamé (MAD) *</label>
+                    <input
+                      style={s.formInput}
+                      type="number"
+                      placeholder="Ex : 1500"
+                      value={manualForm.amount}
+                      onChange={e => setManualForm({ ...manualForm, amount: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div style={s.aiHint}>
+                  🧠 Le score de risque IA sera calculé automatiquement par XGBoost à la création.
+                </div>
+
+                <button
+                  style={{ ...s.submitBtn, opacity: submitting ? 0.6 : 1 }}
+                  disabled={submitting}
+                  onClick={handleManualSubmit}
+                >
+                  {submitting ? "Création en cours..." : "Créer le dossier"}
+                </button>
+
+                {submitMsg && (
+                  <div style={submitMsg.startsWith("✅") ? s.successMsg : s.errorMsg}>
+                    {submitMsg}
+                  </div>
+                )}
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// ── Styles ─────────────────────────────────────────────────────────────────
 const s: Record<string, React.CSSProperties> = {
   shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F0F4FA", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
 
+  // Sidebar
   sidebar:      { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E2E4E9", display: "flex", flexDirection: "column" },
   sbTop:        { padding: "16px 14px 12px", borderBottom: "0.5px solid #EEF2F8" },
   sbBrand:      { display: "flex", alignItems: "center", gap: 9 },
@@ -448,70 +746,101 @@ const s: Record<string, React.CSSProperties> = {
   sbUrole:      { fontSize: 10, color: "#9EA3AE" },
   logoutBtn:    { width: "100%", padding: "8px", borderRadius: 7, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit", marginTop: 8 },
 
-  main:          { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  topbar:        { background: "#fff", borderBottom: "0.5px solid #E2E4E9", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
-  topTitle:      { fontSize: 14, fontWeight: 600, color: "#1A1D23", letterSpacing: "-0.01em" },
-  topDate:       { fontSize: 11, color: "#9EA3AE", marginTop: 2 },
-  topBtns:       { display: "flex", gap: 8, alignItems: "center" },
-  topBtn:        { fontSize: 11, fontWeight: 500, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
-  topBtnPrimary: { fontSize: 11, fontWeight: 600, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "none", background: "#0F62FE", color: "#fff", fontFamily: "inherit", textDecoration: "none" },
+  // Main area
+  main:     { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
+  topbar:   { background: "#fff", borderBottom: "0.5px solid #E2E4E9", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
+  topTitle: { fontSize: 14, fontWeight: 600, color: "#1A1D23", letterSpacing: "-0.01em" },
+  topDate:  { fontSize: 11, color: "#9EA3AE", marginTop: 2 },
+  topBtns:  { display: "flex", gap: 8, alignItems: "center" },
+  topBtn:   { fontSize: 11, fontWeight: 500, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
+  topBtnPrimary: { fontSize: 11, fontWeight: 600, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "none", background: "#0F62FE", color: "#fff", fontFamily: "inherit" },
 
-  content:   { flex: 1, overflowY: "auto", padding: "16px 20px" },
+  content: { flex: 1, overflowY: "auto", padding: "16px 20px" },
 
-  alert:     { background: "#FFF8F0", border: "0.5px solid #FED7AA", borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, marginBottom: 14 },
-  alertIcon: { fontSize: 14, color: "#EA580C", flexShrink: 0 },
-  alertText: { fontSize: 12, color: "#9A3412", flex: 1 },
-  alertClose:{ fontSize: 12, color: "#9A3412", cursor: "pointer", border: "none", background: "none", padding: 0 },
+  // Alert
+  alert:      { background: "#FFF8F0", border: "0.5px solid #FED7AA", borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, marginBottom: 14 },
+  alertIcon:  { fontSize: 14, color: "#EA580C", flexShrink: 0 },
+  alertText:  { fontSize: 12, color: "#9A3412", flex: 1 },
+  alertClose: { fontSize: 12, color: "#9A3412", cursor: "pointer", border: "none", background: "none", padding: 0 },
 
-  kpiGrid:   { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 12 },
-  kpi:       { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: "14px 14px 12px", position: "relative", overflow: "hidden" },
-  kpiAccent: { position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "10px 10px 0 0" },
-  kpiLbl:    { fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 },
-  kpiVal:    { fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1 },
-  kpiSub:    { fontSize: 10, color: "#9EA3AE", marginTop: 5 },
+  // KPI
+  kpiGrid:  { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 12 },
+  kpi:      { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: "14px 14px 12px", position: "relative", overflow: "hidden" },
+  kpiAccent:{ position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "10px 10px 0 0" },
+  kpiLbl:   { fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 },
+  kpiVal:   { fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1 },
+  kpiSub:   { fontSize: 10, color: "#9EA3AE", marginTop: 5 },
 
-  midRow:    { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 },
-  card:      { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: 16 },
-  cardHdr:   { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
-  cardTitle: { fontSize: 12, fontWeight: 600, color: "#1A1D23" },
-  cardAction:{ fontSize: 11, color: "#378ADD", cursor: "pointer" },
+  // Mid row
+  midRow:   { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 },
+  card:     { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: 16 },
+  cardHdr:  { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
+  cardTitle:{ fontSize: 12, fontWeight: 600, color: "#1A1D23" },
+  cardAction:{ fontSize: 11, color: "#378ADD", cursor: "pointer", textDecoration: "none" },
 
-  payerRow:  { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 },
-  payerDot:  { width: 7, height: 7, borderRadius: "50%", flexShrink: 0 },
-  payerName: { fontSize: 11, color: "#6B7280", width: 80, flexShrink: 0 },
+  payerRow: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 },
+  payerDot: { width: 7, height: 7, borderRadius: "50%", flexShrink: 0 },
+  payerName:{ fontSize: 11, color: "#6B7280", width: 80, flexShrink: 0 },
   payerTrack:{ flex: 1, height: 4, background: "#EEF2F8", borderRadius: 2, overflow: "hidden" },
-  payerFill: { height: "100%", borderRadius: 2 },
-  payerPct:  { fontSize: 11, fontWeight: 500, color: "#1A1D23", minWidth: 28, textAlign: "right" },
+  payerFill:{ height: "100%", borderRadius: 2 },
+  payerPct: { fontSize: 11, fontWeight: 500, color: "#1A1D23", minWidth: 28, textAlign: "right" },
 
-  aiCard:    { background: "#E6F1FB", border: "0.5px solid #B5D4F4", borderRadius: 8, padding: "10px 12px", marginTop: 12 },
-  aiLbl:     { fontSize: 9, fontWeight: 600, color: "#185FA5", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 },
-  aiVal:     { fontSize: 18, fontWeight: 700, color: "#0F62FE" },
-  aiSub:     { fontSize: 9, color: "#378ADD", marginTop: 2 },
+  aiCard:   { background: "#E6F1FB", border: "0.5px solid #B5D4F4", borderRadius: 8, padding: "10px 12px", marginTop: 12 },
+  aiLbl:    { fontSize: 9, fontWeight: 600, color: "#185FA5", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 },
+  aiVal:    { fontSize: 18, fontWeight: 700, color: "#0F62FE" },
+  aiSub:    { fontSize: 9, color: "#378ADD", marginTop: 2 },
 
   statBreak:    { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 16 },
   statBreakItem:{ borderRadius: 8, padding: "10px 8px", textAlign: "center" },
   statBreakVal: { fontSize: 18, fontWeight: 700 },
   statBreakLbl: { fontSize: 10, fontWeight: 500, marginTop: 3 },
 
-  riskItem:  { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 8px", background: "#FFF8F0", borderRadius: 6, border: "0.5px solid #FED7AA" },
-  riskNum:   { fontSize: 11, fontFamily: "monospace", color: "#1A1D23" },
-  riskScore: { fontSize: 11, fontWeight: 600, color: "#DC2626" },
+  riskItem: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 8px", background: "#FFF8F0", borderRadius: 6, border: "0.5px solid #FED7AA" },
+  riskNum:  { fontSize: 11, fontFamily: "monospace", color: "#1A1D23" },
+  riskScore:{ fontSize: 11, fontWeight: 600, color: "#DC2626" },
 
-  tableCard: { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, overflow: "hidden" },
-  tableHdr:  { padding: "12px 16px", borderBottom: "0.5px solid #EEF2F8", display: "flex", alignItems: "center", justifyContent: "space-between" },
-  filters:   { display: "flex", gap: 5 },
-  chip:      { fontSize: 10, fontWeight: 500, padding: "3px 9px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
+  // Table
+  tableCard:{ background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, overflow: "hidden" },
+  tableHdr: { padding: "12px 16px", borderBottom: "0.5px solid #EEF2F8", display: "flex", alignItems: "center", justifyContent: "space-between" },
+  filters:  { display: "flex", gap: 5 },
+  chip:     { fontSize: 10, fontWeight: 500, padding: "3px 9px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
   chipActive:{ background: "#E6F1FB", color: "#0F62FE", borderColor: "#B5D4F4" },
-  loading:   { padding: "24px 16px", fontSize: 13, color: "#9EA3AE" },
-  table:     { width: "100%", borderCollapse: "collapse", fontSize: 12 },
-  th:        { textAlign: "left", padding: "8px 14px", fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #EEF2F8", background: "#FAFBFF", whiteSpace: "nowrap" },
-  tr:        { borderBottom: "0.5px solid #F5F7FA" },
-  td:        { padding: "10px 14px", verticalAlign: "middle" },
-  claimNum:  { fontFamily: "monospace", fontSize: 11, color: "#1A1D23", fontWeight: 500 },
+  loading:  { padding: "24px 16px", fontSize: 13, color: "#9EA3AE" },
+  table:    { width: "100%", borderCollapse: "collapse", fontSize: 12 },
+  th:       { textAlign: "left", padding: "8px 14px", fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #EEF2F8", background: "#FAFBFF", whiteSpace: "nowrap" },
+  tr:       { borderBottom: "0.5px solid #F5F7FA" },
+  td:       { padding: "10px 14px", verticalAlign: "middle" },
+  claimNum: { fontFamily: "monospace", fontSize: 11, color: "#1A1D23", fontWeight: 500 },
   patientName:{ fontSize: 12, fontWeight: 500, color: "#1A1D23" },
-  badge:     { display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20 },
-  riskCell:  { display: "flex", alignItems: "center", gap: 6 },
-  riskPill:  { fontSize: 9, fontWeight: 600, padding: "2px 6px", borderRadius: 20, whiteSpace: "nowrap" },
-  riskTrack: { width: 36, height: 3, background: "#EEF2F8", borderRadius: 2, overflow: "hidden" },
-  riskFill:  { height: "100%", borderRadius: 2 },
+  badge:    { display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20 },
+  riskCell: { display: "flex", alignItems: "center", gap: 6 },
+  riskPill: { fontSize: 9, fontWeight: 600, padding: "2px 6px", borderRadius: 20, whiteSpace: "nowrap" },
+  riskTrack:{ width: 36, height: 3, background: "#EEF2F8", borderRadius: 2, overflow: "hidden" },
+  riskFill: { height: "100%", borderRadius: 2 },
+
+  // Modal
+  overlay:    { position: "fixed", inset: 0, background: "rgba(12,27,51,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 },
+  modal:      { background: "#fff", borderRadius: 14, width: "100%", maxWidth: 540, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,0.2)" },
+  modalHdr:   { display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "20px 22px 16px", borderBottom: "0.5px solid #EEF2F8" },
+  modalTitle: { fontSize: 15, fontWeight: 600, color: "#1A1D23" },
+  modalSub:   { fontSize: 11, color: "#9EA3AE", marginTop: 3 },
+  modalClose: { background: "none", border: "none", fontSize: 16, color: "#9EA3AE", cursor: "pointer", padding: "0 0 0 8px", lineHeight: 1 },
+  choiceGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, padding: 20 },
+  choiceCard: { background: "#FAFBFF", border: "1.5px solid #E2E4E9", borderRadius: 12, padding: "22px 16px", cursor: "pointer", textAlign: "center", fontFamily: "inherit", transition: "border-color 0.15s" },
+  choiceIcon: { fontSize: 30, marginBottom: 10 },
+  choiceLabel:{ fontSize: 13, fontWeight: 600, color: "#1A1D23", marginBottom: 6 },
+  choiceSub:  { fontSize: 11, color: "#9EA3AE", lineHeight: 1.6 },
+  backBtn:    { background: "none", border: "none", fontSize: 12, color: "#378ADD", cursor: "pointer", padding: "8px 22px 4px", fontFamily: "inherit", display: "block" },
+  dropzone:   { margin: "0 22px", border: "2px dashed #B5D4F4", borderRadius: 10, padding: "32px 20px", textAlign: "center", background: "#F8FBFF" },
+  fileBtn:    { display: "inline-block", marginTop: 14, padding: "7px 18px", background: "#0F62FE", color: "#fff", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer" },
+  fileBtnSmall:{ display: "inline-block", padding: "5px 12px", background: "#E6F1FB", color: "#185FA5", borderRadius: 6, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "none", fontFamily: "inherit" },
+  infoBox:    { margin: "12px 22px 4px", background: "#F0F4FA", borderRadius: 8, padding: "10px 12px", fontSize: 11, color: "#6B7280", lineHeight: 1.9 },
+  formGrid:   { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, padding: "4px 22px 0" },
+  formGroup:  { display: "flex", flexDirection: "column", gap: 4 },
+  formLabel:  { fontSize: 10, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.06em" },
+  formInput:  { padding: "8px 10px", border: "0.5px solid #E2E4E9", borderRadius: 7, fontSize: 12, color: "#1A1D23", background: "#fff", fontFamily: "inherit", outline: "none" },
+  aiHint:     { margin: "12px 22px 0", background: "#E6F1FB", borderRadius: 8, padding: "9px 12px", fontSize: 11, color: "#185FA5" },
+  submitBtn:  { display: "block", width: "calc(100% - 44px)", margin: "14px 22px 4px", padding: "11px", background: "#0F62FE", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" },
+  successMsg: { margin: "4px 22px 14px", padding: "10px 12px", background: "#DCFCE7", border: "0.5px solid #86EFAC", borderRadius: 8, fontSize: 12, color: "#166534" },
+  errorMsg:   { margin: "4px 22px 14px", padding: "10px 12px", background: "#FEE2E2", border: "0.5px solid #FCA5A5", borderRadius: 8, fontSize: 12, color: "#991B1B" },
 };

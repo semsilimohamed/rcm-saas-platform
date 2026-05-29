@@ -61,7 +61,46 @@ export default function DossiersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("Tous");
   const [selected, setSelected] = useState<Claim | null>(null);
+  const [updating, setUpdating] = useState(false);
+  const [updateMsg, setUpdateMsg] = useState("");
+  const [rejectReason, setRejectReason] = useState("");
+  const [showRejectInput, setShowRejectInput] = useState(false)
 
+  async function updateStatus(claimId: string, status: "approved" | "rejected") {
+  if (status === "rejected" && !rejectReason) {
+    setShowRejectInput(true);
+    return;
+  }
+  setUpdating(true);
+  setUpdateMsg("");
+  try {
+    const token = localStorage.getItem("sihaiq_token");
+    const res = await fetch(`${API_URL}/claims/${claimId}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status, rejection_reason: rejectReason || null }),
+    });
+    if (!res.ok) throw new Error("Erreur mise à jour");
+    const data = await res.json();
+    setUpdateMsg("✅ " + data.message);
+    setShowRejectInput(false);
+    setRejectReason("");
+    // Refresh claims list
+    const tenantId = localStorage.getItem("sihaiq_tenant_id");
+    const cr = await fetch(`${API_URL}/claims/with-patients?tenant_id=${tenantId}`);
+    if (cr.ok) {
+      const updated = await cr.json();
+      setClaims(updated);
+      const updatedClaim = updated.find((c: Claim) => c.id === claimId);
+      if (updatedClaim) setSelected(updatedClaim);
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Erreur inconnue";
+    setUpdateMsg("❌ " + message);
+  } finally {
+    setUpdating(false);
+  }
+}
   useEffect(() => {
     const load = async () => {
       const token = localStorage.getItem("sihaiq_token");
@@ -276,6 +315,59 @@ export default function DossiersPage() {
                     </div>
                   </div>
                 )}
+
+                 {/* STATUS UPDATE */}
+                {selected.status === "pending" && (
+                  <div style={s.detailSection}>
+                    <div style={s.detailSectionTitle}>Mettre à jour le statut</div>
+                    <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                      <button
+                        style={{ ...s.actionBtn, background: "#DCFCE7", color: "#166534", border: "0.5px solid #86EFAC" }}
+                        disabled={updating}
+                        onClick={() => { setShowRejectInput(false); setRejectReason(""); updateStatus(selected.id, "approved"); }}
+                      >
+                        ✓ Approuvé
+                      </button>
+                      <button
+                        style={{ ...s.actionBtn, background: "#FEE2E2", color: "#991B1B", border: "0.5px solid #FCA5A5" }}
+                        disabled={updating}
+                        onClick={() => setShowRejectInput(true)}
+                      >
+                        ✗ Rejeté
+                      </button>
+                    </div>
+                    {showRejectInput && (
+                      <div>
+                        <input
+                          style={{ ...s.rejectInput }}
+                          placeholder="Motif de rejet (ex: immatriculation invalide)"
+                          value={rejectReason}
+                          onChange={e => setRejectReason(e.target.value)}
+                        />
+                        <button
+                          style={{ ...s.actionBtn, background: "#FEE2E2", color: "#991B1B", border: "0.5px solid #FCA5A5", marginTop: 6, width: "100%" }}
+                          disabled={updating || !rejectReason}
+                          onClick={() => updateStatus(selected.id, "rejected")}
+                        >
+                          {updating ? "Enregistrement..." : "Confirmer le rejet"}
+                        </button>
+                      </div>
+                    )}
+                    {updateMsg && (
+                      <div style={{ fontSize: 11, marginTop: 8, color: updateMsg.startsWith("✅") ? "#166534" : "#991B1B" }}>
+                        {updateMsg}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {selected.status !== "pending" && (
+                  <div style={{ ...s.detailSection, borderBottom: "none" }}>
+                    <div style={s.detailSectionTitle}>Feedback IA</div>
+                    <div style={{ fontSize: 11, color: "#6B7280", background: "#F0F4FA", borderRadius: 6, padding: "8px 10px" }}>
+                      ✅ Résultat enregistré — le modèle XGBoost apprendra de ce dossier lors du prochain cycle d&apos;entraînement.
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -343,4 +435,6 @@ const s: Record<string, React.CSSProperties> = {
   riskBox:      { borderRadius: 8, padding: "10px 12px", marginTop: 4 },
   riskCause:    { fontSize: 11, marginTop: 6, lineHeight: 1.5 },
   forclusionBox:{ fontSize: 12, color: "#9A3412", background: "#FFF8F0", border: "0.5px solid #FED7AA", borderRadius: 6, padding: "8px 10px", marginTop: 4 },
+  actionBtn:  { fontSize: 11, fontWeight: 600, padding: "7px 14px", borderRadius: 7, cursor: "pointer", fontFamily: "inherit", flex: 1 },
+  rejectInput:{ width: "100%", padding: "7px 10px", border: "0.5px solid #E2E4E9", borderRadius: 7, fontSize: 11, fontFamily: "inherit", outline: "none", boxSizing: "border-box" },
 };
