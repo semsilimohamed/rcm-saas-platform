@@ -29,12 +29,13 @@ app.add_middleware(
 )
 
 # Register routers
-from app.api import claims, tenants, patients
+from app.api import claims, tenants, patients, audit 
 app.include_router(claims.router)
 app.include_router(tenants.router) 
 app.include_router(patients.router)
 app.include_router(predict.router)
 app.include_router(auth.router)
+app.include_router(audit.router)
 @app.get("/")
 def root():
     return {

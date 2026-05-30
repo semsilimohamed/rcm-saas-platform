@@ -44,7 +44,7 @@ export default function LoginPage() {
       const data = await res.json();
       localStorage.setItem("sihaiq_token", data.access_token);
       localStorage.setItem("sihaiq_tenant_id", data.tenant_id);
-      localStorage.setItem("sihaiq_user", JSON.stringify({ name: data.full_name, role: data.role }));
+      localStorage.setItem("sihaiq_user", JSON.stringify({ name: data.full_name, role: data.role, email: email }));
       router.push("/dashboard");
     } catch {
       setError("Impossible de contacter le serveur. Vérifiez que le backend est actif.");

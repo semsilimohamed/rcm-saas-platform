@@ -65,6 +65,9 @@ export default function DossiersPage() {
   const [updateMsg, setUpdateMsg]         = useState("");
   const [rejectReason, setRejectReason]   = useState("");
   const [showRejectInput, setShowRejectInput] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteReason, setDeleteReason]       = useState("");
+  const [claimToDelete, setClaimToDelete]     = useState<{id: string, number: string} | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -115,17 +118,28 @@ export default function DossiersPage() {
     }
   }
 
-  async function deleteClaim(claimId: string, claimNumber: string) {
-    if (!confirm(`Supprimer le dossier ${claimNumber} ? Cette action est irréversible.`)) return;
+  function openDeleteModal(claimId: string, claimNumber: string) {
+    setClaimToDelete({ id: claimId, number: claimNumber });
+    setDeleteReason("");
+    setShowDeleteModal(true);
+  }
+
+  async function confirmDelete() {
+    if (!claimToDelete || !deleteReason) return;
     try {
-      const token = localStorage.getItem("sihaiq_token");
-      const res = await fetch(`${API_URL}/claims/${claimId}`, {
+      const token     = localStorage.getItem("sihaiq_token");
+      const userEmail = JSON.parse(localStorage.getItem("sihaiq_user") || "{}").email || "inconnu";
+      const res = await fetch(`${API_URL}/claims/${claimToDelete.id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reason: deleteReason, user_email: userEmail }),
       });
       if (!res.ok) throw new Error("Erreur suppression");
+      setShowDeleteModal(false);
+      setClaimToDelete(null);
+      setDeleteReason("");
       setSelected(null);
-      setClaims(prev => prev.filter(c => c.id !== claimId));
+      setClaims(prev => prev.filter(c => c.id !== claimToDelete.id));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erreur inconnue";
       alert("❌ " + message);
@@ -288,7 +302,7 @@ export default function DossiersPage() {
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <button
                       style={s.deleteBtn}
-                      onClick={() => deleteClaim(selected.id, selected.claim_number)}
+                      onClick={() => openDeleteModal(selected.id, selected.claim_number)}
                     >
                       🗑 Supprimer
                     </button>
@@ -409,6 +423,45 @@ export default function DossiersPage() {
           </div>
         </div>
       </div>
+
+      {/* DELETE MODAL */}
+      {showDeleteModal && claimToDelete && (
+        <div style={s.overlay} onClick={() => setShowDeleteModal(false)}>
+          <div style={s.deleteModal} onClick={e => e.stopPropagation()}>
+            <div style={s.deleteModalHdr}>
+              <div style={s.deleteModalTitle}>Supprimer le dossier</div>
+              <button style={s.closeBtn} onClick={() => setShowDeleteModal(false)}>✕</button>
+            </div>
+            <div style={s.deleteModalBody}>
+              <div style={s.deleteModalClaim}>{claimToDelete.number}</div>
+              <div style={s.deleteModalWarn}>
+                ⚠️ Cette action est irréversible. Le dossier sera définitivement supprimé.
+              </div>
+              <label style={s.deleteModalLabel}>Raison de suppression *</label>
+              <input
+                style={s.deleteModalInput}
+                placeholder="Ex: doublon, erreur de saisie, dossier test..."
+                value={deleteReason}
+                onChange={e => setDeleteReason(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div style={s.deleteModalFooter}>
+              <button style={s.cancelBtn} onClick={() => setShowDeleteModal(false)}>
+                Annuler
+              </button>
+              <button
+                style={{ ...s.confirmDeleteBtn, opacity: !deleteReason ? 0.5 : 1 }}
+                disabled={!deleteReason}
+                onClick={confirmDelete}
+              >
+                Confirmer la suppression
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
@@ -474,4 +527,16 @@ const s: Record<string, React.CSSProperties> = {
   actionBtn:          { fontSize: 11, fontWeight: 600, padding: "7px 14px", borderRadius: 7, cursor: "pointer", fontFamily: "inherit", flex: 1 },
   rejectInput:        { width: "100%", padding: "7px 10px", border: "0.5px solid #E2E4E9", borderRadius: 7, fontSize: 11, fontFamily: "inherit", outline: "none", boxSizing: "border-box" },
   deleteBtn:          { fontSize: 11, fontWeight: 500, padding: "4px 10px", borderRadius: 6, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit" },
+  overlay:          { position: "fixed", inset: 0, background: "rgba(12,27,51,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 },
+  deleteModal:      { background: "#fff", borderRadius: 12, width: "100%", maxWidth: 440, boxShadow: "0 20px 50px rgba(0,0,0,0.18)" },
+  deleteModalHdr:   { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 20px 14px", borderBottom: "0.5px solid #EEF2F8" },
+  deleteModalTitle: { fontSize: 14, fontWeight: 600, color: "#1A1D23" },
+  deleteModalBody:  { padding: "16px 20px" },
+  deleteModalClaim: { fontFamily: "monospace", fontSize: 13, fontWeight: 600, color: "#0F62FE", marginBottom: 10 },
+  deleteModalWarn:  { fontSize: 12, color: "#9A3412", background: "#FFF8F0", border: "0.5px solid #FED7AA", borderRadius: 7, padding: "8px 10px", marginBottom: 14 },
+  deleteModalLabel: { fontSize: 10, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 },
+  deleteModalInput: { width: "100%", padding: "9px 12px", border: "0.5px solid #E2E4E9", borderRadius: 8, fontSize: 12, fontFamily: "inherit", outline: "none", boxSizing: "border-box" },
+  deleteModalFooter:{ display: "flex", gap: 10, padding: "14px 20px", borderTop: "0.5px solid #EEF2F8", justifyContent: "flex-end" },
+  cancelBtn:        { fontSize: 12, fontWeight: 500, padding: "8px 16px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
+  confirmDeleteBtn: { fontSize: 12, fontWeight: 600, padding: "8px 16px", borderRadius: 7, cursor: "pointer", border: "none", background: "#DC2626", color: "#fff", fontFamily: "inherit" },
 };

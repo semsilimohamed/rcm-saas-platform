@@ -37,11 +37,26 @@ SHAP_MESSAGES = {
     "days_since_service": "Délai trop long : Risque de rejet pour dépassement de délai.",
     "pec_required": "PEC Requise non obtenue : Cet acte nécessite une autorisation préalable.",
 }
-
+def write_audit_log(db: Session, tenant_id: str, user_email: str, action: str, resource_type: str, resource_id: str, details: str):
+    try:
+        db.execute(text("""
+            INSERT INTO audit_logs (id, tenant_id, user_email, action, resource_type, resource_id, details)
+            VALUES (gen_random_uuid(), :tenant_id, :user_email, :action, :resource_type, :resource_id, :details)
+        """), {
+            "tenant_id": tenant_id,
+            "user_email": user_email,
+            "action": action,
+            "resource_type": resource_type,
+            "resource_id": resource_id,
+            "details": details,
+        })
+    except Exception as e:
+        print(f"Audit log error: {e}")
 # ── Pydantic schemas ───────────────────────────────────────────────────────
 class StatusUpdate(BaseModel):
     status: str
     rejection_reason: Optional[str] = None
+    user_email : Optional[str] = None
 
 # ── ML helper ─────────────────────────────────────────────────────────────
 def run_prediction(claim_data: dict) -> dict:
@@ -230,7 +245,19 @@ def update_claim_status(
         "rejection_reason": update.rejection_reason,
         "days_to_resolution": days_to_resolution,
     })
-
+    action = "DOSSIER_APPROUVÉ" if update.status == "approved" else "DOSSIER_REJETÉ"
+    details = f"Statut mis à jour → {update.status}"
+    if update.rejection_reason:
+        details += f" | Motif: {update.rejection_reason}"
+    write_audit_log(
+        db,
+        tenant_id=str(claim.tenant_id),
+        user_email=update.user_email or "inconnu",
+        action=action,
+        resource_type="claim",
+        resource_id=claim.claim_number,
+        details=details,
+    )
     db.commit()
     db.refresh(claim)
 
@@ -241,13 +268,29 @@ def update_claim_status(
         "resolved_at": claim.resolved_at.isoformat(),
         "training_feedback_saved": True
     }
+class DeleteClaimRequest(BaseModel):
+    reason: str
+    user_email: Optional[str] = None
+
 @router.delete("/{claim_id}")
-def delete_claim(claim_id: UUID, db: Session = Depends(get_db)):
+def delete_claim(claim_id: UUID, request: DeleteClaimRequest, db: Session = Depends(get_db)):
     claim = db.query(Claim).filter(Claim.id == claim_id).first()
     if not claim:
         raise HTTPException(status_code=404, detail="Dossier introuvable")
-    # Delete training feedback rows first to avoid foreign key violation
+    claim_number = claim.claim_number
+    tenant_id    = str(claim.tenant_id)
+    # Delete training feedback rows first
     db.execute(text("DELETE FROM training_feedback WHERE claim_id = :cid"), {"cid": str(claim_id)})
     db.delete(claim)
+    # Write audit log before commit
+    write_audit_log(
+        db,
+        tenant_id=tenant_id,
+        user_email=request.user_email or "inconnu",
+        action="DOSSIER_SUPPRIMÉ",
+        resource_type="claim",
+        resource_id=claim_number,
+        details=f"Raison: {request.reason}",
+    )
     db.commit()
-    return { "message": f"Dossier {claim.claim_number} supprimé." }
+    return { "message": f"Dossier {claim_number} supprimé." }

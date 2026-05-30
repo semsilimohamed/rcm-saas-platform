@@ -88,6 +88,17 @@ function forclusionLabel(deadline: string | null) {
   return { label: `J+${Math.abs(days)}`, urgent: false };
 }
 
+function parseCSV(text: string): Record<string, string>[] {
+  const lines = text.trim().split("\n");
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/\r/g, ""));
+  return lines.slice(1).map(line => {
+    const values = line.split(",").map(v => v.trim().replace(/\r/g, ""));
+    const row: Record<string, string> = {};
+    headers.forEach((h, i) => { row[h] = values[i] ?? ""; });
+    return row;
+  }).filter(row => Object.values(row).some(v => v !== ""));
+}
 // ── Main component ─────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const [claims, setClaims]       = useState<Claim[]>([]);
@@ -102,6 +113,11 @@ export default function DashboardPage() {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitMsg, setSubmitMsg]   = useState("");
+  const [importRows, setImportRows]       = useState<Record<string, string>[]>([]);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importTotal, setImportTotal]     = useState(0);
+  const [importErrors, setImportErrors]   = useState<string[]>([]);
+  const [importDone, setImportDone]       = useState(false);
   const [manualForm, setManualForm] = useState({
     patient_name: "",
     cin: "",
@@ -235,15 +251,7 @@ export default function DashboardPage() {
     }
   }
 
-  function handleImportConfirm() {
-    if (!importFile) return;
-    setSubmitMsg("✅ Fichier reçu. Traitement en cours — les dossiers apparaîtront dans votre tableau d'ici quelques secondes.");
-    setTimeout(() => {
-      setShowModal(false);
-      setSubmitMsg("");
-      setImportFile(null);
-    }, 2500);
-  }
+  
 
   return (
     <div style={s.shell}>
@@ -560,10 +568,18 @@ export default function DashboardPage() {
                 <div
                   style={s.dropzone}
                   onDragOver={e => e.preventDefault()}
-                  onDrop={e => {
+                  onDrop={async e => {
                     e.preventDefault();
                     const file = e.dataTransfer.files[0];
-                    if (file) setImportFile(file);
+                    if (!file) return;
+                    setImportFile(file);
+                    setImportDone(false);
+                    setImportErrors([]);
+                    setImportProgress(0);
+                    const text = await file.text();
+                    const rows = parseCSV(text);
+                    setImportRows(rows);
+                    setImportTotal(rows.length);
                   }}
                 >
                   {importFile ? (
@@ -596,7 +612,18 @@ export default function DashboardPage() {
                           type="file"
                           accept=".csv,.xlsx"
                           style={{ display: "none" }}
-                          onChange={e => { if (e.target.files?.[0]) setImportFile(e.target.files[0]); }}
+                          onChange={async e => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setImportFile(file);
+                          setImportDone(false);
+                          setImportErrors([]);
+                          setImportProgress(0);
+                          const text = await file.text();
+                          const rows = parseCSV(text);
+                          setImportRows(rows);
+                          setImportTotal(rows.length);
+                        }}
                         />
                       </label>
                     </div>
@@ -609,10 +636,101 @@ export default function DashboardPage() {
                   service_type · service_date (YYYY-MM-DD) · amount
                 </div>
 
-                {importFile && (
-                  <button style={s.submitBtn} onClick={handleImportConfirm}>
-                    Importer {importFile.name}
-                  </button>
+                {importFile && importRows.length > 0 && !importDone && (
+                  <div>
+                    <div style={{ fontSize: 11, color: "#6B7280", margin: "8px 22px 4px", background: "#F0F4FA", borderRadius: 6, padding: "8px 10px" }}>
+                      📊 {importRows.length} dossier{importRows.length > 1 ? "s" : ""} détecté{importRows.length > 1 ? "s" : ""} dans le fichier
+                    </div>
+                    {importProgress > 0 && (
+                      <div style={{ margin: "8px 22px" }}>
+                        <div style={{ fontSize: 11, color: "#185FA5", marginBottom: 4 }}>
+                          Importation en cours... {importProgress}/{importTotal}
+                        </div>
+                        <div style={{ background: "#E6F1FB", borderRadius: 4, height: 6 }}>
+                          <div style={{ background: "#0F62FE", borderRadius: 4, height: 6, width: `${(importProgress / importTotal) * 100}%`, transition: "width 0.2s" }} />
+                        </div>
+                      </div>
+                    )}
+                    <button
+                      style={{ ...s.submitBtn, opacity: submitting ? 0.6 : 1 }}
+                      disabled={submitting}
+                      onClick={async () => {
+                        setSubmitting(true);
+                        setImportErrors([]);
+                        setImportProgress(0);
+                        const token    = localStorage.getItem("sihaiq_token");
+                        const tenantId = localStorage.getItem("sihaiq_tenant_id");
+                        const errors: string[] = [];
+                        let done = 0;
+                        for (const row of importRows) {
+                          try {
+                            // Create patient
+                            const pRes = await fetch(`${API_URL}/patients`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                              body: JSON.stringify({
+                                full_name:      row["patient_name"] || "Inconnu",
+                                cin:            row["cin"] || "000000",
+                                insurance_type: row["insurance_type"] || "CNOPS",
+                                tenant_id:      tenantId,
+                              }),
+                            });
+                            if (!pRes.ok) throw new Error(`Patient ${row["patient_name"]}: erreur création`);
+                            const patient = await pRes.json();
+                            // Create claim
+                            const cRes = await fetch(`${API_URL}/claims`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                              body: JSON.stringify({
+                                patient_id:     patient.id,
+                                tenant_id:      tenantId,
+                                claim_number:   `CLM-IMP-${Date.now()}-${done}`,
+                                insurance_type: row["insurance_type"] || "CNOPS",
+                                service_type:   row["service_type"] || "Consultation",
+                                service_date:   row["service_date"] || new Date().toISOString().split("T")[0],
+                                amount:         parseFloat(row["amount"]) || 0,
+                                status:         "pending",
+                              }),
+                            });
+                            if (!cRes.ok) throw new Error(`Dossier ${row["patient_name"]}: erreur création`);
+                          } catch (err: unknown) {
+                            const msg = err instanceof Error ? err.message : "Erreur inconnue";
+                            errors.push(msg);
+                          }
+                          done++;
+                          setImportProgress(done);
+                        }
+                        setImportErrors(errors);
+                        setImportDone(true);
+                        setSubmitting(false);
+                        if (errors.length === 0) {
+                          setTimeout(() => {
+                            setShowModal(false);
+                            setImportFile(null);
+                            setImportRows([]);
+                            setImportDone(false);
+                            loadData();
+                          }, 2000);
+                        }
+                      }}
+                    >
+                      {submitting ? `Importation... ${importProgress}/${importTotal}` : `Importer ${importRows.length} dossier${importRows.length > 1 ? "s" : ""}`}
+                    </button>
+                  </div>
+                )}
+                {importDone && (
+                  <div style={{ margin: "8px 22px 14px" }}>
+                    {importErrors.length === 0 ? (
+                      <div style={s.successMsg}>
+                        ✅ {importTotal} dossier{importTotal > 1 ? "s" : ""} importé{importTotal > 1 ? "s" : ""} avec succès — scores IA calculés automatiquement.
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={s.successMsg}>✅ {importTotal - importErrors.length} dossier{importTotal - importErrors.length > 1 ? "s" : ""} importé{importTotal - importErrors.length > 1 ? "s" : ""}</div>
+                        <div style={s.errorMsg}>❌ {importErrors.length} erreur{importErrors.length > 1 ? "s" : ""} : {importErrors.join(" | ")}</div>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {submitMsg && (
