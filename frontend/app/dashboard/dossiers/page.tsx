@@ -15,6 +15,7 @@ interface Claim {
   service_date: string;
   status: string;
   rejection_reason: string | null;
+  contestation_reason: string | null;
   risk_score: number | null;
   risk_level: string | null;
   rejection_cause_predicted: string | null;
@@ -29,14 +30,22 @@ function riskStyle(level: string | null) {
 }
 
 function statusStyle(status: string) {
-  if (status === "approved") return { bg: "#DCFCE7", color: "#166534" };
-  if (status === "rejected") return { bg: "#FEE2E2", color: "#991B1B" };
+  if (status === "approved")  return { bg: "#DCFCE7", color: "#166534" };
+  if (status === "rejected")  return { bg: "#FEE2E2", color: "#991B1B" };
+  if (status === "contested") return { bg: "#FFF7ED", color: "#9A3412" };
+  if (status === "settled")   return { bg: "#DCFCE7", color: "#166534" };
+  if (status === "closed")    return { bg: "#F3F4F6", color: "#6B7280" };
+  if (status === "abandoned") return { bg: "#F3F4F6", color: "#6B7280" };
   return { bg: "#FEF9C3", color: "#854D0E" };
 }
 
 function statusLabel(status: string) {
-  if (status === "approved") return "Approuvé";
-  if (status === "rejected") return "Rejeté";
+  if (status === "approved")  return "Approuvé";
+  if (status === "rejected")  return "Rejeté";
+  if (status === "contested") return "Contesté";
+  if (status === "settled")   return "Réglé";
+  if (status === "closed")    return "Soldé";
+  if (status === "abandoned") return "Abandonné";
   return "En attente";
 }
 
@@ -65,6 +74,8 @@ export default function DossiersPage() {
   const [updateMsg, setUpdateMsg]         = useState("");
   const [rejectReason, setRejectReason]   = useState("");
   const [showRejectInput, setShowRejectInput] = useState(false);
+  const [showContestInput, setShowContestInput] = useState(false);
+  const [contestReason, setContestReason] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteReason, setDeleteReason]       = useState("");
   const [claimToDelete, setClaimToDelete]     = useState<{id: string, number: string} | null>(null);
@@ -96,7 +107,12 @@ export default function DossiersPage() {
       const res = await fetch(`${API_URL}/claims/${claimId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status, rejection_reason: rejectReason || null }),
+        body: JSON.stringify({
+        status,
+        rejection_reason: rejectReason || null,
+        contestation_reason: contestReason || null,
+        user_email: JSON.parse(localStorage.getItem("sihaiq_user") || "{}").email || "inconnu",
+      }),
       });
       if (!res.ok) throw new Error("Erreur mise à jour");
       const data = await res.json();
@@ -363,7 +379,7 @@ export default function DossiersPage() {
                   </div>
                 )}
 
-                {/* Status update — only for pending */}
+                {/* STATUS UPDATE — disposition codes */}
                 {selected.status === "pending" && (
                   <div style={s.detailSection}>
                     <div style={s.detailSectionTitle}>Mettre à jour le statut</div>
@@ -372,39 +388,91 @@ export default function DossiersPage() {
                         style={{ ...s.actionBtn, background: "#DCFCE7", color: "#166534", border: "0.5px solid #86EFAC" }}
                         disabled={updating}
                         onClick={() => { setShowRejectInput(false); setRejectReason(""); updateStatus(selected.id, "approved"); }}
-                      >
-                        ✓ Approuvé
-                      </button>
+                      >✓ Approuvé</button>
                       <button
                         style={{ ...s.actionBtn, background: "#FEE2E2", color: "#991B1B", border: "0.5px solid #FCA5A5" }}
                         disabled={updating}
-                        onClick={() => setShowRejectInput(true)}
-                      >
-                        ✗ Rejeté
-                      </button>
+                        onClick={() => { setShowContestInput(false); setShowRejectInput(true); }}
+                      >✗ Rejeté</button>
                     </div>
                     {showRejectInput && (
                       <div>
-                        <input
-                          style={s.rejectInput}
-                          placeholder="Motif de rejet (ex: immatriculation invalide)"
-                          value={rejectReason}
-                          onChange={e => setRejectReason(e.target.value)}
-                        />
-                        <button
-                          style={{ ...s.actionBtn, background: "#FEE2E2", color: "#991B1B", border: "0.5px solid #FCA5A5", marginTop: 6, width: "100%" }}
-                          disabled={updating || !rejectReason}
-                          onClick={() => updateStatus(selected.id, "rejected")}
-                        >
+                        <input style={s.rejectInput} placeholder="Motif de rejet..." value={rejectReason} onChange={e => setRejectReason(e.target.value)} />
+                        <button style={{ ...s.actionBtn, background: "#FEE2E2", color: "#991B1B", border: "0.5px solid #FCA5A5", marginTop: 6, width: "100%" }}
+                          disabled={updating || !rejectReason} onClick={() => updateStatus(selected.id, "rejected")}>
                           {updating ? "Enregistrement..." : "Confirmer le rejet"}
                         </button>
                       </div>
                     )}
-                    {updateMsg && (
-                      <div style={{ fontSize: 11, marginTop: 8, color: updateMsg.startsWith("✅") ? "#166534" : "#991B1B" }}>
-                        {updateMsg}
+                    {updateMsg && <div style={{ fontSize: 11, marginTop: 8, color: updateMsg.startsWith("✅") ? "#166534" : "#991B1B" }}>{updateMsg}</div>}
+                  </div>
+                )}
+
+                {selected.status === "rejected" && (
+                  <div style={s.detailSection}>
+                    <div style={s.detailSectionTitle}>Contester le rejet</div>
+                    <div style={{ fontSize: 11, color: "#9A3412", background: "#FFF8F0", border: "0.5px solid #FED7AA", borderRadius: 6, padding: "8px 10px", marginBottom: 10 }}>
+                      Dossier rejeté · Vous pouvez envoyer une contestation à la caisse dans le délai légal.
+                    </div>
+                    {!showContestInput ? (
+                      <button style={{ ...s.actionBtn, background: "#FFF7ED", color: "#9A3412", border: "0.5px solid #FED7AA", width: "100%" }}
+                        onClick={() => setShowContestInput(true)}>
+                        ✉ Contester ce rejet
+                      </button>
+                    ) : (
+                      <div>
+                        <input style={s.rejectInput} placeholder="Motif de contestation..." value={contestReason} onChange={e => setContestReason(e.target.value)} />
+                        <button style={{ ...s.actionBtn, background: "#FFF7ED", color: "#9A3412", border: "0.5px solid #FED7AA", marginTop: 6, width: "100%" }}
+                          disabled={updating || !contestReason}
+                          onClick={() => { updateStatus(selected.id, "contested"); setShowContestInput(false); }}>
+                          {updating ? "Envoi..." : "Confirmer la contestation"}
+                        </button>
                       </div>
                     )}
+                    {updateMsg && <div style={{ fontSize: 11, marginTop: 8, color: updateMsg.startsWith("✅") ? "#166534" : "#991B1B" }}>{updateMsg}</div>}
+                  </div>
+                )}
+
+                {selected.status === "contested" && (
+                  <div style={s.detailSection}>
+                    <div style={s.detailSectionTitle}>Résultat de la contestation</div>
+                    <div style={{ fontSize: 11, color: "#185FA5", background: "#E6F1FB", border: "0.5px solid #B5D4F4", borderRadius: 6, padding: "8px 10px", marginBottom: 10 }}>
+                      Contestation envoyée · En attente de réponse de la caisse.
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button style={{ ...s.actionBtn, background: "#DCFCE7", color: "#166534", border: "0.5px solid #86EFAC" }}
+                        disabled={updating} onClick={() => updateStatus(selected.id, "settled")}>
+                        ✓ Réglé
+                      </button>
+                      <button style={{ ...s.actionBtn, background: "#F3F4F6", color: "#6B7280", border: "0.5px solid #D1D5DB" }}
+                        disabled={updating} onClick={() => updateStatus(selected.id, "abandoned")}>
+                        ✗ Abandonné
+                      </button>
+                    </div>
+                    {updateMsg && <div style={{ fontSize: 11, marginTop: 8, color: updateMsg.startsWith("✅") ? "#166534" : "#991B1B" }}>{updateMsg}</div>}
+                  </div>
+                )}
+
+                {selected.status === "settled" && (
+                  <div style={s.detailSection}>
+                    <div style={s.detailSectionTitle}>Clôturer le dossier</div>
+                    <div style={{ fontSize: 11, color: "#166534", background: "#DCFCE7", border: "0.5px solid #86EFAC", borderRadius: 6, padding: "8px 10px", marginBottom: 10 }}>
+                      Contestation acceptée · Paiement reçu. Clôturez le dossier.
+                    </div>
+                    <button style={{ ...s.actionBtn, background: "#F3F4F6", color: "#6B7280", border: "0.5px solid #D1D5DB", width: "100%" }}
+                      disabled={updating} onClick={() => updateStatus(selected.id, "closed")}>
+                      Solder le dossier
+                    </button>
+                    {updateMsg && <div style={{ fontSize: 11, marginTop: 8, color: updateMsg.startsWith("✅") ? "#166534" : "#991B1B" }}>{updateMsg}</div>}
+                  </div>
+                )}
+
+                {["approved","closed","abandoned"].includes(selected.status) && (
+                  <div style={{ ...s.detailSection, borderBottom: "none" }}>
+                    <div style={s.detailSectionTitle}>Feedback IA</div>
+                    <div style={{ fontSize: 11, color: "#6B7280", background: "#F0F4FA", borderRadius: 6, padding: "8px 10px" }}>
+                      ✅ Résultat enregistré — le modèle XGBoost apprendra de ce dossier lors du prochain cycle d&apos;entraînement.
+                    </div>
                   </div>
                 )}
 

@@ -56,7 +56,8 @@ def write_audit_log(db: Session, tenant_id: str, user_email: str, action: str, r
 class StatusUpdate(BaseModel):
     status: str
     rejection_reason: Optional[str] = None
-    user_email : Optional[str] = None
+    contestation_reason: Optional[str] = None
+    user_email: Optional[str] = None
 
 # ── ML helper ─────────────────────────────────────────────────────────────
 def run_prediction(claim_data: dict) -> dict:
@@ -202,8 +203,9 @@ def update_claim_status(
     if not claim:
         raise HTTPException(status_code=404, detail="Dossier introuvable")
 
-    if update.status not in ("approved", "rejected"):
-        raise HTTPException(status_code=400, detail="Statut invalide. Utilisez 'approved' ou 'rejected'.")
+    VALID_STATUSES = ("approved", "rejected", "contested", "settled", "closed", "abandoned")
+    if update.status not in VALID_STATUSES:
+        raise HTTPException(status_code=400, detail=f"Statut invalide. Valeurs acceptées : {', '.join(VALID_STATUSES)}")
 
     # Update claim
     claim.status = update.status
@@ -245,10 +247,20 @@ def update_claim_status(
         "rejection_reason": update.rejection_reason,
         "days_to_resolution": days_to_resolution,
     })
-    action = "DOSSIER_APPROUVÉ" if update.status == "approved" else "DOSSIER_REJETÉ"
+    ACTION_MAP = {
+        "approved":  "DOSSIER_APPROUVÉ",
+        "rejected":  "DOSSIER_REJETÉ",
+        "contested": "DOSSIER_CONTESTÉ",
+        "settled":   "DOSSIER_RÉGLÉ",
+        "closed":    "DOSSIER_SOLDÉ",
+        "abandoned": "DOSSIER_ABANDONNÉ",
+    }
+    action = ACTION_MAP.get(update.status, "STATUT_MODIFIÉ")
     details = f"Statut mis à jour → {update.status}"
     if update.rejection_reason:
-        details += f" | Motif: {update.rejection_reason}"
+        details += f" | Motif rejet: {update.rejection_reason}"
+    if update.contestation_reason:
+        details += f" | Motif contestation: {update.contestation_reason}"
     write_audit_log(
         db,
         tenant_id=str(claim.tenant_id),
