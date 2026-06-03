@@ -79,7 +79,8 @@ export default function DossiersPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteReason, setDeleteReason]       = useState("");
   const [claimToDelete, setClaimToDelete]     = useState<{id: string, number: string} | null>(null);
-
+  const [selectedForBordereau, setSelectedForBordereau] = useState<string[]>([]);
+  const [generatingBordereau, setGeneratingBordereau] = useState(false);
   useEffect(() => {
     const load = async () => {
       const token = localStorage.getItem("sihaiq_token");
@@ -94,7 +95,7 @@ export default function DossiersPage() {
     load();
   }, []);
 
-  async function updateStatus(claimId: string, status: "approved" | "rejected") {
+  async function updateStatus(claimId: string, status: "approved" | "rejected" | "contested" | "settled" | "closed" | "abandoned") {
     if (status === "rejected" && !rejectReason) {
       setShowRejectInput(true);
       return;
@@ -161,7 +162,38 @@ export default function DossiersPage() {
       alert("❌ " + message);
     }
   }
-
+  async function generateBordereau() {
+    if (selectedForBordereau.length === 0) { alert("Sélectionnez au moins un dossier."); return; }
+    setGeneratingBordereau(true);
+    try {
+      const token    = localStorage.getItem("sihaiq_token");
+      const tenantId = localStorage.getItem("sihaiq_tenant_id");
+      const tenantData = await fetch(`${API_URL}/tenants/${tenantId}`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json());
+      const selectedClaims = claims.filter(c => selectedForBordereau.includes(c.id));
+      const payer = selectedClaims[0]?.insurance_type || "CNOPS";
+      const res = await fetch(`${API_URL}/bordereau/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          tenant_id: tenantId, claim_ids: selectedForBordereau, payer,
+          hospital_name: tenantData.name || "Établissement de santé",
+          hospital_city: tenantData.city || "",
+          hospital_phone: tenantData.phone || "",
+          hospital_address: tenantData.address || "",
+        }),
+      });
+      if (!res.ok) throw new Error("Erreur génération bordereau");
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url; a.download = `bordereau-${payer}-${Date.now()}.pdf`; a.click();
+      URL.revokeObjectURL(url);
+      setSelectedForBordereau([]);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erreur inconnue";
+      alert("❌ " + message);
+    } finally { setGeneratingBordereau(false); }
+  }
   const filtered = claims.filter(c => {
     const matchSearch =
       search === "" ||
@@ -232,7 +264,18 @@ export default function DossiersPage() {
             <div style={s.topTitle}>Dossiers BAF</div>
             <div style={s.topDate}>{filtered.length} dossier{filtered.length > 1 ? "s" : ""} trouvé{filtered.length > 1 ? "s" : ""}</div>
           </div>
-          <button style={s.topBtnPrimary}>+ Nouveau dossier</button>
+          <div style={{ display: "flex", gap: 8 }}>
+            {selectedForBordereau.length > 0 && (
+              <button
+                style={{ ...s.topBtnPrimary, background: "#16A34A", opacity: generatingBordereau ? 0.6 : 1 }}
+                disabled={generatingBordereau}
+                onClick={generateBordereau}
+              >
+                {generatingBordereau ? "Génération..." : `📄 Bordereau (${selectedForBordereau.length})`}
+              </button>
+            )}
+            <button style={s.topBtnPrimary}>+ Nouveau dossier</button>
+          </div>
         </div>
 
         <div style={s.content}>
@@ -269,6 +312,9 @@ export default function DossiersPage() {
                   <table style={s.table}>
                     <thead>
                       <tr>
+                        <th style={s.th}>
+                          <input type="checkbox" onChange={e => { if (e.target.checked) setSelectedForBordereau(filtered.map(c => c.id)); else setSelectedForBordereau([]); }}/>
+                        </th>
                         {["N° dossier", "Patient", "Caisse", "Montant", "Risque IA", "Statut", "Date service"].map(h => (
                           <th key={h} style={s.th}>{h}</th>
                         ))}
@@ -285,6 +331,15 @@ export default function DossiersPage() {
                             style={selected?.id === claim.id ? { ...s.tr, ...s.trSelected } : s.tr}
                             onClick={() => setSelected(selected?.id === claim.id ? null : claim)}
                           >
+                            <td style={s.td} onClick={e => e.stopPropagation()}>
+                              <input type="checkbox"
+                                checked={selectedForBordereau.includes(claim.id)}
+                                onChange={e => {
+                                  if (e.target.checked) setSelectedForBordereau(prev => [...prev, claim.id]);
+                                  else setSelectedForBordereau(prev => prev.filter(id => id !== claim.id));
+                                }}
+                              />
+                            </td>
                             <td style={s.td}><span style={s.claimNum}>{claim.claim_number}</span></td>
                             <td style={s.td}><span style={s.patientName}>{claim.patient_name}</span></td>
                             <td style={s.td}><span style={{ ...s.badge, background: ps.bg, color: ps.color }}>{claim.insurance_type}</span></td>
@@ -476,15 +531,7 @@ export default function DossiersPage() {
                   </div>
                 )}
 
-                {/* Feedback IA — for resolved claims */}
-                {selected.status !== "pending" && (
-                  <div style={{ ...s.detailSection, borderBottom: "none" }}>
-                    <div style={s.detailSectionTitle}>Feedback IA</div>
-                    <div style={{ fontSize: 11, color: "#6B7280", background: "#F0F4FA", borderRadius: 6, padding: "8px 10px" }}>
-                      ✅ Résultat enregistré — le modèle XGBoost apprendra de ce dossier lors du prochain cycle d&apos;entraînement.
-                    </div>
-                  </div>
-                )}
+                
 
               </div>
             )}
