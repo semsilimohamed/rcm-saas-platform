@@ -372,7 +372,7 @@ export default function SettingsPage() {
                             <option value="biller">Agent BAF</option>
                             <option value="admin">Responsable de Cellule ...</option>
                             <option value="auditor">Auditeur</option>
-                            <option value="director">Chef de BAF</option>
+                            <option value="Responsable de BAF">Chef de BAF</option>
                             <option value="director">Directeur financier</option>
                             <option value="admin">Administrateur</option>
                           </select>
