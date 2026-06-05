@@ -142,6 +142,7 @@ export default function ForclusionPage() {
           <a href="/dashboard/performance" style={s.sbItem}>📈 Performance</a>
           <a href="/dashboard/forclusion" style={{ ...s.sbItem, ...s.sbItemActive }}>⚠️ Forclusion</a>
           <a href="/dashboard/encours" style={s.sbItem}>💰 Encours A/R</a>
+          <a href="/dashboard/financier" style={s.sbItem}>🏦 Activité financière</a>
           <div style={s.sbSec}>Système</div>
           <a href="/dashboard/audit" style={s.sbItem}>📜 Journal d&apos;audit</a>
           <a href="/dashboard/settings" style={s.sbItem}>⚙️ Paramètres</a>

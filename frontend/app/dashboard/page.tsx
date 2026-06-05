@@ -302,7 +302,10 @@ export default function DashboardPage() {
             <span style={s.sbItemIcon}>💰</span>
             <span style={s.sbItemLabel}>Encours A/R</span>
           </a>
-          <a href="/dashboard/financier" style={s.sbItem}>🏦 Activité financière</a>
+          <a href="/dashboard/financier" style={s.sbItem}>
+            <span style={s.sbItemIcon}>🏦</span>
+            <span style={s.sbItemLabel}>Activité financière</span>
+          </a>
           <div style={s.sbSec}>Système</div>
           <a href="/dashboard/audit" style={s.sbItem}>
             <span style={s.sbItemIcon}>📝</span>

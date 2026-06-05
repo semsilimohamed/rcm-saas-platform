@@ -158,6 +158,8 @@ export default function EncoursPage() {
           <Link href="/dashboard/performance" style={s.sbItem}>📈 Performance</Link>
           <Link href="/dashboard/forclusion"  style={s.sbItem}>⚠️ Forclusion</Link>
           <div style={{ ...s.sbItem, ...s.sbItemActive }}>💰 Encours A/R</div>
+          <a href="/dashboard/financier" style={s.sbItem}>🏦 Activité financière</a>
+          
           <div style={s.sbSec}>Système</div>
           <Link href="/dashboard/audit"    style={s.sbItem}>📜 Journal d&apos;audit</Link>
           <Link href="/dashboard/settings" style={s.sbItem}>⚙️ Paramètres</Link>

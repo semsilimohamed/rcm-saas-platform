@@ -150,6 +150,7 @@ export default function AuditPage() {
           <Link href="/dashboard/performance" style={s.sbItem}>📈 Performance</Link>
           <Link href="/dashboard/forclusion"  style={s.sbItem}>⚠️ Forclusion</Link>
           <Link href="/dashboard/encours"     style={s.sbItem}>💰 Encours A/R</Link>
+          <a href="/dashboard/financier" style={s.sbItem}>🏦 Activité financière</a>
           <div style={s.sbSec}>Système</div>
           <div style={{ ...s.sbItem, ...s.sbItemActive }}>📜 Journal d&apos;audit</div>
           <Link href="/dashboard/settings" style={s.sbItem}>⚙️ Paramètres</Link>
