@@ -134,18 +134,18 @@ export default function ForclusionPage() {
         </div>
         <nav style={s.sbNav}>
           <div style={s.sbSec}>Principal</div>
-          <a href="/dashboard" style={s.sbItem}>📊 Tableau de bord</a>
-          <a href="/dashboard/dossiers" style={s.sbItem}>📋 Dossiers BAF</a>
-          <a href="/dashboard/patients" style={s.sbItem}>👥 Patients</a>
-          <a href="/dashboard/prediction" style={s.sbItem}>🧠 Prédiction IA</a>
+          <a href="/dashboard" style={s.sbItem}> Tableau de bord</a>
+          <a href="/dashboard/dossiers" style={s.sbItem}> Dossiers BAF</a>
+          <a href="/dashboard/patients" style={s.sbItem}> Patients</a>
+          <a href="/dashboard/prediction" style={s.sbItem}> Prédiction IA</a>
           <div style={s.sbSec}>Analyse</div>
-          <a href="/dashboard/performance" style={s.sbItem}>📈 Performance</a>
-          <a href="/dashboard/forclusion" style={{ ...s.sbItem, ...s.sbItemActive }}>⚠️ Forclusion</a>
-          <a href="/dashboard/encours" style={s.sbItem}>💰 Encours A/R</a>
-          <a href="/dashboard/financier" style={s.sbItem}>🏦 Activité financière</a>
+          <a href="/dashboard/performance" style={s.sbItem}> Performance</a>
+          <a href="/dashboard/forclusion" style={{ ...s.sbItem, ...s.sbItemActive }}> Forclusion</a>
+          <a href="/dashboard/encours" style={s.sbItem}> Encours A/R</a>
+          <a href="/dashboard/financier" style={s.sbItem}> Activité financière</a>
           <div style={s.sbSec}>Système</div>
-          <a href="/dashboard/audit" style={s.sbItem}>📜 Journal d&apos;audit</a>
-          <a href="/dashboard/settings" style={s.sbItem}>⚙️ Paramètres</a>
+          <a href="/dashboard/audit" style={s.sbItem}> Journal d&apos;audit</a>
+          <a href="/dashboard/settings" style={s.sbItem}> Paramètres</a>
         </nav>
         <div style={s.sbFooter}>
           <button style={s.logoutBtn} onClick={() => {
@@ -329,7 +329,7 @@ const s: Record<string, React.CSSProperties> = {
 
   filterBar: { display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" },
   chip:      { fontSize: 11, fontWeight: 500, padding: "5px 12px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6 },
-  chipActive:{ background: "#E6F1FB", color: "#0F62FE", borderColor: "#B5D4F4" },
+  chipActive:{ background: "#E6F1FB", color: "#0F62FE", border: "0.5px solid #B5D4F4" },
   chipCount: { fontSize: 10, fontWeight: 700, background: "rgba(0,0,0,0.08)", padding: "1px 5px", borderRadius: 10 },
 
   tableCard: { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, overflow: "hidden" },

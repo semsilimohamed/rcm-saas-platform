@@ -131,18 +131,19 @@ export default function PerformancePage() {
         </div>
         <nav style={s.sbNav}>
           <div style={s.sbSec}>Principal</div>
-          <a href="/dashboard" style={s.sbItem}>📊 Tableau de bord</a>
-          <a href="/dashboard/dossiers" style={s.sbItem}>📋 Dossiers BAF</a>
-          <a href="/dashboard/patients" style={s.sbItem}>👥 Patients</a>
-          <a href="/dashboard/prediction" style={s.sbItem}>🧠 Prédiction IA</a>
+          <a href="/dashboard" style={s.sbItem}> Tableau de bord</a>
+          <a href="/dashboard/dossiers" style={s.sbItem}> Dossiers BAF</a>
+          <a href="/dashboard/patients" style={s.sbItem}> Patients</a>
+          <a href="/dashboard/prediction" style={s.sbItem}> Prédiction IA</a>
           <div style={s.sbSec}>Analyse</div>
-          <a href="/dashboard/performance" style={{ ...s.sbItem, ...s.sbItemActive }}>📈 Performance</a>
-          <a href="/dashboard/forclusion" style={s.sbItem}>⚠️ Forclusion</a>
-          <a href="/dashboard/encours" style={s.sbItem}>💰 Encours A/R</a>
-          <a href="/dashboard/financier" style={s.sbItem}>🏦 Activité financière</a>
+          <a href="/dashboard/performance" style={{ ...s.sbItem, ...s.sbItemActive }}> Performance</a>
+          <a href="/dashboard/forclusion" style={s.sbItem}> Forclusion</a>
+          <a href="/dashboard/encours" style={s.sbItem}> Encours A/R</a>
+          <a href="/dashboard/financier" style={s.sbItem}> Activité financière</a>
+          <a href="/dashboard/comptabilite" style={s.sbItem}>📒 Comptabilité DAF</a>
           <div style={s.sbSec}>Système</div>
-          <a href="/dashboard/audit" style={s.sbItem}>📜 Journal d&apos;audit</a>
-          <a href="/dashboard/settings" style={s.sbItem}>⚙️ Paramètres</a>
+          <a href="/dashboard/audit" style={s.sbItem}> Journal d&apos;audit</a>
+          <a href="/dashboard/settings" style={s.sbItem}> Paramètres</a>
         </nav>
         <div style={s.sbFooter}>
           <button style={s.logoutBtn} onClick={() => {

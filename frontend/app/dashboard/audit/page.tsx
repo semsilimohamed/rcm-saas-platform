@@ -142,18 +142,19 @@ export default function AuditPage() {
         </div>
         <nav style={s.sbNav}>
           <div style={s.sbSec}>Principal</div>
-          <Link href="/dashboard"            style={s.sbItem}>📊 Tableau de bord</Link>
-          <Link href="/dashboard/dossiers"   style={s.sbItem}>📋 Dossiers BAF</Link>
-          <Link href="/dashboard/patients"   style={s.sbItem}>👥 Patients</Link>
-          <Link href="/dashboard/prediction" style={s.sbItem}>🧠 Prédiction IA</Link>
+          <Link href="/dashboard"            style={s.sbItem}> Tableau de bord</Link>
+          <Link href="/dashboard/dossiers"   style={s.sbItem}> Dossiers BAF</Link>
+          <Link href="/dashboard/patients"   style={s.sbItem}> Patients</Link>
+          <Link href="/dashboard/prediction" style={s.sbItem}> Prédiction IA</Link>
           <div style={s.sbSec}>Analyse</div>
-          <Link href="/dashboard/performance" style={s.sbItem}>📈 Performance</Link>
-          <Link href="/dashboard/forclusion"  style={s.sbItem}>⚠️ Forclusion</Link>
-          <Link href="/dashboard/encours"     style={s.sbItem}>💰 Encours A/R</Link>
-          <a href="/dashboard/financier" style={s.sbItem}>🏦 Activité financière</a>
+          <Link href="/dashboard/performance" style={s.sbItem}> Performance</Link>
+          <Link href="/dashboard/forclusion"  style={s.sbItem}> Forclusion</Link>
+          <Link href="/dashboard/encours"     style={s.sbItem}> Encours A/R</Link>
+          <Link href="/dashboard/financier" style={s.sbItem}> Activité financière</Link>
+          <Link href="/dashboard/comptabilite" style={s.sbItem}>📒 Comptabilité DAF</Link>
           <div style={s.sbSec}>Système</div>
-          <div style={{ ...s.sbItem, ...s.sbItemActive }}>📜 Journal d&apos;audit</div>
-          <Link href="/dashboard/settings" style={s.sbItem}>⚙️ Paramètres</Link>
+          <div style={{ ...s.sbItem, ...s.sbItemActive }}> Journal d&apos;audit</div>
+          <Link href="/dashboard/settings" style={s.sbItem}> Paramètres</Link>
         </nav>
         <div style={s.sbFooter}>
           <button style={s.logoutBtn} onClick={() => {

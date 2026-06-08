@@ -271,48 +271,48 @@ export default function DashboardPage() {
         <nav style={s.sbNav}>
           <div style={s.sbSec}>Principal</div>
           <a href="/dashboard" style={{ ...s.sbItem, ...s.sbItemActive }}>
-            <span style={s.sbItemIcon}>📈</span>
+            <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Tableau de bord</span>
           </a>
           <a href="/dashboard/dossiers" style={s.sbItem}>
-            <span style={s.sbItemIcon}>📋</span>
+            <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Dossiers BAF</span>
             <span style={s.sbBadge}>{stats?.pending ?? 0}</span>
           </a>
           <a href="/dashboard/patients" style={s.sbItem}>
-            <span style={s.sbItemIcon}>👤</span>
+            <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Patients</span>
           </a>
           <a href="/dashboard/prediction" style={s.sbItem}>
-            <span style={s.sbItemIcon}>🧠</span>
+            <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Prédiction IA</span>
             <span style={{ ...s.sbBadge, background: "#E6F1FB", color: "#185FA5" }}>IA</span>
           </a>
           <div style={s.sbSec}>Analyse</div>
           <a href="/dashboard/performance" style={s.sbItem}>
-            <span style={s.sbItemIcon}>📊</span>
+            <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Performance</span>
           </a>
           <a href="/dashboard/forclusion" style={s.sbItem}>
-            <span style={s.sbItemIcon}>⚠️</span>
+            <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Forclusion</span>
             <span style={{ ...s.sbBadge, ...s.sbBadgeRed }}>{forclusion.length}</span>
           </a>
           <a href="/dashboard/encours" style={s.sbItem}>
-            <span style={s.sbItemIcon}>💰</span>
+            <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Encours A/R</span>
           </a>
           <a href="/dashboard/financier" style={s.sbItem}>
-            <span style={s.sbItemIcon}>🏦</span>
+            <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Activité financière</span>
           </a>
           <div style={s.sbSec}>Système</div>
           <a href="/dashboard/audit" style={s.sbItem}>
-            <span style={s.sbItemIcon}>📝</span>
+            <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Journal d&apos;audit</span>
           </a>
           <a href="/dashboard/settings" style={s.sbItem}>
-            <span style={s.sbItemIcon}>⚙️</span>
+            <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Paramètres</span>
           </a>
         </nav>
@@ -361,11 +361,13 @@ export default function DashboardPage() {
           {/* FORCLUSION ALERT */}
           {showAlert && forclusion.length > 0 && (
             <div style={s.alert}>
-              <span style={s.alertIcon}>⚠</span>
               <span style={s.alertText}>
                 <strong>{forclusion.length} dossier{forclusion.length > 1 ? "s" : ""} à risque de forclusion</strong>
                 {" "}— délai légal dans moins de 7 jours. Action immédiate requise.
               </span>
+              <a href="/dashboard/forclusion" style={s.alertBtn}>
+                Consulter →
+              </a>
               <button style={s.alertClose} onClick={() => setShowAlert(false)}>✕</button>
             </div>
           )}
@@ -884,6 +886,7 @@ const s: Record<string, React.CSSProperties> = {
   alertIcon:  { fontSize: 14, color: "#EA580C", flexShrink: 0 },
   alertText:  { fontSize: 12, color: "#9A3412", flex: 1 },
   alertClose: { fontSize: 12, color: "#9A3412", cursor: "pointer", border: "none", background: "none", padding: 0 },
+  alertBtn: { fontSize: 11, fontWeight: 600, color: "#9A3412", background: "#FED7AA", padding: "4px 10px", borderRadius: 6, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 },
 
   // KPI
   kpiGrid:  { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 12 },

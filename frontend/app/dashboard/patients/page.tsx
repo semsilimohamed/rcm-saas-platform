@@ -38,6 +38,9 @@ export default function PatientsPage() {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteReason, setDeleteReason]       = useState("");
+  const [deleting, setDeleting]               = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("sihaiq_token");
@@ -79,7 +82,27 @@ export default function PatientsPage() {
     } catch { setError("Impossible de contacter le serveur."); }
     finally { setSaving(false); }
   }
-
+  async function deletePatient(patientId: string) {
+    if (!deleteReason) return;
+    setDeleting(true);
+    try {
+      const token     = localStorage.getItem("sihaiq_token");
+      const userEmail = JSON.parse(localStorage.getItem("sihaiq_user") || "{}").email || "inconnu";
+      const res = await fetch(`${API_URL}/patients/${patientId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reason: deleteReason, user_email: userEmail }),
+      });
+      if (!res.ok) throw new Error("Erreur suppression patient");
+      setShowDeleteModal(false);
+      setSelected(null);
+      setDeleteReason("");
+      loadPatients();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erreur inconnue";
+      alert("❌ " + message);
+    } finally { setDeleting(false); }
+  }
   const filtered = patients.filter(p =>
     search === "" ||
     p.full_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -118,18 +141,19 @@ export default function PatientsPage() {
         </div>
         <nav style={s.sbNav}>
           <div style={s.sbSec}>Principal</div>
-          <a href="/dashboard" style={s.sbItem}>📊 Tableau de bord</a>
-          <a href="/dashboard/dossiers" style={s.sbItem}>📋 Dossiers BAF</a>
-          <a href="/dashboard/patients" style={{ ...s.sbItem, ...s.sbItemActive }}>👥 Patients</a>
-          <a href="/dashboard/prediction" style={s.sbItem}>🧠 Prédiction IA</a>
+          <a href="/dashboard" style={s.sbItem}> Tableau de bord</a>
+          <a href="/dashboard/dossiers" style={s.sbItem}> Dossiers BAF</a>
+          <a href="/dashboard/patients" style={{ ...s.sbItem, ...s.sbItemActive }}> Patients</a>
+          <a href="/dashboard/prediction" style={s.sbItem}> Prédiction IA</a>
           <div style={s.sbSec}>Analyse</div>
-          <a href="/dashboard/performance" style={s.sbItem}>📈 Performance</a>
-          <a href="/dashboard/forclusion" style={s.sbItem}>⚠️ Forclusion</a>
-          <a href="/dashboard/encours" style={s.sbItem}>💰 Encours A/R</a>
-          <a href="/dashboard/financier" style={s.sbItem}>🏦 Activité financière</a>
+          <a href="/dashboard/performance" style={s.sbItem}> Performance</a>
+          <a href="/dashboard/forclusion" style={s.sbItem}> Forclusion</a>
+          <a href="/dashboard/encours" style={s.sbItem}> Encours A/R</a>
+          <a href="/dashboard/financier" style={s.sbItem}> Activité financière</a>
+          <a href="/dashboard/comptabilite" style={s.sbItem}>📒 Comptabilité DAF</a>
           <div style={s.sbSec}>Système</div>
-          <a href="/dashboard/audit" style={s.sbItem}>📜 Journal d&apos;audit</a>
-          <a href="/dashboard/settings" style={s.sbItem}>⚙️ Paramètres</a>
+          <a href="/dashboard/audit" style={s.sbItem}> Journal d&apos;audit</a>
+          <a href="/dashboard/settings" style={s.sbItem}> Paramètres</a>
         </nav>
         <div style={s.sbFooter}>
           <button style={s.logoutBtn} onClick={() => {
@@ -278,11 +302,54 @@ export default function PatientsPage() {
                 <a href="/dashboard/dossiers" style={s.viewClaimsBtn}>
                   Voir les dossiers →
                 </a>
+                <button
+                  style={s.deletePatientBtn}
+                  onClick={() => { setDeleteReason(""); setShowDeleteModal(true); }}
+                >
+                   Supprimer ce patient
+                </button>
               </div>
             )}
           </div>
         </div>
       </div>
+      {/* DELETE PATIENT MODAL */}
+      {showDeleteModal && selected && (
+        <div style={s.overlay} onClick={() => setShowDeleteModal(false)}>
+          <div style={s.deleteModal} onClick={e => e.stopPropagation()}>
+            <div style={s.deleteModalHdr}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#1A1D23" }}>Supprimer le patient</div>
+              <button style={{ background: "none", border: "none", fontSize: 16, color: "#9EA3AE", cursor: "pointer" }} onClick={() => setShowDeleteModal(false)}>✕</button>
+            </div>
+            <div style={{ padding: "16px 20px" }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#0F62FE", marginBottom: 10 }}>{selected.full_name}</div>
+              <div style={{ fontSize: 12, color: "#9A3412", background: "#FFF8F0", border: "0.5px solid #FED7AA", borderRadius: 7, padding: "8px 10px", marginBottom: 14 }}>
+                ⚠️ Cette action est irréversible. Tous les dossiers BAF associés seront également supprimés.
+              </div>
+              <label style={{ fontSize: 10, fontWeight: 600, color: "#6B7280", textTransform: "uppercase" as const, letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>
+                Raison de suppression *
+              </label>
+              <input
+                style={{ width: "100%", padding: "9px 12px", border: "0.5px solid #E2E4E9", borderRadius: 8, fontSize: 12, fontFamily: "inherit", outline: "none", boxSizing: "border-box" as const }}
+                placeholder="Ex: doublon, erreur de saisie..."
+                value={deleteReason}
+                onChange={e => setDeleteReason(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div style={{ display: "flex", gap: 10, padding: "14px 20px", borderTop: "0.5px solid #EEF2F8", justifyContent: "flex-end" }}>
+              <button style={s.cancelBtn} onClick={() => setShowDeleteModal(false)}>Annuler</button>
+              <button
+                style={{ ...s.confirmDeleteBtn, opacity: !deleteReason || deleting ? 0.5 : 1 }}
+                disabled={!deleteReason || deleting}
+                onClick={() => deletePatient(selected.id)}
+              >
+                {deleting ? "Suppression..." : "Confirmer la suppression"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -348,4 +415,10 @@ const s: Record<string, React.CSSProperties> = {
   detailLbl:    { fontSize: 12, color: "#6B7280" },
   detailVal:    { fontSize: 12, fontWeight: 500, color: "#1A1D23" },
   viewClaimsBtn:{ display: "block", textAlign: "center", padding: "9px", borderRadius: 7, fontSize: 12, fontWeight: 600, background: "#E6F1FB", color: "#0F62FE", textDecoration: "none", marginTop: 8 },
+deletePatientBtn: { display: "block", width: "100%", textAlign: "center", padding: "9px", borderRadius: 7, fontSize: 12, fontWeight: 500, background: "#FEF2F2", color: "#DC2626", border: "0.5px solid #FCA5A5", cursor: "pointer", marginTop: 8, fontFamily: "inherit" },
+  overlay:      { position: "fixed", inset: 0, background: "rgba(12,27,51,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 },
+  deleteModal:  { background: "#fff", borderRadius: 12, width: "100%", maxWidth: 440, boxShadow: "0 20px 50px rgba(0,0,0,0.18)" },
+  deleteModalHdr: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 20px 14px", borderBottom: "0.5px solid #EEF2F8" },
+  cancelBtn:    { fontSize: 12, fontWeight: 500, padding: "8px 16px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
+  confirmDeleteBtn: { fontSize: 12, fontWeight: 600, padding: "8px 16px", borderRadius: 7, cursor: "pointer", border: "none", background: "#DC2626", color: "#fff", fontFamily: "inherit" },
 };

@@ -159,18 +159,18 @@ export default function FinancierPage() {
         </div>
         <nav style={s.sbNav}>
           <div style={s.sbSec}>Principal</div>
-          <Link href="/dashboard"             style={s.sbItem}>📊 Tableau de bord</Link>
-          <Link href="/dashboard/dossiers"    style={s.sbItem}>📋 Dossiers BAF</Link>
-          <Link href="/dashboard/patients"    style={s.sbItem}>👥 Patients</Link>
-          <Link href="/dashboard/prediction"  style={s.sbItem}>🧠 Prédiction IA</Link>
+          <Link href="/dashboard"             style={s.sbItem}> Tableau de bord</Link>
+          <Link href="/dashboard/dossiers"    style={s.sbItem}> Dossiers BAF</Link>
+          <Link href="/dashboard/patients"    style={s.sbItem}> Patients</Link>
+          <Link href="/dashboard/prediction"  style={s.sbItem}> Prédiction IA</Link>
           <div style={s.sbSec}>Analyse</div>
-          <Link href="/dashboard/performance" style={s.sbItem}>📈 Performance</Link>
-          <Link href="/dashboard/forclusion"  style={s.sbItem}>⚠️ Forclusion</Link>
-          <Link href="/dashboard/encours"     style={s.sbItem}>💰 Encours A/R</Link>
-          <div style={{ ...s.sbItem, ...s.sbItemActive }}>🏦 Activité financière</div>
+          <Link href="/dashboard/performance" style={s.sbItem}> Performance</Link>
+          <Link href="/dashboard/forclusion"  style={s.sbItem}> Forclusion</Link>
+          <Link href="/dashboard/encours"     style={s.sbItem}> Encours A/R</Link>
+          <div style={{ ...s.sbItem, ...s.sbItemActive }}> Activité financière</div>
           <div style={s.sbSec}>Système</div>
-          <Link href="/dashboard/audit"    style={s.sbItem}>📜 Journal d&apos;audit</Link>
-          <Link href="/dashboard/settings" style={s.sbItem}>⚙️ Paramètres</Link>
+          <Link href="/dashboard/audit"    style={s.sbItem}> Journal d&apos;audit</Link>
+          <Link href="/dashboard/settings" style={s.sbItem}> Paramètres</Link>
         </nav>
         <div style={s.sbFooter}>
           <button style={s.logoutBtn} onClick={() => { localStorage.clear(); window.location.href = "/auth/login"; }}>
