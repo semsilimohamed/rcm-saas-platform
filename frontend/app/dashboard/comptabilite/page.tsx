@@ -90,6 +90,19 @@ export default function ComptabilitePage() {
   const [periode, setPeriode] = useState("2026-06");
   const [error, setError]     = useState("");
   const [activeSection, setActiveSection] = useState<"rentabilite"|"tresorerie"|"activite"|"budget">("rentabilite");
+  const [showModal, setShowModal]   = useState(false);
+  const [modalTab, setModalTab]     = useState<"charges"|"tresorerie"|"admissions">("charges");
+  const [saving, setSaving]         = useState(false);
+  const [saveMsg, setSaveMsg]       = useState("");
+  const [formCharges, setFormCharges] = useState({
+    personnel: "", medicaments: "", honoraires: "", frais_generaux: "", amortissements: "",
+  });
+  const [formTreo, setFormTreo] = useState({
+    tresorerie_actif: "", tresorerie_passif: "", actif_circulant: "", passif_circulant: "",
+  });
+  const [formAdm, setFormAdm] = useState({
+    nb_admissions: "", nb_journees: "", ca_total: "",
+  });
 
   async function loadData(p: string) {
     setLoading(true);
@@ -122,7 +135,73 @@ export default function ComptabilitePage() {
 
   const k = data?.kpis;
   const maxTrend = data ? Math.max(...data.monthly_trend.map(m => m.ca), 1) : 1;
+  async function saveCharges() {
+    setSaving(true); setSaveMsg("");
+    try {
+      const token    = localStorage.getItem("sihaiq_token");
+      const tenantId = localStorage.getItem("sihaiq_tenant_id");
+      const entries = [
+        { categorie: "personnel",      montant: parseFloat(formCharges.personnel || "0"),      sous_categorie: "Masse salariale" },
+        { categorie: "medicaments",    montant: parseFloat(formCharges.medicaments || "0"),    sous_categorie: "Pharmacie & DMI" },
+        { categorie: "honoraires",     montant: parseFloat(formCharges.honoraires || "0"),     sous_categorie: "Médecins libéraux" },
+        { categorie: "frais_generaux", montant: parseFloat(formCharges.frais_generaux || "0"), sous_categorie: "Énergie & maintenance" },
+        { categorie: "amortissements", montant: parseFloat(formCharges.amortissements || "0"), sous_categorie: "Équipements médicaux" },
+      ].filter(e => e.montant > 0);
+      for (const entry of entries) {
+        await fetch(`${API_URL}/comptabilite/charges`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ tenant_id: tenantId, periode, ...entry }),
+        });
+      }
+      setSaveMsg("✅ Charges enregistrées avec succès.");
+      setTimeout(() => { setShowModal(false); setSaveMsg(""); loadData(periode); }, 1500);
+    } catch { setSaveMsg("❌ Erreur lors de l'enregistrement."); }
+    finally { setSaving(false); }
+  }
 
+  async function saveTresorerie() {
+    setSaving(true); setSaveMsg("");
+    try {
+      const token    = localStorage.getItem("sihaiq_token");
+      const tenantId = localStorage.getItem("sihaiq_tenant_id");
+      await fetch(`${API_URL}/comptabilite/tresorerie`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          tenant_id: tenantId, periode,
+          tresorerie_actif:  parseFloat(formTreo.tresorerie_actif  || "0"),
+          tresorerie_passif: parseFloat(formTreo.tresorerie_passif || "0"),
+          actif_circulant:   parseFloat(formTreo.actif_circulant   || "0"),
+          passif_circulant:  parseFloat(formTreo.passif_circulant  || "0"),
+        }),
+      });
+      setSaveMsg("✅ Trésorerie enregistrée avec succès.");
+      setTimeout(() => { setShowModal(false); setSaveMsg(""); loadData(periode); }, 1500);
+    } catch { setSaveMsg("❌ Erreur lors de l'enregistrement."); }
+    finally { setSaving(false); }
+  }
+
+  async function saveAdmissions() {
+    setSaving(true); setSaveMsg("");
+    try {
+      const token    = localStorage.getItem("sihaiq_token");
+      const tenantId = localStorage.getItem("sihaiq_tenant_id");
+      await fetch(`${API_URL}/comptabilite/admissions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          tenant_id: tenantId, periode,
+          nb_admissions: parseInt(formAdm.nb_admissions || "0"),
+          nb_journees:   parseInt(formAdm.nb_journees   || "0"),
+          ca_total:      parseFloat(formAdm.ca_total    || "0"),
+        }),
+      });
+      setSaveMsg("✅ Données d'activité enregistrées.");
+      setTimeout(() => { setShowModal(false); setSaveMsg(""); loadData(periode); }, 1500);
+    } catch { setSaveMsg("❌ Erreur lors de l'enregistrement."); }
+    finally { setSaving(false); }
+  }
   if (error) return (
     <div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center", background: "#F0F4FA" }}>
       <div style={{ background: "#fff", borderRadius: 12, padding: 32, maxWidth: 400, textAlign: "center", border: "0.5px solid #E2E4E9" }}>
@@ -190,14 +269,19 @@ export default function ComptabilitePage() {
             <div style={s.topTitle}>Tableau de bord DAF</div>
             <div style={s.topSub}>Comptabilité hospitalière · CGNC · Plan Comptable Marocain · Accès restreint</div>
           </div>
-          <div style={s.periodBar}>
-            {PERIODS.map(p => (
-              <button
-                key={p.key}
-                style={periode === p.key ? { ...s.periodBtn, ...s.periodBtnActive } : s.periodBtn}
-                onClick={() => { setPeriode(p.key); loadData(p.key); }}
-              >{p.lbl}</button>
-            ))}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={s.periodBar}>
+              {PERIODS.map(p => (
+                <button
+                  key={p.key}
+                  style={periode === p.key ? { ...s.periodBtn, ...s.periodBtnActive } : s.periodBtn}
+                  onClick={() => { setPeriode(p.key); loadData(p.key); }}
+                >{p.lbl}</button>
+              ))}
+            </div>
+            <button style={s.saisirBtn} onClick={() => { setShowModal(true); setSaveMsg(""); }}>
+              + Saisir les données
+            </button>
           </div>
         </div>
 
@@ -490,6 +574,128 @@ export default function ComptabilitePage() {
           </div>
         )}
       </div>
+    {/* DATA ENTRY MODAL */}
+      {showModal && (
+        <div style={s.overlay} onClick={() => setShowModal(false)}>
+          <div style={s.modal} onClick={e => e.stopPropagation()}>
+            <div style={s.modalHdr}>
+              <div>
+                <div style={s.modalTitle}>Saisir les données — {periode}</div>
+                <div style={s.modalSub}>Renseignez les données comptables du mois sélectionné</div>
+              </div>
+              <button style={s.closeBtn} onClick={() => setShowModal(false)}>✕</button>
+            </div>
+            {/* Tabs */}
+            <div style={s.modalTabs}>
+              {([
+                { key: "charges",     lbl: "📊 Charges" },
+                { key: "tresorerie",  lbl: "💧 Trésorerie" },
+                { key: "admissions",  lbl: "🏥 Activité" },
+              ] as const).map(t => (
+                <button key={t.key}
+                  style={modalTab === t.key ? { ...s.modalTab, ...s.modalTabActive } : s.modalTab}
+                  onClick={() => setModalTab(t.key)}
+                >{t.lbl}</button>
+              ))}
+            </div>
+
+            <div style={s.modalBody}>
+              {/* CHARGES TAB */}
+              {modalTab === "charges" && (
+                <div>
+                  <div style={s.modalNote}>Saisissez les charges en MAD pour la période {periode}</div>
+                  <div style={s.formGrid}>
+                    {[
+                      { key: "personnel",      lbl: "Personnel (Classe 61)",          placeholder: "Ex: 187000", hint: "Salaires + charges sociales" },
+                      { key: "medicaments",    lbl: "Médicaments & DMI (Classe 61)",  placeholder: "Ex: 91000",  hint: "Pharmacie + dispositifs médicaux" },
+                      { key: "honoraires",     lbl: "Honoraires médecins (Classe 61)",placeholder: "Ex: 87000",  hint: "Praticiens libéraux" },
+                      { key: "frais_generaux", lbl: "Frais généraux (Classe 61)",     placeholder: "Ex: 30000",  hint: "Énergie, maintenance, loyer" },
+                      { key: "amortissements", lbl: "Amortissements (Classe 68)",     placeholder: "Ex: 35000",  hint: "Scanner, IRM, équipements lourds" },
+                    ].map(f => (
+                      <div key={f.key} style={s.formField}>
+                        <label style={s.formLabel}>{f.lbl}</label>
+                        <input
+                          style={s.formInput}
+                          type="number"
+                          placeholder={f.placeholder}
+                          value={formCharges[f.key as keyof typeof formCharges]}
+                          onChange={e => setFormCharges(prev => ({ ...prev, [f.key]: e.target.value }))}
+                        />
+                        <div style={s.formHint}>{f.hint}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {saveMsg && <div style={saveMsg.startsWith("✅") ? s.successMsg : s.errorMsg}>{saveMsg}</div>}
+                  <button style={{ ...s.saveBtn, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={saveCharges}>
+                    {saving ? "Enregistrement..." : "Enregistrer les charges"}
+                  </button>
+                </div>
+              )}
+
+              {/* TRÉSORERIE TAB */}
+              {modalTab === "tresorerie" && (
+                <div>
+                  <div style={s.modalNote}>Soldes de fin de période en MAD — {periode}</div>
+                  <div style={s.formGrid}>
+                    {[
+                      { key: "tresorerie_actif",  lbl: "Trésorerie Actif (Compte 51/52)",   placeholder: "Ex: 187000", hint: "Soldes bancaires + caisse" },
+                      { key: "tresorerie_passif", lbl: "Trésorerie Passif (Compte 56)",      placeholder: "Ex: 45000",  hint: "Découverts + facilités de caisse" },
+                      { key: "actif_circulant",   lbl: "Actif Circulant (Compte 342/35)",    placeholder: "Ex: 312000", hint: "Créances clients + stocks" },
+                      { key: "passif_circulant",  lbl: "Passif Circulant (Compte 441/44)",   placeholder: "Ex: 198000", hint: "Dettes fournisseurs + fiscales" },
+                    ].map(f => (
+                      <div key={f.key} style={s.formField}>
+                        <label style={s.formLabel}>{f.lbl}</label>
+                        <input
+                          style={s.formInput}
+                          type="number"
+                          placeholder={f.placeholder}
+                          value={formTreo[f.key as keyof typeof formTreo]}
+                          onChange={e => setFormTreo(prev => ({ ...prev, [f.key]: e.target.value }))}
+                        />
+                        <div style={s.formHint}>{f.hint}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {saveMsg && <div style={saveMsg.startsWith("✅") ? s.successMsg : s.errorMsg}>{saveMsg}</div>}
+                  <button style={{ ...s.saveBtn, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={saveTresorerie}>
+                    {saving ? "Enregistrement..." : "Enregistrer la trésorerie"}
+                  </button>
+                </div>
+              )}
+
+              {/* ADMISSIONS TAB */}
+              {modalTab === "admissions" && (
+                <div>
+                  <div style={s.modalNote}>Activité hospitalière du mois — {periode}</div>
+                  <div style={s.formGrid}>
+                    {[
+                      { key: "nb_admissions", lbl: "Nombre d'admissions",          placeholder: "Ex: 187",    hint: "Total entrées patients hospitalisés" },
+                      { key: "nb_journees",   lbl: "Nombre de journées",            placeholder: "Ex: 1410",   hint: "Total journées d'hospitalisation facturées" },
+                      { key: "ca_total",      lbl: "Chiffre d'affaires total (MAD)",placeholder: "Ex: 487000", hint: "CA global du mois — toutes prestations" },
+                    ].map(f => (
+                      <div key={f.key} style={s.formField}>
+                        <label style={s.formLabel}>{f.lbl}</label>
+                        <input
+                          style={s.formInput}
+                          type="number"
+                          placeholder={f.placeholder}
+                          value={formAdm[f.key as keyof typeof formAdm]}
+                          onChange={e => setFormAdm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                        />
+                        <div style={s.formHint}>{f.hint}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {saveMsg && <div style={saveMsg.startsWith("✅") ? s.successMsg : s.errorMsg}>{saveMsg}</div>}
+                  <button style={{ ...s.saveBtn, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={saveAdmissions}>
+                    {saving ? "Enregistrement..." : "Enregistrer l'activité"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -541,4 +747,25 @@ const s: Record<string, React.CSSProperties> = {
   th:       { textAlign: "left", padding: "6px 12px", fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #EEF2F8" },
   tr:       { borderBottom: "0.5px solid #F5F7FA" },
   td:       { padding: "10px 12px", verticalAlign: "middle", color: "#57534E" },
+
+  saisirBtn:  { fontSize: 12, fontWeight: 600, padding: "7px 16px", borderRadius: 8, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit" },
+  overlay:    { position: "fixed", inset: 0, background: "rgba(12,27,51,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 },
+  modal:      { background: "#fff", borderRadius: 14, width: "100%", maxWidth: 580, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,0.2)" },
+  modalHdr:   { display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "20px 22px 16px", borderBottom: "0.5px solid #EEF2F8" },
+  modalTitle: { fontSize: 15, fontWeight: 600, color: "#1A1D23" },
+  modalSub:   { fontSize: 11, color: "#9EA3AE", marginTop: 3 },
+  closeBtn:   { background: "none", border: "none", fontSize: 16, color: "#9EA3AE", cursor: "pointer" },
+  modalTabs:  { display: "flex", gap: 0, padding: "12px 22px 0", borderBottom: "0.5px solid #EEF2F8" },
+  modalTab:   { fontSize: 12, fontWeight: 500, padding: "8px 16px", borderRadius: "8px 8px 0 0", cursor: "pointer", border: "none", background: "none", color: "#6B7280", fontFamily: "inherit" },
+  modalTabActive: { background: "#EEEDFB", color: "#5B4FE8", fontWeight: 600 },
+  modalBody:  { padding: "20px 22px" },
+  modalNote:  { fontSize: 12, color: "#9EA3AE", marginBottom: 16, background: "#F8FBFF", padding: "8px 12px", borderRadius: 7 },
+  formGrid:   { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 },
+  formField:  { display: "flex", flexDirection: "column", gap: 4 },
+  formLabel:  { fontSize: 10, fontWeight: 600, color: "#374151", textTransform: "uppercase" as const, letterSpacing: "0.06em" },
+  formInput:  { padding: "9px 12px", border: "0.5px solid #E2E4E9", borderRadius: 8, fontSize: 13, color: "#1A1D23", fontFamily: "inherit", outline: "none" },
+  formHint:   { fontSize: 10, color: "#9EA3AE" },
+  saveBtn:    { width: "100%", padding: "11px", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit", marginTop: 4 },
+  successMsg: { background: "#DCFCE7", border: "0.5px solid #86EFAC", borderRadius: 7, padding: "8px 12px", fontSize: 12, color: "#166534", marginBottom: 10 },
+  errorMsg:   { background: "#FEE2E2", border: "0.5px solid #FCA5A5", borderRadius: 7, padding: "8px 12px", fontSize: 12, color: "#991B1B", marginBottom: 10 },
 };
