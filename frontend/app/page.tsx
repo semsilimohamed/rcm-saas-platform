@@ -396,22 +396,112 @@ export default function LandingPage() {
           <h2 className="section-h2" style={{ marginTop: 10 }}>48 millions de MAD rejetés<br/>chaque jour au Maroc</h2>
           <p className="section-sub" style={{ marginTop: 12, margin: "12px 0 0" }}>
             34 à 38% des dossiers BAF sont rejetés. 90% de ces rejets sont évitables.
-            Pendant ce temps, les charges d&apos;exploitation restent invisibles pour la direction.
+            SihaIQ prédit, explique, et récupère.
           </p>
-          <div className="stats-grid">
+
+          {/* KPI STRIP */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginTop: 40 }}>
             {[
-              { num: "110 000", lbl: "dossiers CNSS / jour", src: "DG Hassan Boubrik · Parlement Mars 2025", color: "var(--violet)" },
-              { num: "34–38%", lbl: "taux de rejet moyen BAF", src: "Cliniques privées marocaines", color: "var(--orange)" },
-              { num: "60 jours", lbl: "délai légal forclusion", src: "Code Sécurité Sociale marocain", color: "var(--red)" },
-              { num: "400+", lbl: "polycliniques cibles", src: "Marché Akdital et indépendants", color: "var(--text)" },
-            ].map(s => (
-              <div key={s.lbl} className="stat-cell">
-                <div className="stat-num" style={{ color: s.color }}>{s.num}</div>
-                <div className="stat-lbl">{s.lbl}</div>
-                <div className="stat-src">{s.src}</div>
+              { lbl: "Dossiers analysés", val: "3 000", sub: "dataset BAF synthétique", color: "#534AB7" },
+              { lbl: "Taux de rejet",     val: "36.5%", sub: "1 095 dossiers rejetés",  color: "#E24B4A" },
+              { lbl: "Précision XGBoost",val: "AUC 0.87", sub: "17 features NGAP",     color: "#1D9E75" },
+              { lbl: "Délai forclusion", val: "60 jours", sub: "délai légal Maroc",     color: "#BA7517" },
+            ].map(k => (
+              <div key={k.lbl} style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 12, padding: "20px 16px", position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: k.color, borderRadius: "12px 12px 0 0" }} />
+                <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 6 }}>{k.lbl}</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: k.color, lineHeight: 1 }}>{k.val}</div>
+                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 5 }}>{k.sub}</div>
               </div>
             ))}
           </div>
+
+          {/* RCM STEP FLOW */}
+          <div style={{ display: "flex", gap: 0, marginTop: 16 }}>
+            {[
+              { lbl: "PEC", sub: "Autorisation caisse", note: "CNOPS · CNSS · AMO", highlight: false },
+              { lbl: "Droits", sub: "Vérification immat.", note: "CIN · éligibilité", highlight: false },
+              { lbl: "BAF", sub: "Création dossier", note: "NGAP · documents", highlight: false },
+              { lbl: "IA", sub: "Prédiction XGBoost", note: "score · SHAP", highlight: true },
+              { lbl: "Envoi", sub: "Soumission bordereau", note: "PDF · caisse", highlight: false },
+              { lbl: "Rejet?", sub: "Contestation", note: "J-60 deadline", highlight: false },
+              { lbl: "Recouvr.", sub: "Remboursement", note: "trésorerie", highlight: false },
+            ].map((step, i) => (
+              <div key={i} style={{ flex: 1, padding: "12px 8px", textAlign: "center", background: step.highlight ? "var(--violet-light)" : "var(--stone)", borderRadius: i === 0 ? "10px 0 0 10px" : i === 6 ? "0 10px 10px 0" : 0, borderRight: i < 6 ? "1px solid var(--border)" : "none", position: "relative" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: step.highlight ? "var(--violet)" : "var(--text)", marginBottom: 2 }}>{step.lbl}</div>
+                <div style={{ fontSize: 9, color: step.highlight ? "var(--violet)" : "var(--text2)", lineHeight: 1.3 }}>{step.sub}</div>
+                <div style={{ fontSize: 8, color: "var(--text3)", marginTop: 2 }}>{step.note}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* CHARTS ROW */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
+            <div style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 12, padding: 20 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 12 }}>Causes de rejet — Pareto BAF</div>
+              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 10, marginBottom: 12, fontSize: 11, color: "var(--text2)" }}>
+                <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#534AB7", marginRight: 4, verticalAlign: "middle" }}></span>Identitovigilance</span>
+                <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#AFA9EC", marginRight: 4, verticalAlign: "middle" }}></span>NGAP coding</span>
+                <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#D3D1C7", marginRight: 4, verticalAlign: "middle" }}></span>Autres</span>
+              </div>
+              <div style={{ position: "relative", width: "100%", height: 180 }}>
+                <canvas id="chart-pareto" role="img" aria-label="Pareto des causes de rejet BAF">Identitovigilance 35%, NGAP 25%, Docs manquants 15%, PEC 12%, Autres 13%.</canvas>
+              </div>
+            </div>
+            <div style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 12, padding: 20 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 12 }}>Répartition rejets par caisse</div>
+              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 10, marginBottom: 12, fontSize: 11, color: "var(--text2)" }}>
+                <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#534AB7", marginRight: 4, verticalAlign: "middle" }}></span>CNOPS 48%</span>
+                <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#1D9E75", marginRight: 4, verticalAlign: "middle" }}></span>CNSS 27%</span>
+                <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#BA7517", marginRight: 4, verticalAlign: "middle" }}></span>AMO 18%</span>
+                <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#D3D1C7", marginRight: 4, verticalAlign: "middle" }}></span>AMO-Tadamon 7%</span>
+              </div>
+              <div style={{ position: "relative", width: "100%", height: 180 }}>
+                <canvas id="chart-payer" role="img" aria-label="Répartition des rejets par caisse">CNOPS 48%, CNSS 27%, AMO 18%, AMO-Tadamon 7%.</canvas>
+              </div>
+            </div>
+          </div>
+
+          {/* SCATTER */}
+          <div style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 12, padding: 20, marginTop: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>Modèle XGBoost — score de risque par dossier</div>
+            <div style={{ display: "flex", gap: 16, marginBottom: 10, fontSize: 11, color: "var(--text2)" }}>
+              <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#E24B4A", marginRight: 4, verticalAlign: "middle" }}></span>Risque ÉLEVÉ (&gt;0.65)</span>
+              <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#BA7517", marginRight: 4, verticalAlign: "middle" }}></span>Risque MODÉRÉ (0.35–0.65)</span>
+              <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#1D9E75", marginRight: 4, verticalAlign: "middle" }}></span>Risque FAIBLE (&lt;0.35)</span>
+            </div>
+            <div style={{ position: "relative", width: "100%", height: 120 }}>
+              <canvas id="chart-scatter" role="img" aria-label="Scatter plot des scores XGBoost sur 60 dossiers">Scores de risque distribués sur 60 dossiers.</canvas>
+            </div>
+          </div>
+
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" async />
+          <script dangerouslySetInnerHTML={{ __html: `            (function() {
+              function initCharts() {
+                if (typeof Chart === 'undefined') { setTimeout(initCharts, 100); return; }
+                const seed = (n) => { let s=n; return ()=>{ s=(s*16807)%2147483647; return (s-1)/2147483646; }; };
+                new Chart(document.getElementById('chart-pareto'), {
+                  type:'bar',
+                  data:{ labels:['Identitovigilance','NGAP coding','Docs manquants','PEC absente','Autres'], datasets:[{ data:[35,25,15,12,13], backgroundColor:['#534AB7','#534AB7','#AFA9EC','#AFA9EC','#D3D1C7'], borderWidth:0, borderRadius:4 }] },
+                  options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'%'}}}, scales:{ x:{grid:{display:false},ticks:{font:{size:10},color:'#888780'}}, y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},color:'#888780',callback:v=>v+'%'},max:45} } }
+                });
+                new Chart(document.getElementById('chart-payer'), {
+                  type:'doughnut',
+                  data:{ labels:['CNOPS','CNSS','AMO','AMO-Tadamon'], datasets:[{ data:[48,27,18,7], backgroundColor:['#534AB7','#1D9E75','#BA7517','#D3D1C7'], borderWidth:2, borderColor:'#FAFAF7' }] },
+                  options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+c.raw+'%'}}} }
+                });
+                const rng=seed(42);
+                const scores=Array.from({length:60},(_,i)=>({x:i+1,y:Math.round(rng()*100)/100}));
+                const colors=scores.map(p=>p.y>0.65?'#E24B4A':p.y>0.35?'#BA7517':'#1D9E75');
+                new Chart(document.getElementById('chart-scatter'), {
+                  type:'scatter',
+                  data:{ datasets:[{ data:scores, backgroundColor:colors, pointRadius:5, pointHoverRadius:7 }] },
+                  options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Dossier #'+c.raw.x+' · Score: '+c.raw.y.toFixed(2)}}}, scales:{ x:{grid:{display:false},ticks:{font:{size:10},color:'#888780'},title:{display:true,text:'N° dossier',font:{size:10},color:'#888780'}}, y:{min:0,max:1,grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},color:'#888780',callback:v=>v.toFixed(1)},title:{display:true,text:'Score rejet',font:{size:10},color:'#888780'}} } }
+                });
+              }
+              initCharts();
+            })();
+          ` }} />
         </div>
       </section>
 
@@ -587,9 +677,7 @@ export default function LandingPage() {
             ].map(l => (
               <a key={l.label} href={l.href} style={{ fontSize: 12, color: "#52514D", textDecoration: "none" }}>{l.label}</a>
             ))}
-            <span style={{ marginLeft: "auto", fontSize: 12, color: "#52514D", display: "flex", alignItems: "center", gap: 6 }}>
-              <span className="live-dot"/> Tous les systèmes opérationnels
-            </span>
+            
           </div>
         </div>
       </footer>
