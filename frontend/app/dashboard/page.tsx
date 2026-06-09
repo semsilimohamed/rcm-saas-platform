@@ -306,6 +306,10 @@ export default function DashboardPage() {
             <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Activité financière</span>
           </a>
+          <a href="/dashboard/comptabilite" style={s.sbItem}>
+          <span style={s.sbItemIcon}></span>
+          <span style={s.sbItemLabel}>Comptabilité DAF</span>
+          </a>
           <div style={s.sbSec}>Système</div>
           <a href="/dashboard/audit" style={s.sbItem}>
             <span style={s.sbItemIcon}></span>

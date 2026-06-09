@@ -45,7 +45,9 @@ export default function LoginPage() {
       localStorage.setItem("sihaiq_token", data.access_token);
       localStorage.setItem("sihaiq_tenant_id", data.tenant_id);
       localStorage.setItem("sihaiq_user", JSON.stringify({ name: data.full_name, role: data.role, email: email }));
-      router.push("/dashboard");
+      const redirect = localStorage.getItem("sihaiq_redirect") || "/dashboard";
+      localStorage.removeItem("sihaiq_redirect");
+      router.push(redirect);
     } catch {
       setError("Impossible de contacter le serveur. Vérifiez que le backend est actif.");
     } finally {

@@ -349,7 +349,7 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <a href="/auth/register" className="module-cta baf">
+              <a href="/dashboard" className="module-cta baf">
                 Accéder au module BAF →
               </a>
             </div>
@@ -377,7 +377,11 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <a href="/auth/register" className="module-cta compta">
+              <a className="module-cta compta" style={{ cursor: "pointer" }}
+                onClick={() => {
+                  localStorage.setItem("sihaiq_redirect", "/dashboard/comptabilite");
+                  window.location.href = "/dashboard/comptabilite";
+                }}>
                 Accéder au module Comptabilité →
               </a>
             </div>
