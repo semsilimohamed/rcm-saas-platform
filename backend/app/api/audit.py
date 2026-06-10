@@ -2,19 +2,20 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db
-from uuid import UUID
+from app.api.auth import get_current_user
+from app.models.user import User
 
-router = APIRouter(prefix="/audit", tags=["Audit"])
+router = APIRouter(prefix="/audit", tags=["Audit"], dependencies=[Depends(get_current_user)])
 
 @router.get("/logs")
-def get_audit_logs(tenant_id: UUID, db: Session = Depends(get_db)):
+def get_audit_logs(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     result = db.execute(text("""
         SELECT id, tenant_id, user_email, action, resource_type, resource_id, details, created_at
         FROM audit_logs
         WHERE tenant_id = :tenant_id
         ORDER BY created_at DESC
         LIMIT 200
-    """), {"tenant_id": str(tenant_id)})
+    """), {"tenant_id": str(current_user.tenant_id)})
     rows = result.fetchall()
     return [
         {

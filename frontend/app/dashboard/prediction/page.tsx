@@ -93,8 +93,9 @@ export default function PredictionPage() {
   async function handlePredict() {
     setLoading(true); setError(""); setResult(null);
     try {
+      const token = localStorage.getItem("sihaiq_token");
       const res = await fetch(`${API_URL}/predict/`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(form),
       });
       if (!res.ok) { setError("Erreur lors de la prédiction."); return; }
@@ -136,12 +137,13 @@ export default function PredictionPage() {
     setBatchRunning(true);
     setBatchProgress(0);
     setBatchDone(false);
+    const token = localStorage.getItem("sihaiq_token");
     const results: BatchRow[] = [...batchRows];
     for (let i = 0; i < rawRows.length; i++) {
       try {
         const payload = buildPayload(rawRows[i]);
         const res = await fetch(`${API_URL}/predict/`, {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify(payload),
         });
         if (res.ok) {

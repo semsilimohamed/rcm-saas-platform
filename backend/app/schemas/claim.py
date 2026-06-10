@@ -4,7 +4,6 @@ from typing import Optional
 from uuid import UUID
 
 class ClaimCreate(BaseModel):
-    tenant_id: UUID
     patient_id: UUID
     claim_number: str
     amount: float

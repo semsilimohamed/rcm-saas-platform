@@ -1,18 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 from app.database import get_db
+from app.api.auth import get_current_user
+from app.models.user import User
 from pydantic import BaseModel
 from typing import List, Optional
+from uuid import UUID
 from datetime import datetime
 import io
 
-router = APIRouter(prefix="/bordereau", tags=["Bordereau"])
+router = APIRouter(prefix="/bordereau", tags=["Bordereau"], dependencies=[Depends(get_current_user)])
 
 class BordereauRequest(BaseModel):
-    tenant_id: str
-    claim_ids: List[str]
+    claim_ids: List[UUID]
     payer: str
     hospital_name: Optional[str] = "Etablissement de sante"
     hospital_address: Optional[str] = ""
@@ -20,20 +22,27 @@ class BordereauRequest(BaseModel):
     hospital_phone: Optional[str] = ""
 
 @router.post("/generate")
-def generate_bordereau(req: BordereauRequest, db: Session = Depends(get_db)):
+def generate_bordereau(
+    req: BordereauRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     if not req.claim_ids:
         raise HTTPException(status_code=400, detail="Aucun dossier selectionne.")
-    placeholders = ",".join([f"'{cid}'" for cid in req.claim_ids])
-    result = db.execute(text(f"""
+    stmt = text("""
         SELECT c.claim_number, p.full_name, c.insurance_type,
                c.service_type, c.service_date, c.amount,
                c.status, c.forclusion_deadline
         FROM claims c
         JOIN patients p ON c.patient_id = p.id
-        WHERE c.id IN ({placeholders})
+        WHERE c.id IN :claim_ids
         AND c.tenant_id = :tenant_id
         ORDER BY c.service_date ASC
-    """), {"tenant_id": req.tenant_id})
+    """).bindparams(bindparam("claim_ids", expanding=True))
+    result = db.execute(stmt, {
+        "claim_ids": [str(cid) for cid in req.claim_ids],
+        "tenant_id": str(current_user.tenant_id),
+    })
     rows = result.fetchall()
     if not rows:
         raise HTTPException(status_code=404, detail="Aucun dossier trouve.")

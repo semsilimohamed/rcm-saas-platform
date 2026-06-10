@@ -61,7 +61,7 @@ export default function ForclusionPage() {
 
     const load = async () => {
       try {
-        const res = await fetch(`${API_URL}/claims/with-patients?tenant_id=${tenantId}`);
+        const res = await fetch(`${API_URL}/claims/with-patients?tenant_id=${tenantId}`, { headers: { Authorization: `Bearer ${token}` } });
         if (res.ok) {
           const all: Claim[] = await res.json();
           // Only show pending claims with forclusion deadline

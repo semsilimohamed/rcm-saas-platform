@@ -5,13 +5,22 @@ from app.database import get_db
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.schemas.tenant import TenantCreate, TenantResponse
+from app.api.auth import get_current_user
 from pydantic import BaseModel
 from typing import List, Optional
 from uuid import UUID
 import uuid
 import bcrypt
 
-router = APIRouter(prefix="/tenants", tags=["Tenants"])
+router = APIRouter(prefix="/tenants", tags=["Tenants"], dependencies=[Depends(get_current_user)])
+
+
+# ── Helpers ────────────────────────────────────────────────────────────────
+
+def ensure_same_tenant(tenant_id: UUID, current_user: User):
+    """Block any access to a tenant other than the caller's own."""
+    if tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=403, detail="Accès refusé à cet établissement.")
 
 
 # ── Schemas ────────────────────────────────────────────────────────────────
@@ -31,7 +40,6 @@ class PasswordChange(BaseModel):
     new_password: str
 
 class NewAgent(BaseModel):
-    tenant_id: str
     full_name: str
     email: str
     password: str
@@ -58,12 +66,14 @@ def create_tenant(tenant: TenantCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=List[TenantResponse])
-def get_tenants(db: Session = Depends(get_db)):
-    return db.query(Tenant).all()
+def get_tenants(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Only return the caller's own tenant — never the full list of hospitals.
+    return db.query(Tenant).filter(Tenant.id == current_user.tenant_id).all()
 
 
 @router.get("/{tenant_id}")
-def get_tenant(tenant_id: UUID, db: Session = Depends(get_db)):
+def get_tenant(tenant_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ensure_same_tenant(tenant_id, current_user)
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
     if not tenant:
         raise HTTPException(status_code=404, detail="Établissement introuvable")
@@ -82,7 +92,8 @@ def get_tenant(tenant_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.patch("/{tenant_id}")
-def update_tenant(tenant_id: UUID, update: TenantUpdate, db: Session = Depends(get_db)):
+def update_tenant(tenant_id: UUID, update: TenantUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ensure_same_tenant(tenant_id, current_user)
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
     if not tenant:
         raise HTTPException(status_code=404, detail="Établissement introuvable")
@@ -109,7 +120,8 @@ def update_tenant(tenant_id: UUID, update: TenantUpdate, db: Session = Depends(g
 # ── User / Agent routes ────────────────────────────────────────────────────
 
 @router.get("/{tenant_id}/users")
-def get_users(tenant_id: UUID, db: Session = Depends(get_db)):
+def get_users(tenant_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ensure_same_tenant(tenant_id, current_user)
     users = db.query(User).filter(User.tenant_id == tenant_id).all()
     return [
         {
@@ -125,7 +137,8 @@ def get_users(tenant_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.post("/{tenant_id}/users")
-def create_agent(tenant_id: UUID, agent: NewAgent, db: Session = Depends(get_db)):
+def create_agent(tenant_id: UUID, agent: NewAgent, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ensure_same_tenant(tenant_id, current_user)
     existing = db.query(User).filter(User.email == agent.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Un compte avec cet email existe déjà.")
@@ -145,7 +158,8 @@ def create_agent(tenant_id: UUID, agent: NewAgent, db: Session = Depends(get_db)
 
 
 @router.patch("/{tenant_id}/users/{user_id}")
-def update_agent(tenant_id: UUID, user_id: UUID, update: UpdateAgent, db: Session = Depends(get_db)):
+def update_agent(tenant_id: UUID, user_id: UUID, update: UpdateAgent, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ensure_same_tenant(tenant_id, current_user)
     user = db.query(User).filter(User.id == user_id, User.tenant_id == tenant_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable")
@@ -156,7 +170,8 @@ def update_agent(tenant_id: UUID, user_id: UUID, update: UpdateAgent, db: Sessio
 
 
 @router.delete("/{tenant_id}/users/{user_id}")
-def delete_agent(tenant_id: UUID, user_id: UUID, db: Session = Depends(get_db)):
+def delete_agent(tenant_id: UUID, user_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ensure_same_tenant(tenant_id, current_user)
     user = db.query(User).filter(User.id == user_id, User.tenant_id == tenant_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable")
@@ -168,8 +183,12 @@ def delete_agent(tenant_id: UUID, user_id: UUID, db: Session = Depends(get_db)):
 # ── Password change ────────────────────────────────────────────────────────
 
 @router.post("/change-password")
-def change_password(req: PasswordChange, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == req.user_id).first()
+def change_password(req: PasswordChange, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # A user may only change a password within their own tenant.
+    user = db.query(User).filter(
+        User.id == req.user_id,
+        User.tenant_id == current_user.tenant_id,
+    ).first()
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable")
     if not bcrypt.checkpw(req.current_password.encode(), user.hashed_password.encode()):

@@ -144,24 +144,6 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
-class PasswordResetRequest(BaseModel):
-    email: str
-    new_password: str
-    admin_secret: str
-
-@router.post("/admin/reset-password")
-def admin_reset_password(request: PasswordResetRequest, db: Session = Depends(get_db)):
-    # Simple secret to prevent unauthorized resets
-    if request.admin_secret != "sihaiq-admin-2026":
-        raise HTTPException(status_code=403, detail="Secret invalide")
-    
-    user = db.query(User).filter(User.email == request.email).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
-    
-    user.hashed_password = hash_password(request.new_password)
-    db.commit()
-    return {"message": f"Mot de passe réinitialisé pour {request.email}"}
 import secrets
 from datetime import datetime, timedelta
 

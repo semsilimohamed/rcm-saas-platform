@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db
+from app.api.auth import get_current_user
+from app.models.user import User
 from uuid import UUID
 from datetime import datetime, timedelta
 
-router = APIRouter(prefix="/financier", tags=["Financier"])
+router = APIRouter(prefix="/financier", tags=["Financier"], dependencies=[Depends(get_current_user)])
 
 def get_period_filter(period: str):
     now = datetime.utcnow()
@@ -21,7 +23,12 @@ def get_period_filter(period: str):
     return f"AND c.created_at >= '{start.isoformat()}'"
 
 @router.get("/summary")
-def get_financier_summary(tenant_id: UUID, period: str = "all", db: Session = Depends(get_db)):
+def get_financier_summary(
+    period: str = "all",
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    tenant_id = current_user.tenant_id
     period_filter = get_period_filter(period)
 
     # Main financial summary by status

@@ -50,9 +50,10 @@ export default function PerformancePage() {
 
     const load = async () => {
       try {
+        const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
         const [sr, cr] = await Promise.all([
-          fetch(`${API_URL}/claims/stats/summary?tenant_id=${tenantId}`),
-          fetch(`${API_URL}/claims/with-patients?tenant_id=${tenantId}`),
+          fetch(`${API_URL}/claims/stats/summary?tenant_id=${tenantId}`, authHeaders),
+          fetch(`${API_URL}/claims/with-patients?tenant_id=${tenantId}`, authHeaders),
         ]);
         if (sr.ok) setStats(await sr.json());
         if (cr.ok) setClaims(await cr.json());

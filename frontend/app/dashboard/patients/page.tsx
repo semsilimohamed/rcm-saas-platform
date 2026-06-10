@@ -50,8 +50,9 @@ export default function PatientsPage() {
 
   async function loadPatients() {
     const tenantId = localStorage.getItem("sihaiq_tenant_id");
+    const token = localStorage.getItem("sihaiq_token");
     try {
-      const res = await fetch(`${API_URL}/patients/?tenant_id=${tenantId}`);
+      const res = await fetch(`${API_URL}/patients/?tenant_id=${tenantId}`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) setPatients(await res.json());
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -61,13 +62,12 @@ export default function PatientsPage() {
     if (!form.full_name) { setError("Le nom est obligatoire."); return; }
     setSaving(true);
     setError("");
-    const tenantId = localStorage.getItem("sihaiq_tenant_id");
+    const token = localStorage.getItem("sihaiq_token");
     try {
       const res = await fetch(`${API_URL}/patients/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          tenant_id: tenantId,
           full_name: form.full_name,
           cin: form.cin || null,
           phone: form.phone || null,

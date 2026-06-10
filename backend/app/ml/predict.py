@@ -2,12 +2,12 @@ import joblib
 import shap
 import numpy as np
 from pathlib import Path
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from typing import Optional
 from app.ml.features import encode_features, FEATURE_NAMES
+from app.api.auth import get_current_user
 
-router = APIRouter(prefix="/predict", tags=["Prediction"])
+router = APIRouter(prefix="/predict", tags=["Prediction"], dependencies=[Depends(get_current_user)])
 
 # Load model once at startup — not on every request
 MODEL_PATH = Path(__file__).parent / "models" / "sihaiq_xgboost_model.pkl"
@@ -52,7 +52,6 @@ class ClaimInput(BaseModel):
     days_since_service: int = 0
     pec_required: int = 0
     pec_obtained: int = 0
-    tenant_id: Optional[str] = None
 
 class PredictionResponse(BaseModel):
     risk_score: float

@@ -2,18 +2,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import NextImage from "next/image";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export default function LandingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeModule, setActiveModule] = useState<"baf"|"compta">("baf");
-
-  useEffect(() => {
-    Promise.resolve().then(() => setIsLoggedIn(!!localStorage.getItem("sihaiq_token")));
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   const footerCols: { title: string; links: { label: string; href: string }[] }[] = [
     { title: "Produit", links: [
@@ -35,6 +30,55 @@ export default function LandingPage() {
     ]},
   ];
 
+  useEffect(() => {
+    Promise.resolve().then(() => setIsLoggedIn(!!localStorage.getItem("sihaiq_token")));
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll);
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const heroTl = gsap.timeline({ delay: 0.2 });
+    heroTl
+      .fromTo(".gsap-hero-label", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" })
+      .fromTo(".gsap-hero-h1", { opacity: 0, y: 50, skewY: 2 }, { opacity: 1, y: 0, skewY: 0, duration: 0.8, ease: "power3.out" }, "-=0.2")
+      .fromTo(".gsap-hero-sub", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.4")
+      .fromTo(".gsap-hero-ctas", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.3")
+      .fromTo(".gsap-proof-strip", { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
+      .fromTo("#hero-visual", { opacity: 0, x: 40, scale: 0.95 }, { opacity: 1, x: 0, scale: 1, duration: 0.9, ease: "power3.out" }, "-=0.8")
+      .fromTo(["#hv-alert", "#hv-ai", "#hv-shap"], { opacity: 0, scale: 0.8, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, stagger: 0.15, ease: "back.out(1.4)" }, "-=0.4");
+
+    gsap.utils.toArray<Element>(".modules-section, .features-section, .testimonial-section, .pricing-section, .problem-section").forEach(section => {
+      gsap.fromTo(section, { opacity: 0, y: 60 }, {
+        opacity: 1, y: 0, duration: 0.8, ease: "power3.out",
+        scrollTrigger: { trigger: section, start: "top 82%", toggleActions: "play none none none" }
+      });
+    });
+
+    gsap.fromTo(".module-card", { opacity: 0, y: 50, scale: 0.96 }, {
+      opacity: 1, y: 0, scale: 1, duration: 0.7, stagger: 0.2, ease: "power3.out",
+      scrollTrigger: { trigger: ".modules-grid", start: "top 78%", toggleActions: "play none none none" }
+    });
+
+    gsap.fromTo(".feat", { opacity: 0, y: 35 }, {
+      opacity: 1, y: 0, duration: 0.5, stagger: 0.07, ease: "power2.out",
+      scrollTrigger: { trigger: ".features-grid", start: "top 78%", toggleActions: "play none none none" }
+    });
+
+    gsap.fromTo(".plan", { opacity: 0, y: 45 }, {
+      opacity: 1, y: 0, duration: 0.6, stagger: 0.15, ease: "power3.out",
+      scrollTrigger: { trigger: ".plan-grid", start: "top 78%", toggleActions: "play none none none" }
+    });
+
+    gsap.fromTo(".hv-bar-fill", { scaleX: 0 }, {
+      scaleX: 1, duration: 1, stagger: 0.1, ease: "power2.out", transformOrigin: "left center", delay: 1.2
+    });
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      ScrollTrigger.getAll().forEach(t => t.kill());
+    };
+  }, []);
+
   return (
     <>
       <style>{`
@@ -42,22 +86,12 @@ export default function LandingPage() {
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-          --white: #FFFFFF;
-          --cream: #FAFAF7;
-          --stone: #F2F1EE;
-          --border: #E5E3DD;
-          --border2: #D1CEC6;
-          --violet: #5B4FE8;
-          --violet2: #7B72F0;
-          --violet-light: #EEEDFB;
-          --orange: #F2711C;
-          --orange2: #F58B4C;
-          --orange-light: #FEF2EA;
-          --text: #1A1814;
-          --text2: #5C5852;
-          --text3: #9C9890;
-          --green: #1A7F4B;
-          --red: #C8352A;
+          --white: #FFFFFF; --cream: #FAFAF7; --stone: #F2F1EE;
+          --border: #E5E3DD; --border2: #D1CEC6;
+          --violet: #5B4FE8; --violet2: #7B72F0; --violet-light: #EEEDFB;
+          --orange: #F2711C; --orange2: #F58B4C; --orange-light: #FEF2EA;
+          --text: #1A1814; --text2: #5C5852; --text3: #9C9890;
+          --green: #1A7F4B; --red: #C8352A;
           --serif: 'DM Serif Display', Georgia, serif;
           --sans: 'DM Sans', -apple-system, system-ui, sans-serif;
           --shadow-sm: 0 1px 4px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
@@ -67,15 +101,8 @@ export default function LandingPage() {
         html { scroll-behavior: smooth; }
         body { font-family: var(--sans); background: var(--white); color: var(--text); -webkit-font-smoothing: antialiased; }
 
-        @keyframes fade-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-
-        .fade-up-0 { animation: fade-up 0.7s ease both; }
-        .fade-up-1 { animation: fade-up 0.7s 0.1s ease both; }
-        .fade-up-2 { animation: fade-up 0.7s 0.2s ease both; }
-        .fade-up-3 { animation: fade-up 0.7s 0.3s ease both; }
+        @keyframes float-badge { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
 
         /* NAV */
         .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 62px; display: flex; align-items: center; transition: all 0.2s; }
@@ -83,7 +110,7 @@ export default function LandingPage() {
         .nav-inner { max-width: 1160px; margin: 0 auto; padding: 0 28px; width: 100%; display: flex; align-items: center; justify-content: space-between; }
         .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
         .logo-mark { width: 32px; height: 32px; border-radius: 9px; background: var(--violet); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(91,79,232,0.35); }
-        .logo-text { font-family: var(--sans); font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.03em; }
+        .logo-text { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.03em; }
         .logo-text span { color: var(--violet); }
         .nav-links { display: flex; gap: 28px; }
         .nav-link { font-size: 13px; font-weight: 500; color: var(--text2); text-decoration: none; transition: color 0.15s; }
@@ -100,45 +127,65 @@ export default function LandingPage() {
         .hero-grid-bg { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 56px 56px; opacity: 0.4; pointer-events: none; }
         .hero-glow-left { position: absolute; top: -20%; left: -10%; width: 600px; height: 600px; background: radial-gradient(ellipse, rgba(91,79,232,0.07) 0%, transparent 70%); pointer-events: none; }
         .hero-glow-right { position: absolute; bottom: -10%; right: -5%; width: 500px; height: 500px; background: radial-gradient(ellipse, rgba(242,113,28,0.06) 0%, transparent 70%); pointer-events: none; }
-        .hero-inner { max-width: 1160px; margin: 0 auto; width: 100%; position: relative; }
+        .hero-inner { max-width: 1160px; margin: 0 auto; width: 100%; position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
         .hero-label { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; color: var(--violet); background: var(--violet-light); padding: 5px 12px; border-radius: 20px; margin-bottom: 28px; letter-spacing: 0.06em; text-transform: uppercase; }
         .hero-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--violet); animation: pulse 2s ease infinite; }
-        .hero-h1 { font-family: var(--serif); font-size: 72px; font-weight: 400; line-height: 1.05; letter-spacing: -0.02em; color: var(--text); margin-bottom: 12px; max-width: 720px; }
+        .hero-h1 { font-family: var(--serif); font-size: 64px; font-weight: 400; line-height: 1.05; letter-spacing: -0.02em; color: var(--text); margin-bottom: 12px; }
         .hero-h1 .italic { font-style: italic; color: var(--violet); }
         .hero-h1 .orange { color: var(--orange); }
-        .hero-sub { font-size: 18px; color: var(--text2); line-height: 1.75; margin-bottom: 40px; max-width: 560px; font-weight: 300; }
+        .hero-sub { font-size: 17px; color: var(--text2); line-height: 1.75; margin-bottom: 40px; font-weight: 300; }
         .hero-sub strong { color: var(--text); font-weight: 600; }
-        .hero-ctas { display: flex; gap: 12px; margin-bottom: 64px; flex-wrap: wrap; }
+        .hero-ctas { display: flex; gap: 12px; margin-bottom: 48px; flex-wrap: wrap; }
         .btn-primary { font-size: 14px; font-weight: 600; color: white; background: var(--violet); padding: 13px 28px; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 16px rgba(91,79,232,0.35); transition: all 0.2s; border: none; cursor: pointer; font-family: var(--sans); }
-        .btn-primary:hover { background: #4A3FD4; transform: translateY(-2px); box-shadow: 0 6px 24px rgba(91,79,232,0.45); }
+        .btn-primary:hover { background: #4A3FD4; transform: translateY(-2px); }
         .btn-secondary { font-size: 14px; font-weight: 500; color: var(--text2); background: white; padding: 13px 28px; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--border); transition: all 0.2s; }
         .btn-secondary:hover { border-color: var(--border2); color: var(--text); background: var(--cream); }
         .btn-orange { font-size: 14px; font-weight: 600; color: white; background: var(--orange); padding: 13px 28px; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 16px rgba(242,113,28,0.35); transition: all 0.2s; border: none; cursor: pointer; font-family: var(--sans); }
         .btn-orange:hover { background: #D9630E; transform: translateY(-2px); }
 
-        /* HERO PROOF STRIP */
-        .proof-strip { display: flex; gap: 36px; flex-wrap: wrap; padding-top: 28px; border-top: 1px solid var(--border); }
+        /* PROOF STRIP */
+        .proof-strip { display: flex; gap: 28px; flex-wrap: wrap; padding-top: 28px; border-top: 1px solid var(--border); }
         .proof-item { display: flex; align-items: center; gap: 8px; }
-        .proof-num { font-family: var(--serif); font-size: 26px; color: var(--text); }
-        .proof-lbl { font-size: 12px; color: var(--text3); line-height: 1.3; }
+        .proof-num { font-family: var(--serif); font-size: 24px; color: var(--text); }
+        .proof-lbl { font-size: 11px; color: var(--text3); line-height: 1.3; }
         .proof-sep { color: var(--border2); }
 
-        /* TWO MODULES SECTION */
+        /* HERO VISUAL */
+        .hero-visual { position: relative; height: 460px; }
+        .hv-card { background: white; border-radius: 14px; border: 1px solid var(--border); box-shadow: 0 8px 40px rgba(0,0,0,0.1); padding: 14px; }
+        .hv-main { position: absolute; top: 0; left: 0; right: 40px; }
+        .hv-card-header { display: flex; align-items: center; gap: 5px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .hv-dot { width: 9px; height: 9px; border-radius: 50%; }
+        .hv-dot-red { background: #FF5F57; }
+        .hv-dot-yellow { background: #FFBD2E; }
+        .hv-dot-green { background: #28C840; }
+        .hv-url { font-size: 10px; color: var(--text3); margin-left: 6px; font-family: monospace; }
+        .hv-kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+        .hv-kpi { background: var(--cream); border-radius: 8px; padding: 10px 8px; text-align: center; }
+        .hv-kpi-val { font-size: 18px; font-weight: 700; line-height: 1; margin-bottom: 3px; }
+        .hv-kpi-lbl { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+        .hv-bars { display: flex; flex-direction: column; gap: 7px; }
+        .hv-bar-row { display: flex; align-items: center; gap: 8px; }
+        .hv-bar-track { flex: 1; height: 5px; background: var(--stone); border-radius: 3px; overflow: hidden; }
+        .hv-bar-fill { height: 100%; border-radius: 3px; }
+        .hv-bar-lbl { font-size: 10px; color: var(--text2); min-width: 80px; }
+        .hv-badge { position: absolute; background: white; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 10px 12px; display: flex; align-items: center; gap: 10px; z-index: 10; }
+        .hv-alert { bottom: 80px; left: -16px; animation: float-badge 3s ease-in-out infinite; }
+        .hv-ai { bottom: 10px; right: 0px; animation: float-badge 3.5s ease-in-out infinite 0.5s; }
+        .hv-shap { top: 190px; right: -10px; min-width: 175px; flex-direction: column; align-items: flex-start; animation: float-badge 4s ease-in-out infinite 1s; }
+        .hv-ai-ring { flex-shrink: 0; }
+
+        /* GSAP initial states */
+        .gsap-hero-label, .gsap-hero-h1, .gsap-hero-sub, .gsap-hero-ctas, .gsap-proof-strip { opacity: 0; }
+        #hero-visual, #hv-alert, #hv-ai, #hv-shap { opacity: 0; }
+
+        /* MODULES */
         .modules-section { padding: 96px 28px; background: var(--cream); border-top: 1px solid var(--border); }
         .modules-inner { max-width: 1160px; margin: 0 auto; }
         .modules-header { text-align: center; margin-bottom: 52px; }
         .eyebrow { font-size: 11px; font-weight: 700; color: var(--violet); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
         .section-h2 { font-family: var(--serif); font-size: 44px; font-weight: 400; letter-spacing: -0.02em; color: var(--text); line-height: 1.2; margin-bottom: 14px; }
         .section-sub { font-size: 16px; color: var(--text2); line-height: 1.7; max-width: 540px; margin: 0 auto; font-weight: 300; }
-
-        /* MODULE TABS */
-        .module-tabs { display: flex; gap: 0; background: var(--stone); border-radius: 12px; padding: 4px; margin-bottom: 32px; max-width: 460px; }
-        .module-tab { flex: 1; padding: 10px 16px; border-radius: 9px; border: none; cursor: pointer; font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--text2); background: none; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 7px; }
-        .module-tab.active { background: white; color: var(--text); font-weight: 600; box-shadow: var(--shadow-sm); }
-        .module-tab.active.baf { color: var(--violet); }
-        .module-tab.active.compta { color: var(--orange); }
-
-        /* MODULE CARDS */
         .modules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .module-card { border-radius: 16px; padding: 32px; border: 1.5px solid var(--border); background: white; transition: all 0.2s; cursor: pointer; position: relative; overflow: hidden; }
         .module-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
@@ -165,15 +212,9 @@ export default function LandingPage() {
         .module-badge.new { background: var(--violet-light); color: var(--violet); }
         .module-badge.soon { background: var(--orange-light); color: var(--orange); }
 
-        /* PROBLEM SECTION */
+        /* PROBLEM */
         .problem-section { padding: 96px 28px; background: var(--white); border-top: 1px solid var(--border); }
         .problem-inner { max-width: 1160px; margin: 0 auto; }
-        .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--border); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); margin-top: 48px; }
-        .stat-cell { background: var(--white); padding: 32px 24px; transition: background 0.15s; }
-        .stat-cell:hover { background: var(--cream); }
-        .stat-num { font-family: var(--serif); font-size: 44px; margin-bottom: 6px; }
-        .stat-lbl { font-size: 13px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
-        .stat-src { font-size: 11px; color: var(--text3); }
 
         /* FEATURES */
         .features-section { padding: 96px 28px; background: var(--cream); border-top: 1px solid var(--border); }
@@ -236,7 +277,6 @@ export default function LandingPage() {
         .footer-col-title { font-size: 10px; font-weight: 700; color: #52514D; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
         .footer-link { font-size: 13px; color: #71706C; display: block; margin-bottom: 10px; text-decoration: none; transition: color 0.15s; cursor: pointer; font-weight: 300; }
         .footer-link:hover { color: #A1A09C; }
-        .footer-bottom { border-top: 1px solid #2A2825; padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
         .footer-copy { font-size: 12px; color: #52514D; font-weight: 300; }
         .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #22C55E; animation: pulse 2s ease infinite; display: inline-block; }
       `}</style>
@@ -277,43 +317,123 @@ export default function LandingPage() {
         <div className="hero-glow-left"/>
         <div className="hero-glow-right"/>
         <div className="hero-inner">
-          <div className="fade-up-0">
-            
+
+          {/* LEFT */}
+          <div>
+            <div className="hero-label gsap-hero-label">
+              <div className="hero-dot"/>
+              Plateforme RCM souveraine · Maroc · CNDP Loi 09-08
+            </div>
+            <h1 className="hero-h1 gsap-hero-h1">
+              Transformez votre activité<br/>
+              hospitalière en <span className="italic">intelligence</span><br/>
+              <span className="orange">financière.</span>
+            </h1>
+            <p className="hero-sub gsap-hero-sub">
+              <strong>Contrôlez vos recettes BAF et maîtrisez vos dépenses.</strong><br/>
+              Une intelligence financière complète pour votre hôpital.
+            </p>
+            <div className="hero-ctas gsap-hero-ctas">
+              <a href="/auth/register" className="btn-primary">
+                Démarrer gratuitement
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+              <a href="#modules" className="btn-secondary">Découvrir nos modules →</a>
+            </div>
+            <div className="proof-strip gsap-proof-strip">
+              {[
+                { num: "88%", lbl: "précision IA" },
+                { num: "−62%", lbl: "taux de rejet" },
+                { num: "2", lbl: "modules" },
+                { num: "0", lbl: "concurrent" },
+              ].map((p, i) => (
+                <span key={i} style={{ display: "contents" }}>
+                  {i > 0 && <span className="proof-sep">·</span>}
+                  <div className="proof-item">
+                    <span className="proof-num">{p.num}</span>
+                    <span className="proof-lbl">{p.lbl}</span>
+                  </div>
+                </span>
+              ))}
+            </div>
           </div>
-          <h1 className="hero-h1 fade-up-1">
-            Transformez votre activité<br/>
-            hospitalière en <span className="italic">intelligence</span><br/>
-            <span className="orange">financière.</span>
-          </h1>
-          <p className="hero-sub fade-up-2">
-            <strong>Contrôlez vos recettes BAF et maîtrisez vos dépenses.</strong><br/>
-            Une intelligence financière complète pour votre hôpital.
-          </p>
-          <div className="hero-ctas fade-up-3">
-            <a href="/auth/register" className="btn-primary">
-              Démarrer gratuitement
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-            <a href="#modules" className="btn-secondary">Découvrir nos modules →</a>
-          </div>
-          <div className="proof-strip fade-up-3">
-            {[
-              { num: "88%", lbl: "précision IA" },
-              { num: "−62%", lbl: "taux de rejet BAF" },
-              { num: "2", lbl: "modules intégrés" },
-              { num: "0", lbl: "concurrent direct" },
-            ].map((p, i) => (
-              <span key={i} style={{ display: "contents" }}>
-                {i > 0 && <span className="proof-sep">·</span>}
-                <div className="proof-item">
-                  <span className="proof-num">{p.num}</span>
-                  <span className="proof-lbl">{p.lbl}</span>
+
+          {/* RIGHT: Floating dashboard */}
+          <div className="hero-visual" id="hero-visual">
+            <div className="hv-card hv-main" id="hv-main">
+              <div className="hv-card-header">
+                <div className="hv-dot hv-dot-red"/><div className="hv-dot hv-dot-yellow"/><div className="hv-dot hv-dot-green"/>
+                <span className="hv-url">app.sihaiq.ma/dashboard</span>
+              </div>
+              <div className="hv-kpis">
+                {[
+                  { lbl: "Dossiers", val: "16", color: "#5B4FE8" },
+                  { lbl: "Taux rejet", val: "37.5%", color: "#E24B4A" },
+                  { lbl: "Recouvrement", val: "75.3%", color: "#1D9E75" },
+                ].map(k => (
+                  <div key={k.lbl} className="hv-kpi">
+                    <div className="hv-kpi-val" style={{ color: k.color }}>{k.val}</div>
+                    <div className="hv-kpi-lbl">{k.lbl}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="hv-bars">
+                {[48, 27, 18, 7].map((w, i) => (
+                  <div key={i} className="hv-bar-row">
+                    <div className="hv-bar-track">
+                      <div className="hv-bar-fill" style={{ width: `${w}%`, background: ["#5B4FE8","#1D9E75","#F2711C","#9CA3AF"][i] }}/>
+                    </div>
+                    <span className="hv-bar-lbl">{["CNOPS","CNSS","AMO","AMO-T"][i]} {w}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="hv-badge hv-alert" id="hv-alert">
+              <span style={{ fontSize: 14 }}>⚠️</span>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#C2410C" }}>3 dossiers forclusion</div>
+                <div style={{ fontSize: 10, color: "#F97316" }}>J-3 · 34 200 MAD</div>
+              </div>
+            </div>
+
+            <div className="hv-badge hv-ai" id="hv-ai">
+              <div className="hv-ai-ring">
+                <svg width="44" height="44" viewBox="0 0 44 44">
+                  <circle cx="22" cy="22" r="18" fill="none" stroke="#EEEDFB" strokeWidth="3"/>
+                  <circle cx="22" cy="22" r="18" fill="none" stroke="#5B4FE8" strokeWidth="3"
+                    strokeDasharray="113" strokeDashoffset="29" strokeLinecap="round"
+                    transform="rotate(-90 22 22)"/>
+                  <text x="22" y="26" textAnchor="middle" fontSize="11" fontWeight="700" fill="#5B4FE8">74%</text>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#3C3489" }}>Score IA moyen</div>
+                <div style={{ fontSize: 10, color: "#7F77DD" }}>XGBoost · actuel</div>
+              </div>
+            </div>
+
+            <div className="hv-badge hv-shap" id="hv-shap">
+              <div style={{ fontSize: 9, fontWeight: 700, color: "#5B4FE8", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 6 }}>Top facteurs de rejet</div>
+              {[
+                { lbl: "Immat. invalide", w: 82, color: "#E24B4A" },
+                { lbl: "NGAP incorrect", w: 64, color: "#F2711C" },
+                { lbl: "PEC absente", w: 48, color: "#BA7517" },
+              ].map(f => (
+                <div key={f.lbl} style={{ marginBottom: 5 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#5C5852", marginBottom: 2 }}>
+                    <span>{f.lbl}</span><span style={{ fontWeight: 600 }}>{f.w}%</span>
+                  </div>
+                  <div style={{ height: 4, background: "#F3F4F6", borderRadius: 2 }}>
+                    <div style={{ width: `${f.w}%`, height: "100%", background: f.color, borderRadius: 2 }}/>
+                  </div>
                 </div>
-              </span>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
+
       {/* RCM CONTEXT */}
       <section style={{ padding: "80px 28px", background: "var(--cream)", borderTop: "1px solid var(--border)" }}>
         <div style={{ maxWidth: 1160, margin: "0 auto" }}>
@@ -347,7 +467,6 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="modules-grid">
-            {/* BAF Module */}
             <div className="module-card baf">
               <div className="module-badge new">Disponible</div>
               <div className="module-icon baf">🏥</div>
@@ -366,16 +485,12 @@ export default function LandingPage() {
                   "Disposition codes : contestation → recouvrement",
                 ].map(f => (
                   <div key={f} className="module-feat">
-                    <span className="module-feat-check baf">✦</span>
-                    {f}
+                    <span className="module-feat-check baf">✦</span>{f}
                   </div>
                 ))}
               </div>
-              <a href="/dashboard" className="module-cta baf">
-                Accéder au module BAF →
-              </a>
+              <a href="/dashboard" className="module-cta baf">Accéder au module BAF →</a>
             </div>
-            {/* Comptabilité Module */}
             <div className="module-card compta">
               <div className="module-badge soon">Nouveau</div>
               <div className="module-icon compta">📊</div>
@@ -394,8 +509,7 @@ export default function LandingPage() {
                   "Conformité Plan Comptable Marocain",
                 ].map(f => (
                   <div key={f} className="module-feat">
-                    <span className="module-feat-check compta">✦</span>
-                    {f}
+                    <span className="module-feat-check compta">✦</span>{f}
                   </div>
                 ))}
               </div>
@@ -420,14 +534,12 @@ export default function LandingPage() {
             34 à 38% des dossiers BAF sont rejetés. 90% de ces rejets sont évitables.
             SihaIQ prédit, explique, et récupère.
           </p>
-
-          {/* KPI STRIP */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginTop: 40 }}>
             {[
               { lbl: "Dossiers analysés", val: "3 000", sub: "dataset BAF synthétique", color: "#534AB7" },
-              { lbl: "Taux de rejet",     val: "36.5%", sub: "1 095 dossiers rejetés",  color: "#E24B4A" },
-              { lbl: "Précision XGBoost",val: "AUC 0.87", sub: "17 features NGAP",     color: "#1D9E75" },
-              { lbl: "Délai forclusion", val: "60 jours", sub: "délai légal Maroc",     color: "#BA7517" },
+              { lbl: "Taux de rejet", val: "36.5%", sub: "1 095 dossiers rejetés", color: "#E24B4A" },
+              { lbl: "Précision XGBoost", val: "AUC 0.87", sub: "17 features NGAP", color: "#1D9E75" },
+              { lbl: "Délai forclusion", val: "60 jours", sub: "délai légal Maroc", color: "#BA7517" },
             ].map(k => (
               <div key={k.lbl} style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 12, padding: "20px 16px", position: "relative", overflow: "hidden" }}>
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: k.color, borderRadius: "12px 12px 0 0" }} />
@@ -437,8 +549,6 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-
-          {/* RCM STEP FLOW */}
           <div style={{ display: "flex", gap: 0, marginTop: 16 }}>
             {[
               { lbl: "PEC", sub: "Autorisation caisse", note: "CNOPS · CNSS · AMO", highlight: false },
@@ -449,15 +559,13 @@ export default function LandingPage() {
               { lbl: "Rejet?", sub: "Contestation", note: "J-60 deadline", highlight: false },
               { lbl: "Recouvr.", sub: "Remboursement", note: "trésorerie", highlight: false },
             ].map((step, i) => (
-              <div key={i} style={{ flex: 1, padding: "12px 8px", textAlign: "center", background: step.highlight ? "var(--violet-light)" : "var(--stone)", borderRadius: i === 0 ? "10px 0 0 10px" : i === 6 ? "0 10px 10px 0" : 0, borderRight: i < 6 ? "1px solid var(--border)" : "none", position: "relative" }}>
+              <div key={i} style={{ flex: 1, padding: "12px 8px", textAlign: "center", background: step.highlight ? "var(--violet-light)" : "var(--stone)", borderRadius: i === 0 ? "10px 0 0 10px" : i === 6 ? "0 10px 10px 0" : 0, borderRight: i < 6 ? "1px solid var(--border)" : "none" }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: step.highlight ? "var(--violet)" : "var(--text)", marginBottom: 2 }}>{step.lbl}</div>
                 <div style={{ fontSize: 9, color: step.highlight ? "var(--violet)" : "var(--text2)", lineHeight: 1.3 }}>{step.sub}</div>
                 <div style={{ fontSize: 8, color: "var(--text3)", marginTop: 2 }}>{step.note}</div>
               </div>
             ))}
           </div>
-
-          {/* CHARTS ROW */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
             <div style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 12, padding: 20 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 12 }}>Causes de rejet — Pareto BAF</div>
@@ -483,8 +591,6 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-
-          {/* SCATTER */}
           <div style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 12, padding: 20, marginTop: 16 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>Modèle XGBoost — score de risque par dossier</div>
             <div style={{ display: "flex", gap: 16, marginBottom: 10, fontSize: 11, color: "var(--text2)" }}>
@@ -496,9 +602,9 @@ export default function LandingPage() {
               <canvas id="chart-scatter" role="img" aria-label="Scatter plot des scores XGBoost sur 60 dossiers">Scores de risque distribués sur 60 dossiers.</canvas>
             </div>
           </div>
-          
           <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" async />
-          <script dangerouslySetInnerHTML={{ __html: `            (function() {
+          <script dangerouslySetInnerHTML={{ __html: `
+            (function() {
               function initCharts() {
                 if (typeof Chart === 'undefined') { setTimeout(initCharts, 100); return; }
                 const seed = (n) => { let s=n; return ()=>{ s=(s*16807)%2147483647; return (s-1)/2147483646; }; };
@@ -535,12 +641,8 @@ export default function LandingPage() {
             <h2 className="section-h2" style={{ marginTop: 10 }}>Tout ce dont votre équipe a besoin</h2>
           </div>
           <div className="features-toggle">
-            <button className={`ftab ${activeModule === "baf" ? "active" : ""}`} onClick={() => setActiveModule("baf")}>
-              🏥 Module BAF
-            </button>
-            <button className={`ftab ${activeModule === "compta" ? "active" : ""}`} onClick={() => setActiveModule("compta")}>
-              📊 Module Comptabilité
-            </button>
+            <button className={`ftab ${activeModule === "baf" ? "active" : ""}`} onClick={() => setActiveModule("baf")}>🏥 Module BAF</button>
+            <button className={`ftab ${activeModule === "compta" ? "active" : ""}`} onClick={() => setActiveModule("compta")}>📊 Module Comptabilité</button>
           </div>
           {activeModule === "baf" ? (
             <div className="features-grid">
@@ -607,9 +709,7 @@ export default function LandingPage() {
           <div style={{ textAlign: "center" }}>
             <div className="eyebrow">Tarifs</div>
             <h2 className="section-h2" style={{ marginTop: 10 }}>Simple. Transparent. Basé sur la valeur.</h2>
-            <p className="section-sub" style={{ marginTop: 12 }}>
-              Pas de frais cachés. Annulable à tout moment.
-            </p>
+            <p className="section-sub" style={{ marginTop: 12 }}>Pas de frais cachés. Annulable à tout moment.</p>
           </div>
           <div className="plan-grid">
             {[
@@ -649,9 +749,7 @@ export default function LandingPage() {
             Démarrez en moins de 5 minutes. Vos premières prédictions IA en moins d&apos;une heure.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/auth/register" className="btn-orange" style={{ fontSize: 15, padding: "14px 32px" }}>
-              Créer un compte gratuit →
-            </a>
+            <a href="/auth/register" className="btn-orange" style={{ fontSize: 15, padding: "14px 32px" }}>Créer un compte gratuit →</a>
             <a href="mailto:contact@sihaiq.ma" style={{ fontSize: 15, fontWeight: 400, color: "rgba(255,255,255,0.7)", padding: "14px 24px", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 10, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}>
               Parler à un expert
             </a>
@@ -699,7 +797,9 @@ export default function LandingPage() {
             ].map(l => (
               <a key={l.label} href={l.href} style={{ fontSize: 12, color: "#52514D", textDecoration: "none" }}>{l.label}</a>
             ))}
-           
+            <span style={{ marginLeft: "auto", fontSize: 12, color: "#52514D", display: "flex", alignItems: "center", gap: 6 }}>
+              <span className="live-dot"/> Tous les systèmes opérationnels
+            </span>
           </div>
         </div>
       </footer>

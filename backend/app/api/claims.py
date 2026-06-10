@@ -5,8 +5,10 @@ from sqlalchemy import func, text
 from app.database import get_db
 from app.models.claim import Claim
 from app.models.patient import Patient
+from app.models.user import User
 from app.schemas.claim import ClaimCreate, ClaimResponse
 from app.ml.features import encode_features
+from app.api.auth import get_current_user
 from typing import List, Optional
 from uuid import UUID
 from datetime import timedelta, date, datetime
@@ -16,7 +18,7 @@ import shap
 import json
 from pathlib import Path
 
-router = APIRouter(prefix="/claims", tags=["Claims"])
+router = APIRouter(prefix="/claims", tags=["Claims"], dependencies=[Depends(get_current_user)])
 
 # ── Load model once at startup ─────────────────────────────────────────────
 MODEL_PATH = Path(__file__).parent.parent / "ml" / "models" / "sihaiq_xgboost_model.pkl"
@@ -57,7 +59,6 @@ class StatusUpdate(BaseModel):
     status: str
     rejection_reason: Optional[str] = None
     contestation_reason: Optional[str] = None
-    user_email: Optional[str] = None
 
 # ── ML helper ─────────────────────────────────────────────────────────────
 def run_prediction(claim_data: dict) -> dict:
@@ -100,8 +101,20 @@ def run_prediction(claim_data: dict) -> dict:
 # ── Routes ─────────────────────────────────────────────────────────────────
 
 @router.post("/", response_model=ClaimResponse)
-def create_claim(claim: ClaimCreate, db: Session = Depends(get_db)):
+def create_claim(
+    claim: ClaimCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     service_date = claim.service_date.date() if hasattr(claim.service_date, 'date') else claim.service_date
+
+    # Ensure the patient belongs to the caller's tenant before creating a claim.
+    patient = db.query(Patient).filter(
+        Patient.id == claim.patient_id,
+        Patient.tenant_id == current_user.tenant_id,
+    ).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient introuvable")
 
     prediction = run_prediction({
         "payer": claim.insurance_type,
@@ -111,7 +124,7 @@ def create_claim(claim: ClaimCreate, db: Session = Depends(get_db)):
 
     new_claim = Claim(
         id=uuid.uuid4(),
-        tenant_id=claim.tenant_id,
+        tenant_id=current_user.tenant_id,
         patient_id=claim.patient_id,
         claim_number=claim.claim_number,
         amount=claim.amount,
@@ -133,7 +146,8 @@ def create_claim(claim: ClaimCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/stats/summary")
-def get_stats(tenant_id: UUID, db: Session = Depends(get_db)):
+def get_stats(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    tenant_id = current_user.tenant_id
     total = db.query(func.count(Claim.id)).filter(Claim.tenant_id == tenant_id).scalar()
     pending = db.query(func.count(Claim.id)).filter(Claim.tenant_id == tenant_id, Claim.status == "pending").scalar()
     approved = db.query(func.count(Claim.id)).filter(Claim.tenant_id == tenant_id, Claim.status == "approved").scalar()
@@ -152,11 +166,11 @@ def get_stats(tenant_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/with-patients")
-def get_claims_with_patients(tenant_id: UUID, db: Session = Depends(get_db)):
+def get_claims_with_patients(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     results = (
         db.query(Claim, Patient.full_name)
         .join(Patient, Claim.patient_id == Patient.id)
-        .filter(Claim.tenant_id == tenant_id)
+        .filter(Claim.tenant_id == current_user.tenant_id)
         .all()
     )
     claims_with_names = []
@@ -181,13 +195,16 @@ def get_claims_with_patients(tenant_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=List[ClaimResponse])
-def get_claims(tenant_id: UUID, db: Session = Depends(get_db)):
-    return db.query(Claim).filter(Claim.tenant_id == tenant_id).all()
+def get_claims(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return db.query(Claim).filter(Claim.tenant_id == current_user.tenant_id).all()
 
 
 @router.get("/{claim_id}", response_model=ClaimResponse)
-def get_claim(claim_id: UUID, db: Session = Depends(get_db)):
-    claim = db.query(Claim).filter(Claim.id == claim_id).first()
+def get_claim(claim_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    claim = db.query(Claim).filter(
+        Claim.id == claim_id,
+        Claim.tenant_id == current_user.tenant_id,
+    ).first()
     if not claim:
         raise HTTPException(status_code=404, detail="Claim not found")
     return claim
@@ -197,9 +214,13 @@ def get_claim(claim_id: UUID, db: Session = Depends(get_db)):
 def update_claim_status(
     claim_id: UUID,
     update: StatusUpdate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    claim = db.query(Claim).filter(Claim.id == claim_id).first()
+    claim = db.query(Claim).filter(
+        Claim.id == claim_id,
+        Claim.tenant_id == current_user.tenant_id,
+    ).first()
     if not claim:
         raise HTTPException(status_code=404, detail="Dossier introuvable")
 
@@ -264,7 +285,7 @@ def update_claim_status(
     write_audit_log(
         db,
         tenant_id=str(claim.tenant_id),
-        user_email=update.user_email or "inconnu",
+        user_email=current_user.email,
         action=action,
         resource_type="claim",
         resource_id=claim.claim_number,
@@ -282,11 +303,18 @@ def update_claim_status(
     }
 class DeleteClaimRequest(BaseModel):
     reason: str
-    user_email: Optional[str] = None
 
 @router.delete("/{claim_id}")
-def delete_claim(claim_id: UUID, request: DeleteClaimRequest, db: Session = Depends(get_db)):
-    claim = db.query(Claim).filter(Claim.id == claim_id).first()
+def delete_claim(
+    claim_id: UUID,
+    request: DeleteClaimRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    claim = db.query(Claim).filter(
+        Claim.id == claim_id,
+        Claim.tenant_id == current_user.tenant_id,
+    ).first()
     if not claim:
         raise HTTPException(status_code=404, detail="Dossier introuvable")
     claim_number = claim.claim_number
@@ -298,7 +326,7 @@ def delete_claim(claim_id: UUID, request: DeleteClaimRequest, db: Session = Depe
     write_audit_log(
         db,
         tenant_id=tenant_id,
-        user_email=request.user_email or "inconnu",
+        user_email=current_user.email,
         action="DOSSIER_SUPPRIMÉ",
         resource_type="claim",
         resource_id=claim_number,

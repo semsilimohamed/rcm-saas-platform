@@ -79,7 +79,7 @@ export default function EncoursPage() {
       if (!token) { window.location.href = "/auth/login"; return; }
       const tenantId = localStorage.getItem("sihaiq_tenant_id");
       try {
-        const res = await fetch(`${API_URL}/claims/with-patients?tenant_id=${tenantId}`);
+        const res = await fetch(`${API_URL}/claims/with-patients?tenant_id=${tenantId}`, { headers: { Authorization: `Bearer ${token}` } });
         if (res.ok) setClaims(await res.json());
       } catch (e) { console.error(e); }
       finally { setLoading(false); }

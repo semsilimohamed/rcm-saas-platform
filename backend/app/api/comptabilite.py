@@ -2,17 +2,23 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db
+from app.api.auth import get_current_user
+from app.models.user import User
 from pydantic import BaseModel
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
 
-router = APIRouter(prefix="/comptabilite", tags=["Comptabilite"])
+router = APIRouter(prefix="/comptabilite", tags=["Comptabilite"], dependencies=[Depends(get_current_user)])
 
 # ── GET SUMMARY ────────────────────────────────────────────────────────────
 @router.get("/summary")
-def get_summary(tenant_id: UUID, periode: str = "2026-06", db: Session = Depends(get_db)):
-    tid = str(tenant_id)
+def get_summary(
+    periode: str = "2026-06",
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    tid = str(current_user.tenant_id)
 
     # 1. Charges par catégorie
     charges = db.execute(text("""
@@ -183,7 +189,6 @@ def get_summary(tenant_id: UUID, periode: str = "2026-06", db: Session = Depends
 
 # ── SAISIE CHARGES ─────────────────────────────────────────────────────────
 class ChargeCreate(BaseModel):
-    tenant_id: str
     periode: str
     categorie: str
     sous_categorie: Optional[str] = None
@@ -191,12 +196,16 @@ class ChargeCreate(BaseModel):
     description: Optional[str] = None
 
 @router.post("/charges")
-def add_charge(charge: ChargeCreate, db: Session = Depends(get_db)):
+def add_charge(
+    charge: ChargeCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     db.execute(text("""
         INSERT INTO acc_charges (tenant_id, periode, categorie, sous_categorie, montant, description)
         VALUES (:tid, :periode, :cat, :sous_cat, :montant, :desc)
     """), {
-        "tid": charge.tenant_id, "periode": charge.periode,
+        "tid": str(current_user.tenant_id), "periode": charge.periode,
         "cat": charge.categorie, "sous_cat": charge.sous_categorie,
         "montant": charge.montant, "desc": charge.description
     })
@@ -205,7 +214,6 @@ def add_charge(charge: ChargeCreate, db: Session = Depends(get_db)):
 
 # ── SAISIE TRÉSORERIE ──────────────────────────────────────────────────────
 class TresorerieUpdate(BaseModel):
-    tenant_id: str
     periode: str
     tresorerie_actif: float
     tresorerie_passif: float
@@ -213,10 +221,15 @@ class TresorerieUpdate(BaseModel):
     passif_circulant: float
 
 @router.post("/tresorerie")
-def update_tresorerie(data: TresorerieUpdate, db: Session = Depends(get_db)):
+def update_tresorerie(
+    data: TresorerieUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    tid = str(current_user.tenant_id)
     existing = db.execute(text("""
         SELECT id FROM acc_tresorerie WHERE tenant_id = :tid AND periode = :periode
-    """), {"tid": data.tenant_id, "periode": data.periode}).fetchone()
+    """), {"tid": tid, "periode": data.periode}).fetchone()
     if existing:
         db.execute(text("""
             UPDATE acc_tresorerie
@@ -225,12 +238,12 @@ def update_tresorerie(data: TresorerieUpdate, db: Session = Depends(get_db)):
             WHERE tenant_id = :tid AND periode = :periode
         """), {"ta": data.tresorerie_actif, "tp": data.tresorerie_passif,
                "ac": data.actif_circulant, "pc": data.passif_circulant,
-               "tid": data.tenant_id, "periode": data.periode})
+               "tid": tid, "periode": data.periode})
     else:
         db.execute(text("""
             INSERT INTO acc_tresorerie (tenant_id, periode, tresorerie_actif, tresorerie_passif, actif_circulant, passif_circulant)
             VALUES (:tid, :periode, :ta, :tp, :ac, :pc)
-        """), {"tid": data.tenant_id, "periode": data.periode,
+        """), {"tid": tid, "periode": data.periode,
                "ta": data.tresorerie_actif, "tp": data.tresorerie_passif,
                "ac": data.actif_circulant, "pc": data.passif_circulant})
     db.commit()
@@ -238,28 +251,32 @@ def update_tresorerie(data: TresorerieUpdate, db: Session = Depends(get_db)):
 
 # ── SAISIE ADMISSIONS ──────────────────────────────────────────────────────
 class AdmissionsUpdate(BaseModel):
-    tenant_id: str
     periode: str
     nb_admissions: int
     nb_journees: int
     ca_total: float
 
 @router.post("/admissions")
-def update_admissions(data: AdmissionsUpdate, db: Session = Depends(get_db)):
+def update_admissions(
+    data: AdmissionsUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    tid = str(current_user.tenant_id)
     existing = db.execute(text("""
         SELECT id FROM acc_admissions WHERE tenant_id = :tid AND periode = :periode
-    """), {"tid": data.tenant_id, "periode": data.periode}).fetchone()
+    """), {"tid": tid, "periode": data.periode}).fetchone()
     if existing:
         db.execute(text("""
             UPDATE acc_admissions SET nb_admissions = :nb, nb_journees = :nj, ca_total = :ca
             WHERE tenant_id = :tid AND periode = :periode
         """), {"nb": data.nb_admissions, "nj": data.nb_journees, "ca": data.ca_total,
-               "tid": data.tenant_id, "periode": data.periode})
+               "tid": tid, "periode": data.periode})
     else:
         db.execute(text("""
             INSERT INTO acc_admissions (tenant_id, periode, nb_admissions, nb_journees, ca_total)
             VALUES (:tid, :periode, :nb, :nj, :ca)
-        """), {"tid": data.tenant_id, "periode": data.periode,
+        """), {"tid": tid, "periode": data.periode,
                "nb": data.nb_admissions, "nj": data.nb_journees, "ca": data.ca_total})
     db.commit()
     return {"message": "Admissions mises à jour"}

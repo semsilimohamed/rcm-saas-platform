@@ -4,7 +4,6 @@ from typing import Optional
 from uuid import UUID
 
 class PatientCreate(BaseModel):
-    tenant_id: UUID
     full_name: str
     cin: Optional[str] = None
     date_of_birth: Optional[date] = None
