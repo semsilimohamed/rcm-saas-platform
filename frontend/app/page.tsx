@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import NextImage from "next/image";
 
 export default function LandingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -474,7 +475,16 @@ export default function LandingPage() {
               <canvas id="chart-scatter" role="img" aria-label="Scatter plot des scores XGBoost sur 60 dossiers">Scores de risque distribués sur 60 dossiers.</canvas>
             </div>
           </div>
-
+          {/* RCM CYCLE IMAGE */}
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 40 }}>
+            <NextImage
+              src="/rcm-cycle.png"
+              alt="Cycle RCM — 7 étapes BAF Maroc"
+              width={520}
+              height={520}
+              style={{ width: "100%", maxWidth: 520, height: "auto", borderRadius: 16 }}
+            />
+          </div>
           <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" async />
           <script dangerouslySetInnerHTML={{ __html: `            (function() {
               function initCharts() {
@@ -677,7 +687,7 @@ export default function LandingPage() {
             ].map(l => (
               <a key={l.label} href={l.href} style={{ fontSize: 12, color: "#52514D", textDecoration: "none" }}>{l.label}</a>
             ))}
-            
+            no 
           </div>
         </div>
       </footer>
