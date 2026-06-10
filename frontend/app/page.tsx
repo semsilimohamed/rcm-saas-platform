@@ -314,6 +314,27 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      {/* RCM CONTEXT */}
+      <section style={{ padding: "80px 28px", background: "var(--cream)", borderTop: "1px solid var(--border)" }}>
+        <div style={{ maxWidth: 1160, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div className="eyebrow">Comprendre le cycle</div>
+            <h2 className="section-h2" style={{ marginTop: 10 }}>Le cycle de remboursement hospitalier</h2>
+            <p className="section-sub" style={{ marginTop: 12 }}>
+              De la prise en charge patient jusqu&apos;au remboursement caisse — SihaIQ automatise et sécurise chaque étape.
+            </p>
+          </div>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <NextImage
+              src="/1781076850750_image.png"
+              alt="Cycle Revenue Cycle Management — processus hospitalier complet"
+              width={620}
+              height={620}
+              style={{ width: "100%", maxWidth: 620, height: "auto", borderRadius: 20 }}
+            />
+          </div>
+        </div>
+      </section>
 
       {/* TWO MODULES */}
       <section id="modules" className="modules-section">
@@ -475,16 +496,7 @@ export default function LandingPage() {
               <canvas id="chart-scatter" role="img" aria-label="Scatter plot des scores XGBoost sur 60 dossiers">Scores de risque distribués sur 60 dossiers.</canvas>
             </div>
           </div>
-          {/* RCM CYCLE IMAGE */}
-          <div style={{ display: "flex", justifyContent: "center", marginTop: 40 }}>
-            <NextImage
-              src="/rcm-cycle.png"
-              alt="Cycle RCM — 7 étapes BAF Maroc"
-              width={520}
-              height={520}
-              style={{ width: "100%", maxWidth: 520, height: "auto", borderRadius: 16 }}
-            />
-          </div>
+          
           <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" async />
           <script dangerouslySetInnerHTML={{ __html: `            (function() {
               function initCharts() {
@@ -687,7 +699,7 @@ export default function LandingPage() {
             ].map(l => (
               <a key={l.label} href={l.href} style={{ fontSize: 12, color: "#52514D", textDecoration: "none" }}>{l.label}</a>
             ))}
-            no 
+           
           </div>
         </div>
       </footer>
