@@ -35,17 +35,17 @@ interface Stats {
 function LogoMark({ size = 26 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="0" width="44" height="44" rx="11" fill="#0F62FE" />
+      <rect x="0" y="0" width="44" height="44" rx="11" fill="#5B4FE8" />
       <circle cx="22" cy="22" r="6" fill="white" />
-      <circle cx="22" cy="22" r="2.8" fill="#0F62FE" />
+      <circle cx="22" cy="22" r="2.8" fill="#5B4FE8" />
       <line x1="22" y1="7"    x2="22" y2="14"   stroke="white"   strokeWidth="2.2" strokeLinecap="round" />
       <line x1="22" y1="30"   x2="22" y2="37"   stroke="white"   strokeWidth="2.2" strokeLinecap="round" />
       <line x1="7"  y1="22"   x2="14" y2="22"   stroke="white"   strokeWidth="2.2" strokeLinecap="round" />
       <line x1="30" y1="22"   x2="37" y2="22"   stroke="white"   strokeWidth="2.2" strokeLinecap="round" />
-      <line x1="12"   y1="12"   x2="16.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round" />
-      <line x1="27.5" y1="27.5" x2="32"   y2="32"   stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round" />
-      <line x1="32"   y1="12"   x2="27.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round" />
-      <line x1="16.5" y1="27.5" x2="12"   y2="32"   stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="12"   y1="12"   x2="16.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="27.5" y1="27.5" x2="32"   y2="32"   stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="32"   y1="12"   x2="27.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="16.5" y1="27.5" x2="12"   y2="32"   stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }
@@ -74,7 +74,7 @@ function statusLabel(status: string) {
 }
 
 function payerStyle(payer: string) {
-  if (payer === "CNOPS") return { bg: "#E6F1FB", color: "#1E40AF" };
+  if (payer === "CNOPS") return { bg: "#EEEDFB", color: "#1E40AF" };
   if (payer === "CNSS")  return { bg: "#F0FDF4", color: "#166534" };
   if (payer === "AMO")   return { bg: "#FFF7ED", color: "#9A3412" };
   return { bg: "#F5F3FF", color: "#6D28D9" };
@@ -255,6 +255,21 @@ export default function DashboardPage() {
 
   return (
     <div style={s.shell}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+        .sb-item, .db-chip, .db-btn-ghost, .db-btn-primary, .db-logout, .db-choice, .db-link { transition: all 0.15s ease; }
+        .sb-item:hover { background: #F2F1EE !important; color: #1A1814 !important; }
+        .db-chip:hover { border-color: #C7C2F7 !important; color: #5B4FE8 !important; }
+        .db-btn-ghost:hover { background: #FAFAF7 !important; color: #1A1814 !important; border-color: #D1CEC6 !important; }
+        .db-btn-primary:hover:not(:disabled) { background: #4A3FD4 !important; box-shadow: 0 2px 12px rgba(91,79,232,0.35); }
+        .db-logout:hover { background: #FEE2E2 !important; }
+        .db-choice:hover { border-color: #5B4FE8 !important; transform: translateY(-2px); box-shadow: 0 8px 22px rgba(91,79,232,0.12); }
+        .db-link:hover { color: #5B4FE8 !important; }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after { transition: none !important; animation: none !important; }
+          .db-choice:hover { transform: none; }
+        }
+      `}</style>
 
       {/* ── SIDEBAR ── */}
       <aside style={s.sidebar}>
@@ -274,48 +289,48 @@ export default function DashboardPage() {
             <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Tableau de bord</span>
           </a>
-          <a href="/dashboard/dossiers" style={s.sbItem}>
+          <a href="/dashboard/dossiers" className="sb-item" style={s.sbItem}>
             <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Dossiers BAF</span>
             <span style={s.sbBadge}>{stats?.pending ?? 0}</span>
           </a>
-          <a href="/dashboard/patients" style={s.sbItem}>
+          <a href="/dashboard/patients" className="sb-item" style={s.sbItem}>
             <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Patients</span>
           </a>
-          <a href="/dashboard/prediction" style={s.sbItem}>
+          <a href="/dashboard/prediction" className="sb-item" style={s.sbItem}>
             <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Prédiction IA</span>
-            <span style={{ ...s.sbBadge, background: "#E6F1FB", color: "#185FA5" }}>IA</span>
+            <span style={{ ...s.sbBadge, background: "#EEEDFB", color: "#4A3FD4" }}>IA</span>
           </a>
           <div style={s.sbSec}>Analyse</div>
-          <a href="/dashboard/performance" style={s.sbItem}>
+          <a href="/dashboard/performance" className="sb-item" style={s.sbItem}>
             <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Performance</span>
           </a>
-          <a href="/dashboard/forclusion" style={s.sbItem}>
+          <a href="/dashboard/forclusion" className="sb-item" style={s.sbItem}>
             <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Forclusion</span>
             <span style={{ ...s.sbBadge, ...s.sbBadgeRed }}>{forclusion.length}</span>
           </a>
-          <a href="/dashboard/encours" style={s.sbItem}>
+          <a href="/dashboard/encours" className="sb-item" style={s.sbItem}>
             <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Encours A/R</span>
           </a>
-          <a href="/dashboard/financier" style={s.sbItem}>
+          <a href="/dashboard/financier" className="sb-item" style={s.sbItem}>
             <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Activité financière</span>
           </a>
-          <a href="/dashboard/comptabilite" style={s.sbItem}>
+          <a href="/dashboard/comptabilite" className="sb-item" style={s.sbItem}>
           <span style={s.sbItemIcon}></span>
           <span style={s.sbItemLabel}>Comptabilité DAF</span>
           </a>
           <div style={s.sbSec}>Système</div>
-          <a href="/dashboard/audit" style={s.sbItem}>
+          <a href="/dashboard/audit" className="sb-item" style={s.sbItem}>
             <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Journal d&apos;audit</span>
           </a>
-          <a href="/dashboard/settings" style={s.sbItem}>
+          <a href="/dashboard/settings" className="sb-item" style={s.sbItem}>
             <span style={s.sbItemIcon}></span>
             <span style={s.sbItemLabel}>Paramètres</span>
           </a>
@@ -329,7 +344,7 @@ export default function DashboardPage() {
               <div style={s.sbUrole}>{userRole}</div>
             </div>
           </div>
-          <button style={s.logoutBtn} onClick={() => {
+          <button className="db-logout" style={s.logoutBtn} onClick={() => {
             localStorage.removeItem("sihaiq_token");
             localStorage.removeItem("sihaiq_tenant_id");
             localStorage.removeItem("sihaiq_user");
@@ -352,8 +367,8 @@ export default function DashboardPage() {
             </div>
           </div>
           <div style={s.topBtns}>
-            <button style={s.topBtn}>Exporter</button>
-            <button style={s.topBtnPrimary} onClick={openModal}>
+            <button className="db-btn-ghost" style={s.topBtn}>Exporter</button>
+            <button className="db-btn-primary" style={s.topBtnPrimary} onClick={openModal}>
               + Nouveau dossier
             </button>
           </div>
@@ -379,10 +394,10 @@ export default function DashboardPage() {
           {/* KPI CARDS */}
           <div style={s.kpiGrid}>
             {[
-              { lbl: "Total dossiers", val: loading ? "—" : String(stats?.total_claims ?? 0),          accent: "#0F62FE", sub: "portefeuille actif" },
+              { lbl: "Total dossiers", val: loading ? "—" : String(stats?.total_claims ?? 0),          accent: "#5B4FE8", sub: "portefeuille actif" },
               { lbl: "En attente",     val: loading ? "—" : String(stats?.pending ?? 0),               accent: "#F59E0B", sub: `${stats ? Math.round((stats.pending / (stats.total_claims || 1)) * 100) : 0}% du total` },
               { lbl: "Taux de rejet",  val: loading ? "—" : `${stats?.rejection_rate ?? 0}%`,          accent: "#DC2626", sub: "mois en cours" },
-              { lbl: "Encours total",  val: loading ? "—" : formatMAD(stats?.total_amount_mad ?? 0),   accent: "#8B5CF6", sub: "MAD facturés" },
+              { lbl: "Encours total",  val: loading ? "—" : formatMAD(stats?.total_amount_mad ?? 0),   accent: "#F2711C", sub: "MAD facturés" },
             ].map(k => (
               <div key={k.lbl} style={s.kpi}>
                 <div style={{ ...s.kpiAccent, background: k.accent }} />
@@ -400,12 +415,12 @@ export default function DashboardPage() {
             <div style={s.card}>
               <div style={s.cardHdr}>
                 <span style={s.cardTitle}>Répartition par caisse</span>
-                <a href="/dashboard/performance" style={s.cardAction}>Voir détail →</a>
+                <a href="/dashboard/performance" className="db-link" style={s.cardAction}>Voir détail →</a>
               </div>
               {["CNOPS", "CNSS", "AMO", "AMO-Tadamon"].map((payer, i) => {
                 const count = claims.filter(c => c.insurance_type === payer).length;
                 const pct   = claims.length ? Math.round((count / claims.length) * 100) : 0;
-                const colors = ["#0F62FE", "#16A34A", "#F59E0B", "#8B5CF6"];
+                const colors = ["#5B4FE8", "#1D9E75", "#F2711C", "#9CA3AF"];
                 return (
                   <div key={payer} style={s.payerRow}>
                     <span style={{ ...s.payerDot, background: colors[i] }} />
@@ -451,7 +466,7 @@ export default function DashboardPage() {
                     </div>
                   ))}
                   {claims.filter(c => c.risk_level === "ÉLEVÉ").length === 0 && (
-                    <div style={{ fontSize: 12, color: "#9EA3AE" }}>Aucun dossier à risque élevé</div>
+                    <div style={{ fontSize: 12, color: "#9C9890" }}>Aucun dossier à risque élevé</div>
                   )}
                 </div>
               </div>
@@ -466,7 +481,7 @@ export default function DashboardPage() {
                 {["Tous", "En attente", "Rejetés", "Risque élevé"].map(f => (
                   <button
                     key={f}
-                    style={filter === f ? { ...s.chip, ...s.chipActive } : s.chip}
+                    className="db-chip" style={filter === f ? { ...s.chip, ...s.chipActive } : s.chip}
                     onClick={() => setFilter(f)}
                   >
                     {f}
@@ -514,7 +529,7 @@ export default function DashboardPage() {
                                   <div style={{ ...s.riskFill, width: `${Math.round((claim.risk_score || 0) * 100)}%`, background: rs.color }} />
                                 </div>
                               </div>
-                            ) : <span style={{ fontSize: 11, color: "#9EA3AE" }}>—</span>}
+                            ) : <span style={{ fontSize: 11, color: "#9C9890" }}>—</span>}
                           </td>
                           <td style={s.td}>
                             <span style={{ ...s.badge, background: ss.bg, color: ss.color }}>
@@ -523,10 +538,10 @@ export default function DashboardPage() {
                           </td>
                           <td style={s.td}>
                             {forc ? (
-                              <span style={{ fontSize: 11, fontWeight: 600, color: forc.urgent ? "#DC2626" : "#9EA3AE" }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: forc.urgent ? "#DC2626" : "#9C9890" }}>
                                 {forc.label}
                               </span>
-                            ) : <span style={{ fontSize: 11, color: "#9EA3AE" }}>—</span>}
+                            ) : <span style={{ fontSize: 11, color: "#9C9890" }}>—</span>}
                           </td>
                         </tr>
                       );
@@ -557,12 +572,12 @@ export default function DashboardPage() {
             {/* ── STEP 1: Choose path ── */}
             {modalTab === "choice" && (
               <div style={s.choiceGrid}>
-                <button style={s.choiceCard} onClick={() => { setSubmitMsg(""); setModalTab("import"); }}>
+                <button className="db-choice" style={s.choiceCard} onClick={() => { setSubmitMsg(""); setModalTab("import"); }}>
                   <div style={s.choiceIcon}>📂</div>
                   <div style={s.choiceLabel}>Importer un fichier</div>
                   <div style={s.choiceSub}>Excel (.xlsx) ou CSV · plusieurs dossiers en une fois</div>
                 </button>
-                <button style={s.choiceCard} onClick={() => { setSubmitMsg(""); setModalTab("manual"); }}>
+                <button className="db-choice" style={s.choiceCard} onClick={() => { setSubmitMsg(""); setModalTab("manual"); }}>
                   <div style={s.choiceIcon}>✏️</div>
                   <div style={s.choiceLabel}>Saisie manuelle</div>
                   <div style={s.choiceSub}>Un nouveau patient + dossier BAF avec score IA automatique</div>
@@ -594,10 +609,10 @@ export default function DashboardPage() {
                 >
                   {importFile ? (
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#0F62FE", marginBottom: 4 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#5B4FE8", marginBottom: 4 }}>
                         📄 {importFile.name}
                       </div>
-                      <div style={{ fontSize: 11, color: "#9EA3AE" }}>
+                      <div style={{ fontSize: 11, color: "#9C9890" }}>
                         {(importFile.size / 1024).toFixed(1)} KB · prêt à importer
                       </div>
                       <button
@@ -610,13 +625,13 @@ export default function DashboardPage() {
                   ) : (
                     <div>
                       <div style={{ fontSize: 28, marginBottom: 8 }}>📥</div>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: "#6B7280" }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: "#5C5852" }}>
                         Glissez votre fichier ici
                       </div>
-                      <div style={{ fontSize: 11, color: "#9EA3AE", marginTop: 4 }}>
+                      <div style={{ fontSize: 11, color: "#9C9890", marginTop: 4 }}>
                         Excel (.xlsx) ou CSV acceptés
                       </div>
-                      <label style={s.fileBtn}>
+                      <label className="db-btn-primary" style={s.fileBtn}>
                         Parcourir
                         <input
                           type="file"
@@ -648,21 +663,21 @@ export default function DashboardPage() {
 
                 {importFile && importRows.length > 0 && !importDone && (
                   <div>
-                    <div style={{ fontSize: 11, color: "#6B7280", margin: "8px 22px 4px", background: "#F0F4FA", borderRadius: 6, padding: "8px 10px" }}>
+                    <div style={{ fontSize: 11, color: "#5C5852", margin: "8px 22px 4px", background: "#F2F1EE", borderRadius: 6, padding: "8px 10px" }}>
                       📊 {importRows.length} dossier{importRows.length > 1 ? "s" : ""} détecté{importRows.length > 1 ? "s" : ""} dans le fichier
                     </div>
                     {importProgress > 0 && (
                       <div style={{ margin: "8px 22px" }}>
-                        <div style={{ fontSize: 11, color: "#185FA5", marginBottom: 4 }}>
+                        <div style={{ fontSize: 11, color: "#4A3FD4", marginBottom: 4 }}>
                           Importation en cours... {importProgress}/{importTotal}
                         </div>
-                        <div style={{ background: "#E6F1FB", borderRadius: 4, height: 6 }}>
-                          <div style={{ background: "#0F62FE", borderRadius: 4, height: 6, width: `${(importProgress / importTotal) * 100}%`, transition: "width 0.2s" }} />
+                        <div style={{ background: "#EEEDFB", borderRadius: 4, height: 6 }}>
+                          <div style={{ background: "#5B4FE8", borderRadius: 4, height: 6, width: `${(importProgress / importTotal) * 100}%`, transition: "width 0.2s" }} />
                         </div>
                       </div>
                     )}
                     <button
-                      style={{ ...s.submitBtn, opacity: submitting ? 0.6 : 1 }}
+                      className="db-btn-primary" style={{ ...s.submitBtn, opacity: submitting ? 0.6 : 1 }}
                       disabled={submitting}
                       onClick={async () => {
                         setSubmitting(true);
@@ -825,7 +840,7 @@ export default function DashboardPage() {
                 </div>
 
                 <button
-                  style={{ ...s.submitBtn, opacity: submitting ? 0.6 : 1 }}
+                  className="db-btn-primary" style={{ ...s.submitBtn, opacity: submitting ? 0.6 : 1 }}
                   disabled={submitting}
                   onClick={handleManualSubmit}
                 >
@@ -850,38 +865,38 @@ export default function DashboardPage() {
 
 // ── Styles ─────────────────────────────────────────────────────────────────
 const s: Record<string, React.CSSProperties> = {
-  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F0F4FA", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
+  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F2F1EE", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
 
   // Sidebar
-  sidebar:      { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E2E4E9", display: "flex", flexDirection: "column" },
-  sbTop:        { padding: "16px 14px 12px", borderBottom: "0.5px solid #EEF2F8" },
+  sidebar:      { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E5E3DD", display: "flex", flexDirection: "column" },
+  sbTop:        { padding: "16px 14px 12px", borderBottom: "0.5px solid #F2F1EE" },
   sbBrand:      { display: "flex", alignItems: "center", gap: 9 },
-  sbName:       { fontSize: 15, fontWeight: 300, color: "#0C1B33", letterSpacing: "-0.02em", lineHeight: 1.1 },
-  sbIQ:         { fontWeight: 800, color: "#0F62FE" },
-  sbRole:       { fontSize: 9, fontWeight: 600, color: "#9EA3AE", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
+  sbName:       { fontSize: 15, fontWeight: 300, color: "#1A1814", letterSpacing: "-0.02em", lineHeight: 1.1 },
+  sbIQ:         { fontWeight: 800, color: "#5B4FE8" },
+  sbRole:       { fontSize: 9, fontWeight: 600, color: "#9C9890", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
   sbNav:        { flex: 1, padding: "10px 8px", overflowY: "auto" },
-  sbSec:        { fontSize: 9, fontWeight: 600, color: "#B5D4F4", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
-  sbItem:       { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#6B7280", fontSize: 12, border: "none", background: "none", width: "100%", textAlign: "left", marginBottom: 1, textDecoration: "none" },
-  sbItemActive: { background: "#E6F1FB", color: "#0F62FE", fontWeight: 500 },
+  sbSec:        { fontSize: 9, fontWeight: 600, color: "#C7C2F7", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
+  sbItem:       { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#5C5852", fontSize: 12, border: "none", background: "none", width: "100%", textAlign: "left", marginBottom: 1, textDecoration: "none" },
+  sbItemActive: { background: "#EEEDFB", color: "#5B4FE8", fontWeight: 500 },
   sbItemIcon:   { fontSize: 14, flexShrink: 0 },
   sbItemLabel:  { flex: 1 },
-  sbBadge:      { fontSize: 9, fontWeight: 600, padding: "1px 5px", borderRadius: 10, background: "#E6F1FB", color: "#185FA5" },
+  sbBadge:      { fontSize: 9, fontWeight: 600, padding: "1px 5px", borderRadius: 10, background: "#EEEDFB", color: "#4A3FD4" },
   sbBadgeRed:   { background: "#FEE2E2", color: "#DC2626" },
-  sbFooter:     { padding: "10px 8px", borderTop: "0.5px solid #EEF2F8" },
+  sbFooter:     { padding: "10px 8px", borderTop: "0.5px solid #F2F1EE" },
   sbUser:       { display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderRadius: 7 },
-  sbAvatar:     { width: 26, height: 26, borderRadius: "50%", background: "#E6F1FB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "#0F62FE", flexShrink: 0 },
-  sbUname:      { fontSize: 11, fontWeight: 500, color: "#1A1D23" },
-  sbUrole:      { fontSize: 10, color: "#9EA3AE" },
+  sbAvatar:     { width: 26, height: 26, borderRadius: "50%", background: "#EEEDFB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "#5B4FE8", flexShrink: 0 },
+  sbUname:      { fontSize: 11, fontWeight: 500, color: "#1A1814" },
+  sbUrole:      { fontSize: 10, color: "#9C9890" },
   logoutBtn:    { width: "100%", padding: "8px", borderRadius: 7, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit", marginTop: 8 },
 
   // Main area
   main:     { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  topbar:   { background: "#fff", borderBottom: "0.5px solid #E2E4E9", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
-  topTitle: { fontSize: 14, fontWeight: 600, color: "#1A1D23", letterSpacing: "-0.01em" },
-  topDate:  { fontSize: 11, color: "#9EA3AE", marginTop: 2 },
+  topbar:   { background: "#fff", borderBottom: "0.5px solid #E5E3DD", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
+  topTitle: { fontSize: 14, fontWeight: 600, color: "#1A1814", letterSpacing: "-0.01em" },
+  topDate:  { fontSize: 11, color: "#9C9890", marginTop: 2 },
   topBtns:  { display: "flex", gap: 8, alignItems: "center" },
-  topBtn:   { fontSize: 11, fontWeight: 500, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
-  topBtnPrimary: { fontSize: 11, fontWeight: 600, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "none", background: "#0F62FE", color: "#fff", fontFamily: "inherit" },
+  topBtn:   { fontSize: 11, fontWeight: 500, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit" },
+  topBtnPrimary: { fontSize: 11, fontWeight: 600, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit" },
 
   content: { flex: 1, overflowY: "auto", padding: "16px 20px" },
 
@@ -894,30 +909,30 @@ const s: Record<string, React.CSSProperties> = {
 
   // KPI
   kpiGrid:  { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 12 },
-  kpi:      { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: "14px 14px 12px", position: "relative", overflow: "hidden" },
+  kpi:      { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: "14px 14px 12px", position: "relative", overflow: "hidden" },
   kpiAccent:{ position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "10px 10px 0 0" },
-  kpiLbl:   { fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 },
+  kpiLbl:   { fontSize: 9, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 },
   kpiVal:   { fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1 },
-  kpiSub:   { fontSize: 10, color: "#9EA3AE", marginTop: 5 },
+  kpiSub:   { fontSize: 10, color: "#9C9890", marginTop: 5 },
 
   // Mid row
   midRow:   { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 },
-  card:     { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: 16 },
+  card:     { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 16 },
   cardHdr:  { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
-  cardTitle:{ fontSize: 12, fontWeight: 600, color: "#1A1D23" },
-  cardAction:{ fontSize: 11, color: "#378ADD", cursor: "pointer", textDecoration: "none" },
+  cardTitle:{ fontSize: 12, fontWeight: 600, color: "#1A1814" },
+  cardAction:{ fontSize: 11, color: "#7B72F0", cursor: "pointer", textDecoration: "none" },
 
   payerRow: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 },
   payerDot: { width: 7, height: 7, borderRadius: "50%", flexShrink: 0 },
-  payerName:{ fontSize: 11, color: "#6B7280", width: 80, flexShrink: 0 },
-  payerTrack:{ flex: 1, height: 4, background: "#EEF2F8", borderRadius: 2, overflow: "hidden" },
+  payerName:{ fontSize: 11, color: "#5C5852", width: 80, flexShrink: 0 },
+  payerTrack:{ flex: 1, height: 4, background: "#F2F1EE", borderRadius: 2, overflow: "hidden" },
   payerFill:{ height: "100%", borderRadius: 2 },
-  payerPct: { fontSize: 11, fontWeight: 500, color: "#1A1D23", minWidth: 28, textAlign: "right" },
+  payerPct: { fontSize: 11, fontWeight: 500, color: "#1A1814", minWidth: 28, textAlign: "right" },
 
-  aiCard:   { background: "#E6F1FB", border: "0.5px solid #B5D4F4", borderRadius: 8, padding: "10px 12px", marginTop: 12 },
-  aiLbl:    { fontSize: 9, fontWeight: 600, color: "#185FA5", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 },
-  aiVal:    { fontSize: 18, fontWeight: 700, color: "#0F62FE" },
-  aiSub:    { fontSize: 9, color: "#378ADD", marginTop: 2 },
+  aiCard:   { background: "#EEEDFB", border: "0.5px solid #C7C2F7", borderRadius: 8, padding: "10px 12px", marginTop: 12 },
+  aiLbl:    { fontSize: 9, fontWeight: 600, color: "#4A3FD4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 },
+  aiVal:    { fontSize: 18, fontWeight: 700, color: "#5B4FE8" },
+  aiSub:    { fontSize: 9, color: "#7B72F0", marginTop: 2 },
 
   statBreak:    { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 16 },
   statBreakItem:{ borderRadius: 8, padding: "10px 8px", textAlign: "center" },
@@ -925,51 +940,51 @@ const s: Record<string, React.CSSProperties> = {
   statBreakLbl: { fontSize: 10, fontWeight: 500, marginTop: 3 },
 
   riskItem: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 8px", background: "#FFF8F0", borderRadius: 6, border: "0.5px solid #FED7AA" },
-  riskNum:  { fontSize: 11, fontFamily: "monospace", color: "#1A1D23" },
+  riskNum:  { fontSize: 11, fontFamily: "monospace", color: "#1A1814" },
   riskScore:{ fontSize: 11, fontWeight: 600, color: "#DC2626" },
 
   // Table
-  tableCard:{ background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, overflow: "hidden" },
-  tableHdr: { padding: "12px 16px", borderBottom: "0.5px solid #EEF2F8", display: "flex", alignItems: "center", justifyContent: "space-between" },
+  tableCard:{ background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, overflow: "hidden" },
+  tableHdr: { padding: "12px 16px", borderBottom: "0.5px solid #F2F1EE", display: "flex", alignItems: "center", justifyContent: "space-between" },
   filters:  { display: "flex", gap: 5 },
-  chip:     { fontSize: 10, fontWeight: 500, padding: "3px 9px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
-  chipActive:{ background: "#E6F1FB", color: "#0F62FE", borderColor: "#B5D4F4" },
-  loading:  { padding: "24px 16px", fontSize: 13, color: "#9EA3AE" },
+  chip:     { fontSize: 10, fontWeight: 500, padding: "3px 9px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit" },
+  chipActive:{ background: "#EEEDFB", color: "#5B4FE8", borderColor: "#C7C2F7" },
+  loading:  { padding: "24px 16px", fontSize: 13, color: "#9C9890" },
   table:    { width: "100%", borderCollapse: "collapse", fontSize: 12 },
-  th:       { textAlign: "left", padding: "8px 14px", fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #EEF2F8", background: "#FAFBFF", whiteSpace: "nowrap" },
-  tr:       { borderBottom: "0.5px solid #F5F7FA" },
+  th:       { textAlign: "left", padding: "8px 14px", fontSize: 9, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #F2F1EE", background: "#FAFAF7", whiteSpace: "nowrap" },
+  tr:       { borderBottom: "0.5px solid #F5F4F1" },
   td:       { padding: "10px 14px", verticalAlign: "middle" },
-  claimNum: { fontFamily: "monospace", fontSize: 11, color: "#1A1D23", fontWeight: 500 },
-  patientName:{ fontSize: 12, fontWeight: 500, color: "#1A1D23" },
+  claimNum: { fontFamily: "monospace", fontSize: 11, color: "#1A1814", fontWeight: 500 },
+  patientName:{ fontSize: 12, fontWeight: 500, color: "#1A1814" },
   badge:    { display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20 },
   riskCell: { display: "flex", alignItems: "center", gap: 6 },
   riskPill: { fontSize: 9, fontWeight: 600, padding: "2px 6px", borderRadius: 20, whiteSpace: "nowrap" },
-  riskTrack:{ width: 36, height: 3, background: "#EEF2F8", borderRadius: 2, overflow: "hidden" },
+  riskTrack:{ width: 36, height: 3, background: "#F2F1EE", borderRadius: 2, overflow: "hidden" },
   riskFill: { height: "100%", borderRadius: 2 },
 
   // Modal
-  overlay:    { position: "fixed", inset: 0, background: "rgba(12,27,51,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 },
+  overlay:    { position: "fixed", inset: 0, background: "rgba(26,24,20,0.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 },
   modal:      { background: "#fff", borderRadius: 14, width: "100%", maxWidth: 540, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,0.2)" },
-  modalHdr:   { display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "20px 22px 16px", borderBottom: "0.5px solid #EEF2F8" },
-  modalTitle: { fontSize: 15, fontWeight: 600, color: "#1A1D23" },
-  modalSub:   { fontSize: 11, color: "#9EA3AE", marginTop: 3 },
-  modalClose: { background: "none", border: "none", fontSize: 16, color: "#9EA3AE", cursor: "pointer", padding: "0 0 0 8px", lineHeight: 1 },
+  modalHdr:   { display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "20px 22px 16px", borderBottom: "0.5px solid #F2F1EE" },
+  modalTitle: { fontSize: 15, fontWeight: 600, color: "#1A1814" },
+  modalSub:   { fontSize: 11, color: "#9C9890", marginTop: 3 },
+  modalClose: { background: "none", border: "none", fontSize: 16, color: "#9C9890", cursor: "pointer", padding: "0 0 0 8px", lineHeight: 1 },
   choiceGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, padding: 20 },
-  choiceCard: { background: "#FAFBFF", border: "1.5px solid #E2E4E9", borderRadius: 12, padding: "22px 16px", cursor: "pointer", textAlign: "center", fontFamily: "inherit", transition: "border-color 0.15s" },
+  choiceCard: { background: "#FAFAF7", border: "1.5px solid #E5E3DD", borderRadius: 12, padding: "22px 16px", cursor: "pointer", textAlign: "center", fontFamily: "inherit", transition: "border-color 0.15s" },
   choiceIcon: { fontSize: 30, marginBottom: 10 },
-  choiceLabel:{ fontSize: 13, fontWeight: 600, color: "#1A1D23", marginBottom: 6 },
-  choiceSub:  { fontSize: 11, color: "#9EA3AE", lineHeight: 1.6 },
-  backBtn:    { background: "none", border: "none", fontSize: 12, color: "#378ADD", cursor: "pointer", padding: "8px 22px 4px", fontFamily: "inherit", display: "block" },
-  dropzone:   { margin: "0 22px", border: "2px dashed #B5D4F4", borderRadius: 10, padding: "32px 20px", textAlign: "center", background: "#F8FBFF" },
-  fileBtn:    { display: "inline-block", marginTop: 14, padding: "7px 18px", background: "#0F62FE", color: "#fff", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer" },
-  fileBtnSmall:{ display: "inline-block", padding: "5px 12px", background: "#E6F1FB", color: "#185FA5", borderRadius: 6, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "none", fontFamily: "inherit" },
-  infoBox:    { margin: "12px 22px 4px", background: "#F0F4FA", borderRadius: 8, padding: "10px 12px", fontSize: 11, color: "#6B7280", lineHeight: 1.9 },
+  choiceLabel:{ fontSize: 13, fontWeight: 600, color: "#1A1814", marginBottom: 6 },
+  choiceSub:  { fontSize: 11, color: "#9C9890", lineHeight: 1.6 },
+  backBtn:    { background: "none", border: "none", fontSize: 12, color: "#7B72F0", cursor: "pointer", padding: "8px 22px 4px", fontFamily: "inherit", display: "block" },
+  dropzone:   { margin: "0 22px", border: "2px dashed #C7C2F7", borderRadius: 10, padding: "32px 20px", textAlign: "center", background: "#F8F7FE" },
+  fileBtn:    { display: "inline-block", marginTop: 14, padding: "7px 18px", background: "#5B4FE8", color: "#fff", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer" },
+  fileBtnSmall:{ display: "inline-block", padding: "5px 12px", background: "#EEEDFB", color: "#4A3FD4", borderRadius: 6, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "none", fontFamily: "inherit" },
+  infoBox:    { margin: "12px 22px 4px", background: "#F2F1EE", borderRadius: 8, padding: "10px 12px", fontSize: 11, color: "#5C5852", lineHeight: 1.9 },
   formGrid:   { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, padding: "4px 22px 0" },
   formGroup:  { display: "flex", flexDirection: "column", gap: 4 },
-  formLabel:  { fontSize: 10, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.06em" },
-  formInput:  { padding: "8px 10px", border: "0.5px solid #E2E4E9", borderRadius: 7, fontSize: 12, color: "#1A1D23", background: "#fff", fontFamily: "inherit", outline: "none" },
-  aiHint:     { margin: "12px 22px 0", background: "#E6F1FB", borderRadius: 8, padding: "9px 12px", fontSize: 11, color: "#185FA5" },
-  submitBtn:  { display: "block", width: "calc(100% - 44px)", margin: "14px 22px 4px", padding: "11px", background: "#0F62FE", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" },
+  formLabel:  { fontSize: 10, fontWeight: 600, color: "#5C5852", textTransform: "uppercase", letterSpacing: "0.06em" },
+  formInput:  { padding: "8px 10px", border: "0.5px solid #E5E3DD", borderRadius: 7, fontSize: 12, color: "#1A1814", background: "#fff", fontFamily: "inherit", outline: "none" },
+  aiHint:     { margin: "12px 22px 0", background: "#EEEDFB", borderRadius: 8, padding: "9px 12px", fontSize: 11, color: "#4A3FD4" },
+  submitBtn:  { display: "block", width: "calc(100% - 44px)", margin: "14px 22px 4px", padding: "11px", background: "#5B4FE8", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" },
   successMsg: { margin: "4px 22px 14px", padding: "10px 12px", background: "#DCFCE7", border: "0.5px solid #86EFAC", borderRadius: 8, fontSize: 12, color: "#166534" },
   errorMsg:   { margin: "4px 22px 14px", padding: "10px 12px", background: "#FEE2E2", border: "0.5px solid #FCA5A5", borderRadius: 8, fontSize: 12, color: "#991B1B" },
 };
