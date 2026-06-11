@@ -5,6 +5,17 @@ import NextImage from "next/image";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+/* Floating decorative shapes for the hero background (data/AI theme) */
+const HERO_FLOATS: { top: string; left: string; kind: "dot" | "plus" | "ring" | "diamond"; color: string; size: number }[] = [
+  { top: "14%", left: "4%",  kind: "plus",    color: "#5B4FE8", size: 14 },
+  { top: "70%", left: "7%",  kind: "dot",     color: "#F2711C", size: 8  },
+  { top: "24%", left: "44%", kind: "ring",    color: "#5B4FE8", size: 16 },
+  { top: "82%", left: "38%", kind: "diamond", color: "#5B4FE8", size: 10 },
+  { top: "8%",  left: "78%", kind: "dot",     color: "#5B4FE8", size: 7  },
+  { top: "58%", left: "96%", kind: "plus",    color: "#F2711C", size: 12 },
+  { top: "90%", left: "88%", kind: "ring",    color: "#F2711C", size: 14 },
+];
+
 export default function LandingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -37,45 +48,190 @@ export default function LandingPage() {
 
     gsap.registerPlugin(ScrollTrigger);
 
-    const heroTl = gsap.timeline({ delay: 0.2 });
-    heroTl
-      .fromTo(".gsap-hero-label", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" })
-      .fromTo(".gsap-hero-h1", { opacity: 0, y: 50, skewY: 2 }, { opacity: 1, y: 0, skewY: 0, duration: 0.8, ease: "power3.out" }, "-=0.2")
-      .fromTo(".gsap-hero-sub", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.4")
-      .fromTo(".gsap-hero-ctas", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.3")
-      .fromTo(".gsap-proof-strip", { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
-      .fromTo("#hero-visual", { opacity: 0, x: 40, scale: 0.95 }, { opacity: 1, x: 0, scale: 1, duration: 0.9, ease: "power3.out" }, "-=0.8")
-      .fromTo(["#hv-alert", "#hv-ai", "#hv-shap"], { opacity: 0, scale: 0.8, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, stagger: 0.15, ease: "back.out(1.4)" }, "-=0.4");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    gsap.utils.toArray<Element>(".modules-section, .features-section, .testimonial-section, .pricing-section, .problem-section").forEach(section => {
-      gsap.fromTo(section, { opacity: 0, y: 60 }, {
-        opacity: 1, y: 0, duration: 0.8, ease: "power3.out",
-        scrollTrigger: { trigger: section, start: "top 82%", toggleActions: "play none none none" }
+    /* ---------- Counter helpers ---------- */
+    const spaceThousands = (n: number) =>
+      Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    const formatters: Record<string, (v: number) => string> = {
+      int:       v => String(Math.round(v)),
+      pct0:      v => `${Math.round(v)}%`,
+      negpct:    v => `\u2212${Math.round(v)}%`,
+      pct1:      v => `${v.toFixed(1)}%`,
+      thousands: v => spaceThousands(v),
+      auc:       v => `AUC ${v.toFixed(2)}`,
+      jours:     v => `${Math.round(v)} jours`,
+    };
+    const tweens: gsap.core.Tween[] = [];
+    const timelines: gsap.core.Timeline[] = [];
+    const listeners: { el: Element | Window; type: string; fn: EventListenerOrEventListenerObject }[] = [];
+
+    const animateCount = (el: HTMLElement, position?: gsap.core.Timeline, tlPos?: string) => {
+      const end = parseFloat(el.dataset.count || "0");
+      const fmt = formatters[el.dataset.fmt || "int"] || formatters.int;
+      const obj = { v: 0 };
+      const vars: gsap.TweenVars = {
+        v: end, duration: 1.4, ease: "power2.out",
+        onUpdate: () => { el.textContent = fmt(obj.v); },
+        onComplete: () => { el.textContent = fmt(end); },
+      };
+      if (position) { position.to(obj, vars, tlPos); }
+      else { tweens.push(gsap.to(obj, vars)); }
+    };
+
+    if (reduceMotion) {
+      /* Accessibility: skip all motion, show final state immediately */
+      gsap.set([
+        ".gsap-hero-h1", ".gsap-hero-sub", ".gsap-hero-ctas", ".gsap-proof-strip",
+        "#hero-visual", "#hv-alert", "#hv-ai", "#hv-shap",
+      ], { opacity: 1, clearProps: "transform" });
+      gsap.set(".hv-bar-fill", { scaleX: 1 });
+    } else {
+      /* ---------- Hero entrance timeline ---------- */
+      const heroTl = gsap.timeline({ delay: 0.2 });
+      timelines.push(heroTl);
+      heroTl
+        .fromTo(".gsap-hero-h1", { opacity: 0, y: 50, skewY: 2 }, { opacity: 1, y: 0, skewY: 0, duration: 0.8, ease: "power3.out" })
+        .fromTo(".gsap-hero-sub", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.4")
+        .fromTo(".gsap-hero-ctas", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.3")
+        .fromTo(".gsap-proof-strip", { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
+        .fromTo("#hero-visual", { opacity: 0, x: 40, scale: 0.95 }, { opacity: 1, x: 0, scale: 1, duration: 0.9, ease: "power3.out" }, "-=0.8")
+        .fromTo(["#hv-alert", "#hv-ai", "#hv-shap"], { opacity: 0, scale: 0.8, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, stagger: 0.15, ease: "back.out(1.4)" }, "-=0.4");
+
+      /* Proof strip numbers count up as the strip appears */
+      const proofEls = gsap.utils.toArray<HTMLElement>(".gsap-proof-strip [data-count]");
+      proofEls.forEach((el, i) => animateCount(el, heroTl, i === 0 ? "-=1.2" : "<"));
+
+      /* ---------- Scroll-triggered section reveals ---------- */
+      gsap.utils.toArray<Element>(".modules-section, .features-section, .testimonial-section, .pricing-section, .problem-section").forEach(section => {
+        gsap.fromTo(section, { opacity: 0, y: 60 }, {
+          opacity: 1, y: 0, duration: 0.8, ease: "power3.out",
+          scrollTrigger: { trigger: section, start: "top 82%", toggleActions: "play none none none" }
+        });
       });
-    });
 
-    gsap.fromTo(".module-card", { opacity: 0, y: 50, scale: 0.96 }, {
-      opacity: 1, y: 0, scale: 1, duration: 0.7, stagger: 0.2, ease: "power3.out",
-      scrollTrigger: { trigger: ".modules-grid", start: "top 78%", toggleActions: "play none none none" }
-    });
+      gsap.fromTo(".module-card", { opacity: 0, y: 50, scale: 0.96 }, {
+        opacity: 1, y: 0, scale: 1, duration: 0.7, stagger: 0.2, ease: "power3.out",
+        scrollTrigger: { trigger: ".modules-grid", start: "top 78%", toggleActions: "play none none none" }
+      });
 
-    gsap.fromTo(".feat", { opacity: 0, y: 35 }, {
-      opacity: 1, y: 0, duration: 0.5, stagger: 0.07, ease: "power2.out",
-      scrollTrigger: { trigger: ".features-grid", start: "top 78%", toggleActions: "play none none none" }
-    });
+      gsap.fromTo(".feat", { opacity: 0, y: 35 }, {
+        opacity: 1, y: 0, duration: 0.5, stagger: 0.07, ease: "power2.out",
+        scrollTrigger: { trigger: ".features-grid", start: "top 78%", toggleActions: "play none none none" }
+      });
 
-    gsap.fromTo(".plan", { opacity: 0, y: 45 }, {
-      opacity: 1, y: 0, duration: 0.6, stagger: 0.15, ease: "power3.out",
-      scrollTrigger: { trigger: ".plan-grid", start: "top 78%", toggleActions: "play none none none" }
-    });
+      gsap.fromTo(".plan", { opacity: 0, y: 45 }, {
+        opacity: 1, y: 0, duration: 0.6, stagger: 0.15, ease: "power3.out",
+        scrollTrigger: { trigger: ".plan-grid", start: "top 78%", toggleActions: "play none none none" }
+      });
 
-    gsap.fromTo(".hv-bar-fill", { scaleX: 0 }, {
-      scaleX: 1, duration: 1, stagger: 0.1, ease: "power2.out", transformOrigin: "left center", delay: 1.2
-    });
+      gsap.fromTo(".hv-bar-fill", { scaleX: 0 }, {
+        scaleX: 1, duration: 1, stagger: 0.1, ease: "power2.out", transformOrigin: "left center", delay: 1.2
+      });
+
+      /* ---------- Problem KPI cards: count up from 0 on viewport entry ---------- */
+      const kpiEls = gsap.utils.toArray<HTMLElement>(".problem-kpis [data-count]");
+      if (kpiEls.length) {
+        ScrollTrigger.create({
+          trigger: ".problem-kpis",
+          start: "top 80%",
+          once: true,
+          onEnter: () => kpiEls.forEach(el => animateCount(el)),
+        });
+      }
+
+      /* ---------- Hero floating particles ---------- */
+      gsap.utils.toArray<HTMLElement>(".hero-float").forEach((el, i) => {
+        tweens.push(gsap.to(el, {
+          y: gsap.utils.random(-16, 16),
+          x: gsap.utils.random(-10, 10),
+          rotation: el.dataset.kind === "plus" || el.dataset.kind === "diamond" ? gsap.utils.random(-40, 40) : 0,
+          duration: gsap.utils.random(3.5, 6.5),
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+          delay: i * 0.3,
+        }));
+        tweens.push(gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 1.2, delay: 0.6 + i * 0.15 }));
+      });
+
+      /* ---------- Magnetic hover on module cards ---------- */
+      gsap.utils.toArray<HTMLElement>(".module-card").forEach(card => {
+        const move = (ev: Event) => {
+          const e = ev as MouseEvent;
+          const r = card.getBoundingClientRect();
+          const dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+          const dy = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+          gsap.to(card, { x: dx * 9, y: dy * 9, duration: 0.4, ease: "power2.out", overwrite: "auto" });
+        };
+        const leave = () => gsap.to(card, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.45)", overwrite: "auto" });
+        card.addEventListener("mousemove", move);
+        card.addEventListener("mouseleave", leave);
+        listeners.push({ el: card, type: "mousemove", fn: move }, { el: card, type: "mouseleave", fn: leave });
+      });
+    }
+
+    /* ---------- Chart.js: loaded dynamically (no <script> in JSX) ---------- */
+    let chartsCancelled = false;
+    const charts: { destroy: () => void }[] = [];
+    const buildCharts = () => {
+      if (chartsCancelled) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const Chart = (window as any).Chart;
+      if (!Chart) return;
+      const baseAnim = reduceMotion ? { animation: false } : {};
+      const mk = (id: string, cfg: object) => {
+        const el = document.getElementById(id) as HTMLCanvasElement | null;
+        if (!el) return;
+        Chart.getChart(el)?.destroy(); // React StrictMode double-mount guard
+        charts.push(new Chart(el, cfg));
+      };
+      mk("chart-pareto", {
+        type: "bar",
+        data: { labels: ["Identitovigilance","NGAP coding","Docs manquants","PEC absente","Autres"], datasets: [{ data: [35,25,15,12,13], backgroundColor: ["#534AB7","#534AB7","#AFA9EC","#AFA9EC","#D3D1C7"], borderWidth: 0, borderRadius: 4 }] },
+        options: { ...baseAnim, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c: { raw: number }) => c.raw + "%" } } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 }, color: "#888780" } }, y: { grid: { color: "rgba(0,0,0,0.05)" }, ticks: { font: { size: 10 }, color: "#888780", callback: (v: number) => v + "%" }, max: 45 } } },
+      });
+      mk("chart-payer", {
+        type: "doughnut",
+        data: { labels: ["CNOPS","CNSS","AMO","AMO-Tadamon"], datasets: [{ data: [48,27,18,7], backgroundColor: ["#534AB7","#1D9E75","#BA7517","#D3D1C7"], borderWidth: 2, borderColor: "#FAFAF7" }] },
+        options: { ...baseAnim, responsive: true, maintainAspectRatio: false, cutout: "62%", plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c: { label: string; raw: number }) => c.label + ": " + c.raw + "%" } } } },
+      });
+      const seed = (n: number) => { let s = n; return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; };
+      const rng = seed(42);
+      const scores = Array.from({ length: 60 }, (_, i) => ({ x: i + 1, y: Math.round(rng() * 100) / 100 }));
+      const colors = scores.map(p => p.y > 0.65 ? "#E24B4A" : p.y > 0.35 ? "#BA7517" : "#1D9E75");
+      mk("chart-scatter", {
+        type: "scatter",
+        data: { datasets: [{ data: scores, backgroundColor: colors, pointRadius: 5, pointHoverRadius: 7 }] },
+        options: { ...baseAnim, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c: { raw: { x: number; y: number } }) => "Dossier #" + c.raw.x + " · Score: " + c.raw.y.toFixed(2) } } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 }, color: "#888780" }, title: { display: true, text: "N° dossier", font: { size: 10 }, color: "#888780" } }, y: { min: 0, max: 1, grid: { color: "rgba(0,0,0,0.05)" }, ticks: { font: { size: 10 }, color: "#888780", callback: (v: number) => v.toFixed(1) }, title: { display: true, text: "Score rejet", font: { size: 10 }, color: "#888780" } } } },
+      });
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((window as any).Chart) {
+      buildCharts();
+    } else {
+      const existing = document.querySelector<HTMLScriptElement>("script[data-sihaiq-chartjs]");
+      if (existing) {
+        existing.addEventListener("load", buildCharts);
+        listeners.push({ el: existing, type: "load", fn: buildCharts });
+      } else {
+        const s = document.createElement("script");
+        s.src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js";
+        s.async = true;
+        s.dataset.sihaiqChartjs = "1";
+        s.onload = buildCharts;
+        document.body.appendChild(s);
+      }
+    }
 
     return () => {
       window.removeEventListener("scroll", onScroll);
+      listeners.forEach(({ el, type, fn }) => el.removeEventListener(type, fn));
+      timelines.forEach(t => t.kill());
+      tweens.forEach(t => t.kill());
       ScrollTrigger.getAll().forEach(t => t.kill());
+      chartsCancelled = true;
+      charts.forEach(c => c.destroy());
     };
   }, []);
 
@@ -103,6 +259,16 @@ export default function LandingPage() {
 
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
         @keyframes float-badge { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+        @keyframes cta-glow {
+          0%,100% { box-shadow: 0 2px 16px rgba(91,79,232,0.35); }
+          50% { box-shadow: 0 4px 30px rgba(91,79,232,0.62), 0 0 0 5px rgba(91,79,232,0.08); }
+        }
+
+        /* Accessibility: kill all CSS animation under reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after { animation: none !important; transition: none !important; }
+          html { scroll-behavior: auto; }
+        }
 
         /* NAV */
         .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 62px; display: flex; align-items: center; transition: all 0.2s; }
@@ -127,9 +293,10 @@ export default function LandingPage() {
         .hero-grid-bg { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 56px 56px; opacity: 0.4; pointer-events: none; }
         .hero-glow-left { position: absolute; top: -20%; left: -10%; width: 600px; height: 600px; background: radial-gradient(ellipse, rgba(91,79,232,0.07) 0%, transparent 70%); pointer-events: none; }
         .hero-glow-right { position: absolute; bottom: -10%; right: -5%; width: 500px; height: 500px; background: radial-gradient(ellipse, rgba(242,113,28,0.06) 0%, transparent 70%); pointer-events: none; }
-        .hero-inner { max-width: 1160px; margin: 0 auto; width: 100%; position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-        .hero-label { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; color: var(--violet); background: var(--violet-light); padding: 5px 12px; border-radius: 20px; margin-bottom: 28px; letter-spacing: 0.06em; text-transform: uppercase; }
-        .hero-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--violet); animation: pulse 2s ease infinite; }
+        .hero-inner { max-width: 1160px; margin: 0 auto; width: 100%; position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+        .hero-float-layer { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+        .hero-float { position: absolute; display: block; opacity: 0; will-change: transform; }
+        @media (prefers-reduced-motion: reduce) { .hero-float { opacity: 0.5; } }
         .hero-h1 { font-family: var(--serif); font-size: 64px; font-weight: 400; line-height: 1.05; letter-spacing: -0.02em; color: var(--text); margin-bottom: 12px; }
         .hero-h1 .italic { font-style: italic; color: var(--violet); }
         .hero-h1 .orange { color: var(--orange); }
@@ -138,6 +305,10 @@ export default function LandingPage() {
         .hero-ctas { display: flex; gap: 12px; margin-bottom: 48px; flex-wrap: wrap; }
         .btn-primary { font-size: 14px; font-weight: 600; color: white; background: var(--violet); padding: 13px 28px; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 16px rgba(91,79,232,0.35); transition: all 0.2s; border: none; cursor: pointer; font-family: var(--sans); }
         .btn-primary:hover { background: #4A3FD4; transform: translateY(-2px); }
+        @media (prefers-reduced-motion: no-preference) {
+          .hero-ctas .btn-primary { animation: cta-glow 2.8s ease-in-out infinite; }
+          .hero-ctas .btn-primary:hover { animation-play-state: paused; }
+        }
         .btn-secondary { font-size: 14px; font-weight: 500; color: var(--text2); background: white; padding: 13px 28px; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--border); transition: all 0.2s; }
         .btn-secondary:hover { border-color: var(--border2); color: var(--text); background: var(--cream); }
         .btn-orange { font-size: 14px; font-weight: 600; color: white; background: var(--orange); padding: 13px 28px; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 16px rgba(242,113,28,0.35); transition: all 0.2s; border: none; cursor: pointer; font-family: var(--sans); }
@@ -146,7 +317,7 @@ export default function LandingPage() {
         /* PROOF STRIP */
         .proof-strip { display: flex; gap: 28px; flex-wrap: wrap; padding-top: 28px; border-top: 1px solid var(--border); }
         .proof-item { display: flex; align-items: center; gap: 8px; }
-        .proof-num { font-family: var(--serif); font-size: 24px; color: var(--text); }
+        .proof-num { font-family: var(--serif); font-size: 24px; color: var(--text); font-variant-numeric: tabular-nums; }
         .proof-lbl { font-size: 11px; color: var(--text3); line-height: 1.3; }
         .proof-sep { color: var(--border2); }
 
@@ -176,8 +347,13 @@ export default function LandingPage() {
         .hv-ai-ring { flex-shrink: 0; }
 
         /* GSAP initial states */
-        .gsap-hero-label, .gsap-hero-h1, .gsap-hero-sub, .gsap-hero-ctas, .gsap-proof-strip { opacity: 0; }
+        .gsap-hero-h1, .gsap-hero-sub, .gsap-hero-ctas, .gsap-proof-strip { opacity: 0; }
         #hero-visual, #hv-alert, #hv-ai, #hv-shap { opacity: 0; }
+        /* No-JS / reduced-motion fallback: never leave content invisible */
+        @media (prefers-reduced-motion: reduce) {
+          .gsap-hero-h1, .gsap-hero-sub, .gsap-hero-ctas, .gsap-proof-strip,
+          #hero-visual, #hv-alert, #hv-ai, #hv-shap { opacity: 1; }
+        }
 
         /* MODULES */
         .modules-section { padding: 96px 28px; background: var(--cream); border-top: 1px solid var(--border); }
@@ -187,8 +363,8 @@ export default function LandingPage() {
         .section-h2 { font-family: var(--serif); font-size: 44px; font-weight: 400; letter-spacing: -0.02em; color: var(--text); line-height: 1.2; margin-bottom: 14px; }
         .section-sub { font-size: 16px; color: var(--text2); line-height: 1.7; max-width: 540px; margin: 0 auto; font-weight: 300; }
         .modules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .module-card { border-radius: 16px; padding: 32px; border: 1.5px solid var(--border); background: white; transition: all 0.2s; cursor: pointer; position: relative; overflow: hidden; }
-        .module-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+        .module-card { border-radius: 16px; padding: 32px; border: 1.5px solid var(--border); background: white; transition: box-shadow 0.2s, border-color 0.2s; cursor: pointer; position: relative; overflow: hidden; will-change: transform; }
+        .module-card:hover { box-shadow: var(--shadow-lg); }
         .module-card.baf { border-color: var(--violet); }
         .module-card.baf::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--violet); border-radius: 16px 16px 0 0; }
         .module-card.compta { border-color: var(--orange); }
@@ -215,6 +391,7 @@ export default function LandingPage() {
         /* PROBLEM */
         .problem-section { padding: 96px 28px; background: var(--white); border-top: 1px solid var(--border); }
         .problem-inner { max-width: 1160px; margin: 0 auto; }
+        .problem-kpis [data-count] { font-variant-numeric: tabular-nums; }
 
         /* FEATURES */
         .features-section { padding: 96px 28px; background: var(--cream); border-top: 1px solid var(--border); }
@@ -316,14 +493,35 @@ export default function LandingPage() {
         <div className="hero-grid-bg"/>
         <div className="hero-glow-left"/>
         <div className="hero-glow-right"/>
+
+        {/* Floating data/AI particles */}
+        <div className="hero-float-layer" aria-hidden="true">
+          {HERO_FLOATS.map((f, i) => (
+            <span key={i} className="hero-float" data-kind={f.kind} style={{ top: f.top, left: f.left }}>
+              {f.kind === "dot" && (
+                <span style={{ display: "block", width: f.size, height: f.size, borderRadius: "50%", background: f.color, opacity: 0.3 }}/>
+              )}
+              {f.kind === "ring" && (
+                <span style={{ display: "block", width: f.size, height: f.size, borderRadius: "50%", border: `2px solid ${f.color}`, opacity: 0.28 }}/>
+              )}
+              {f.kind === "diamond" && (
+                <span style={{ display: "block", width: f.size, height: f.size, background: f.color, opacity: 0.22, transform: "rotate(45deg)" }}/>
+              )}
+              {f.kind === "plus" && (
+                <svg width={f.size} height={f.size} viewBox="0 0 14 14" style={{ opacity: 0.3 }}>
+                  <line x1="7" y1="1" x2="7" y2="13" stroke={f.color} strokeWidth="2" strokeLinecap="round"/>
+                  <line x1="1" y1="7" x2="13" y2="7" stroke={f.color} strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              )}
+            </span>
+          ))}
+        </div>
+
         <div className="hero-inner">
 
           {/* LEFT */}
           <div>
-            <div className="hero-label gsap-hero-label">
-              <div className="hero-dot"/>
-              Plateforme RCM souveraine · Maroc · CNDP Loi 09-08
-            </div>
+
             <h1 className="hero-h1 gsap-hero-h1">
               Transformez votre activité<br/>
               hospitalière en <span className="italic">intelligence</span><br/>
@@ -342,15 +540,15 @@ export default function LandingPage() {
             </div>
             <div className="proof-strip gsap-proof-strip">
               {[
-                { num: "88%", lbl: "précision IA" },
-                { num: "−62%", lbl: "taux de rejet" },
-                { num: "2", lbl: "modules" },
-                { num: "0", lbl: "concurrent" },
+                { num: "88%", lbl: "précision IA", count: "88", fmt: "pct0" },
+                { num: "−62%", lbl: "taux de rejet", count: "62", fmt: "negpct" },
+                { num: "2", lbl: "modules", count: "2", fmt: "int" },
+                { num: "0", lbl: "concurrent", count: "0", fmt: "int" },
               ].map((p, i) => (
                 <span key={i} style={{ display: "contents" }}>
                   {i > 0 && <span className="proof-sep">·</span>}
                   <div className="proof-item">
-                    <span className="proof-num">{p.num}</span>
+                    <span className="proof-num" data-count={p.count} data-fmt={p.fmt}>{p.num}</span>
                     <span className="proof-lbl">{p.lbl}</span>
                   </div>
                 </span>
@@ -534,17 +732,17 @@ export default function LandingPage() {
             34 à 38% des dossiers BAF sont rejetés. 90% de ces rejets sont évitables.
             SihaIQ prédit, explique, et récupère.
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginTop: 40 }}>
+          <div className="problem-kpis" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginTop: 40 }}>
             {[
-              { lbl: "Dossiers analysés", val: "3 000", sub: "dataset BAF synthétique", color: "#534AB7" },
-              { lbl: "Taux de rejet", val: "36.5%", sub: "1 095 dossiers rejetés", color: "#E24B4A" },
-              { lbl: "Précision XGBoost", val: "AUC 0.87", sub: "17 features NGAP", color: "#1D9E75" },
-              { lbl: "Délai forclusion", val: "60 jours", sub: "délai légal Maroc", color: "#BA7517" },
+              { lbl: "Dossiers analysés", val: "3 000", sub: "dataset BAF synthétique", color: "#534AB7", count: "3000", fmt: "thousands" },
+              { lbl: "Taux de rejet", val: "36.5%", sub: "1 095 dossiers rejetés", color: "#E24B4A", count: "36.5", fmt: "pct1" },
+              { lbl: "Précision XGBoost", val: "AUC 0.87", sub: "17 features NGAP", color: "#1D9E75", count: "0.87", fmt: "auc" },
+              { lbl: "Délai forclusion", val: "60 jours", sub: "délai légal Maroc", color: "#BA7517", count: "60", fmt: "jours" },
             ].map(k => (
               <div key={k.lbl} style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 12, padding: "20px 16px", position: "relative", overflow: "hidden" }}>
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: k.color, borderRadius: "12px 12px 0 0" }} />
                 <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 6 }}>{k.lbl}</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: k.color, lineHeight: 1 }}>{k.val}</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: k.color, lineHeight: 1 }} data-count={k.count} data-fmt={k.fmt}>{k.val}</div>
                 <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 5 }}>{k.sub}</div>
               </div>
             ))}
@@ -602,34 +800,6 @@ export default function LandingPage() {
               <canvas id="chart-scatter" role="img" aria-label="Scatter plot des scores XGBoost sur 60 dossiers">Scores de risque distribués sur 60 dossiers.</canvas>
             </div>
           </div>
-          <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" async />
-          <script dangerouslySetInnerHTML={{ __html: `
-            (function() {
-              function initCharts() {
-                if (typeof Chart === 'undefined') { setTimeout(initCharts, 100); return; }
-                const seed = (n) => { let s=n; return ()=>{ s=(s*16807)%2147483647; return (s-1)/2147483646; }; };
-                new Chart(document.getElementById('chart-pareto'), {
-                  type:'bar',
-                  data:{ labels:['Identitovigilance','NGAP coding','Docs manquants','PEC absente','Autres'], datasets:[{ data:[35,25,15,12,13], backgroundColor:['#534AB7','#534AB7','#AFA9EC','#AFA9EC','#D3D1C7'], borderWidth:0, borderRadius:4 }] },
-                  options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'%'}}}, scales:{ x:{grid:{display:false},ticks:{font:{size:10},color:'#888780'}}, y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},color:'#888780',callback:v=>v+'%'},max:45} } }
-                });
-                new Chart(document.getElementById('chart-payer'), {
-                  type:'doughnut',
-                  data:{ labels:['CNOPS','CNSS','AMO','AMO-Tadamon'], datasets:[{ data:[48,27,18,7], backgroundColor:['#534AB7','#1D9E75','#BA7517','#D3D1C7'], borderWidth:2, borderColor:'#FAFAF7' }] },
-                  options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+c.raw+'%'}}} }
-                });
-                const rng=seed(42);
-                const scores=Array.from({length:60},(_,i)=>({x:i+1,y:Math.round(rng()*100)/100}));
-                const colors=scores.map(p=>p.y>0.65?'#E24B4A':p.y>0.35?'#BA7517':'#1D9E75');
-                new Chart(document.getElementById('chart-scatter'), {
-                  type:'scatter',
-                  data:{ datasets:[{ data:scores, backgroundColor:colors, pointRadius:5, pointHoverRadius:7 }] },
-                  options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Dossier #'+c.raw.x+' · Score: '+c.raw.y.toFixed(2)}}}, scales:{ x:{grid:{display:false},ticks:{font:{size:10},color:'#888780'},title:{display:true,text:'N° dossier',font:{size:10},color:'#888780'}}, y:{min:0,max:1,grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},color:'#888780',callback:v=>v.toFixed(1)},title:{display:true,text:'Score rejet',font:{size:10},color:'#888780'}} } }
-                });
-              }
-              initCharts();
-            })();
-          ` }} />
         </div>
       </section>
 
@@ -797,9 +967,7 @@ export default function LandingPage() {
             ].map(l => (
               <a key={l.label} href={l.href} style={{ fontSize: 12, color: "#52514D", textDecoration: "none" }}>{l.label}</a>
             ))}
-            <span style={{ marginLeft: "auto", fontSize: 12, color: "#52514D", display: "flex", alignItems: "center", gap: 6 }}>
-              <span className="live-dot"/> Tous les systèmes opérationnels
-            </span>
+
           </div>
         </div>
       </footer>
