@@ -73,7 +73,7 @@ function formatPct(n: number) { return (n > 0 ? "+" : "") + n.toFixed(1) + "%"; 
 const CHARGE_COLORS: Record<string, string> = {
   personnel:      "#5B4FE8",
   medicaments:    "#F2711C",
-  honoraires:     "#0F62FE",
+  honoraires:     "#5B4FE8",
   frais_generaux: "#16A34A",
   amortissements: "#9CA3AF",
 };
@@ -203,12 +203,12 @@ export default function ComptabilitePage() {
     finally { setSaving(false); }
   }
   if (error) return (
-    <div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center", background: "#F0F4FA" }}>
-      <div style={{ background: "#fff", borderRadius: 12, padding: 32, maxWidth: 400, textAlign: "center", border: "0.5px solid #E2E4E9" }}>
+    <div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center", background: "#F2F1EE" }}>
+      <div style={{ background: "#fff", borderRadius: 12, padding: 32, maxWidth: 400, textAlign: "center", border: "0.5px solid #E5E3DD" }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "#1A1D23", marginBottom: 8 }}>Accès restreint</div>
-        <div style={{ fontSize: 13, color: "#6B7280", lineHeight: 1.6, marginBottom: 20 }}>{error}</div>
-        <a href="/dashboard" style={{ fontSize: 13, color: "#0F62FE", textDecoration: "none" }}>← Retour au tableau de bord</a>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#1A1814", marginBottom: 8 }}>Accès restreint</div>
+        <div style={{ fontSize: 13, color: "#5C5852", lineHeight: 1.6, marginBottom: 20 }}>{error}</div>
+        <a href="/dashboard" style={{ fontSize: 13, color: "#5B4FE8", textDecoration: "none" }}>← Retour au tableau de bord</a>
       </div>
     </div>
   );
@@ -222,15 +222,15 @@ export default function ComptabilitePage() {
             <div style={s.sbMark}>
               <svg width="14" height="14" viewBox="0 0 44 44" fill="none">
                 <circle cx="22" cy="22" r="6" fill="white"/>
-                <circle cx="22" cy="22" r="2.8" fill="#0F62FE"/>
+                <circle cx="22" cy="22" r="2.8" fill="#5B4FE8"/>
                 <line x1="22" y1="7" x2="22" y2="14" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="22" y1="30" x2="22" y2="37" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="7" y1="22" x2="14" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="30" y1="22" x2="37" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
-                <line x1="12" y1="12" x2="16.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="27.5" y1="27.5" x2="32" y2="32" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="32" y1="12" x2="27.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="16.5" y1="27.5" x2="12" y2="32" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="12" y1="12" x2="16.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="27.5" y1="27.5" x2="32" y2="32" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="32" y1="12" x2="27.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="16.5" y1="27.5" x2="12" y2="32" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
             </div>
             <div>
@@ -287,7 +287,7 @@ export default function ComptabilitePage() {
 
         {loading ? (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ fontSize: 13, color: "#9EA3AE" }}>Chargement des données comptables...</div>
+            <div style={{ fontSize: 13, color: "#9C9890" }}>Chargement des données comptables...</div>
           </div>
         ) : (
           <div style={s.content}>
@@ -316,7 +316,7 @@ export default function ComptabilitePage() {
                     { lbl: "Chiffre d'affaires", val: formatMAD(k?.ca_total || 0),     sub: `${k?.nb_admissions || 0} admissions`,      color: "#5B4FE8", accent: "#EEEDFB" },
                     { lbl: "Total charges",       val: formatMAD(k?.total_charges || 0), sub: `${((k?.total_charges||0)/(k?.ca_total||1)*100).toFixed(1)}% du CA`, color: "#DC2626", accent: "#FEE2E2" },
                     { lbl: "EBE",                 val: formatMAD(k?.ebe || 0),           sub: `Marge EBE ${k?.ebe_pct || 0}% · Cible 20–25%`, color: k?.ebe_pct && k.ebe_pct >= 20 ? "#16A34A" : "#F59E0B", accent: k?.ebe_pct && k.ebe_pct >= 20 ? "#DCFCE7" : "#FEF9C3" },
-                    { lbl: "EBIT",                val: formatMAD(k?.ebit || 0),          sub: `Après amortissements ${formatMAD(k?.amortissements || 0)}`, color: "#0F62FE", accent: "#E6F1FB" },
+                    { lbl: "EBIT",                val: formatMAD(k?.ebit || 0),          sub: `Après amortissements ${formatMAD(k?.amortissements || 0)}`, color: "#5B4FE8", accent: "#EEEDFB" },
                   ].map(kpi => (
                     <div key={kpi.lbl} style={{ ...s.kpi, background: kpi.accent }}>
                       <div style={{ ...s.kpiBar, background: kpi.color }} />
@@ -335,18 +335,18 @@ export default function ComptabilitePage() {
                       {data?.charges_detail.map(c => (
                         <div key={c.categorie} style={{ marginBottom: 14 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                            <span style={{ fontSize: 12, color: "#1A1D23", fontWeight: 500 }}>{c.label}</span>
-                            <span style={{ fontSize: 12, fontWeight: 600, color: CHARGE_COLORS[c.categorie] || "#6B7280" }}>
-                              {formatMAD(c.montant)} <span style={{ fontSize: 10, color: "#9EA3AE" }}>({c.pct}%)</span>
+                            <span style={{ fontSize: 12, color: "#1A1814", fontWeight: 500 }}>{c.label}</span>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: CHARGE_COLORS[c.categorie] || "#5C5852" }}>
+                              {formatMAD(c.montant)} <span style={{ fontSize: 10, color: "#9C9890" }}>({c.pct}%)</span>
                             </span>
                           </div>
                           <div style={{ height: 6, background: "#F3F4F6", borderRadius: 3, overflow: "hidden" }}>
-                            <div style={{ width: `${c.pct}%`, height: "100%", background: CHARGE_COLORS[c.categorie] || "#6B7280", borderRadius: 3, transition: "width 0.5s" }} />
+                            <div style={{ width: `${c.pct}%`, height: "100%", background: CHARGE_COLORS[c.categorie] || "#5C5852", borderRadius: 3, transition: "width 0.5s" }} />
                           </div>
                         </div>
                       ))}
                     </div>
-                    <div style={{ marginTop: 16, padding: "10px 12px", background: "#F8FBFF", borderRadius: 8, fontSize: 11, color: "#185FA5" }}>
+                    <div style={{ marginTop: 16, padding: "10px 12px", background: "#F8F7FE", borderRadius: 8, fontSize: 11, color: "#4A3FD4" }}>
                       📌 Ratio masse salariale : {k ? ((k.charges_personnel / k.ca_total) * 100).toFixed(1) : 0}% du CA · Benchmark sectoriel : 45–55%
                     </div>
                   </div>
@@ -362,7 +362,7 @@ export default function ComptabilitePage() {
                             <div style={{ flex: 1, background: "#FEE2E2", borderRadius: "4px 4px 0 0", height: `${(m.charges / maxTrend) * 100}%` }} />
                             <div style={{ flex: 1, background: m.ebe >= 0 ? "#DCFCE7" : "#FEF9C3", borderRadius: "4px 4px 0 0", height: `${(Math.abs(m.ebe) / maxTrend) * 100}%` }} />
                           </div>
-                          <div style={{ fontSize: 9, color: "#9EA3AE" }}>{m.periode.split("-")[1] === "04" ? "Avr" : m.periode.split("-")[1] === "05" ? "Mai" : "Jun"}</div>
+                          <div style={{ fontSize: 9, color: "#9C9890" }}>{m.periode.split("-")[1] === "04" ? "Avr" : m.periode.split("-")[1] === "05" ? "Mai" : "Jun"}</div>
                         </div>
                       ))}
                     </div>
@@ -373,8 +373,8 @@ export default function ComptabilitePage() {
                     </div>
                     <div style={{ marginTop: 12 }}>
                       {data?.monthly_trend.map((m, i) => (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "0.5px solid #F5F7FA", fontSize: 12 }}>
-                          <span style={{ color: "#6B7280" }}>{m.periode.split("-")[1] === "04" ? "Avril" : m.periode.split("-")[1] === "05" ? "Mai" : "Juin"} 2026</span>
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "0.5px solid #F5F4F1", fontSize: 12 }}>
+                          <span style={{ color: "#5C5852" }}>{m.periode.split("-")[1] === "04" ? "Avril" : m.periode.split("-")[1] === "05" ? "Mai" : "Juin"} 2026</span>
                           <span style={{ color: "#5B4FE8" }}>{formatMAD(m.ca)}</span>
                           <span style={{ color: "#DC2626" }}>{formatMAD(m.charges)}</span>
                           <span style={{ color: m.ebe >= 0 ? "#16A34A" : "#DC2626", fontWeight: 600 }}>{formatMAD(m.ebe)}</span>
@@ -415,10 +415,10 @@ export default function ComptabilitePage() {
                         { lbl: "Actif Circulant (Compte 342)", val: k?.bfr ? k.bfr + (k?.tresorerie_nette || 0) : 0, color: "#5B4FE8", sub: "Créances clients + stocks" },
                         { lbl: "Passif Circulant (Compte 441)", val: k?.tresorerie_nette ? Math.abs(k.bfr || 0) : 0, color: "#F59E0B", sub: "Dettes fournisseurs + fiscales" },
                       ].map(row => (
-                        <div key={row.lbl} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "0.5px solid #F5F7FA" }}>
+                        <div key={row.lbl} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "0.5px solid #F5F4F1" }}>
                           <div>
-                            <div style={{ fontSize: 12, fontWeight: 500, color: "#1A1D23" }}>{row.lbl}</div>
-                            <div style={{ fontSize: 10, color: "#9EA3AE" }}>{row.sub}</div>
+                            <div style={{ fontSize: 12, fontWeight: 500, color: "#1A1814" }}>{row.lbl}</div>
+                            <div style={{ fontSize: 10, color: "#9C9890" }}>{row.sub}</div>
                           </div>
                           <span style={{ fontSize: 13, fontWeight: 700, color: row.color }}>{formatMAD(row.val)}</span>
                         </div>
@@ -429,17 +429,17 @@ export default function ComptabilitePage() {
                     <div style={s.cardTitle}>Indicateurs de recouvrement</div>
                     <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 16 }}>
                       <div style={{ background: k?.dso && k.dso <= 60 ? "#DCFCE7" : "#FEF9C3", borderRadius: 10, padding: "14px 16px" }}>
-                        <div style={{ fontSize: 10, color: "#6B7280", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>DSO — Délai de recouvrement</div>
+                        <div style={{ fontSize: 10, color: "#5C5852", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>DSO — Délai de recouvrement</div>
                         <div style={{ fontSize: 28, fontWeight: 700, color: k?.dso && k.dso <= 60 ? "#16A34A" : "#F59E0B" }}>{k?.dso || 0} <span style={{ fontSize: 14, fontWeight: 400 }}>jours</span></div>
-                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>Historique secteur : {">"}120j · Cible digitale : 50–60j</div>
+                        <div style={{ fontSize: 11, color: "#5C5852", marginTop: 4 }}>Historique secteur : {">"}120j · Cible digitale : 50–60j</div>
                         <div style={{ marginTop: 8, height: 6, background: "rgba(0,0,0,0.1)", borderRadius: 3, overflow: "hidden" }}>
                           <div style={{ width: `${Math.min(100, (k?.dso || 0) / 120 * 100)}%`, height: "100%", background: k?.dso && k.dso <= 60 ? "#16A34A" : "#F59E0B", borderRadius: 3 }} />
                         </div>
                       </div>
-                      <div style={{ background: "#E6F1FB", borderRadius: 10, padding: "14px 16px" }}>
-                        <div style={{ fontSize: 10, color: "#6B7280", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>Ratio Encaissements / Facturations</div>
-                        <div style={{ fontSize: 28, fontWeight: 700, color: "#0F62FE" }}>{k?.ratio_encaissement || 0}<span style={{ fontSize: 14, fontWeight: 400 }}>%</span></div>
-                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>Cible : {">"}95% · Signal grippage {"<"}85%</div>
+                      <div style={{ background: "#EEEDFB", borderRadius: 10, padding: "14px 16px" }}>
+                        <div style={{ fontSize: 10, color: "#5C5852", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>Ratio Encaissements / Facturations</div>
+                        <div style={{ fontSize: 28, fontWeight: 700, color: "#5B4FE8" }}>{k?.ratio_encaissement || 0}<span style={{ fontSize: 14, fontWeight: 400 }}>%</span></div>
+                        <div style={{ fontSize: 11, color: "#5C5852", marginTop: 4 }}>Cible : {">"}95% · Signal grippage {"<"}85%</div>
                       </div>
                     </div>
                   </div>
@@ -455,7 +455,7 @@ export default function ComptabilitePage() {
                     { lbl: "Taux d'occupation", val: `${k?.taux_occupation || 0}%`, sub: `${k?.total_journees || 0} journées · Cible 65–75%`, color: k?.taux_occupation && k.taux_occupation >= 65 && k.taux_occupation <= 75 ? "#16A34A" : "#F59E0B", accent: "#DCFCE7" },
                     { lbl: "Admissions",         val: String(k?.nb_admissions || 0), sub: `${k?.total_journees || 0} journées d'hospitalisation`, color: "#5B4FE8", accent: "#EEEDFB" },
                     { lbl: "Recette moy/patient",val: formatMAD(k?.recette_moy_patient || 0), sub: "CA total / nb admissions", color: "#F2711C", accent: "#FEF2EA" },
-                    { lbl: "Coût moy/journée",   val: formatMAD(k?.cout_journee || 0), sub: "Charges / nb journées facturées", color: "#0F62FE", accent: "#E6F1FB" },
+                    { lbl: "Coût moy/journée",   val: formatMAD(k?.cout_journee || 0), sub: "Charges / nb journées facturées", color: "#5B4FE8", accent: "#EEEDFB" },
                   ].map(kpi => (
                     <div key={kpi.lbl} style={{ ...s.kpi, background: kpi.accent }}>
                       <div style={{ ...s.kpiBar, background: kpi.color }} />
@@ -479,7 +479,7 @@ export default function ComptabilitePage() {
                     <tbody>
                       {data?.lits_detail.map((l, i) => (
                         <tr key={i} style={s.tr}>
-                          <td style={s.td}><span style={{ fontWeight: 500, color: "#1A1D23" }}>{l.service}</span></td>
+                          <td style={s.td}><span style={{ fontWeight: 500, color: "#1A1814" }}>{l.service}</span></td>
                           <td style={s.td}>{l.nb_total} lits</td>
                           <td style={s.td}>{l.nb_occupes} lits</td>
                           <td style={s.td}>{l.journees}j</td>
@@ -500,7 +500,7 @@ export default function ComptabilitePage() {
                       ))}
                     </tbody>
                   </table>
-                  <div style={{ marginTop: 14, padding: "10px 12px", background: "#F8FBFF", borderRadius: 8, fontSize: 11, color: "#185FA5" }}>
+                  <div style={{ marginTop: 14, padding: "10px 12px", background: "#F8F7FE", borderRadius: 8, fontSize: 11, color: "#4A3FD4" }}>
                     📌 Taux global : {k?.taux_occupation || 0}% · Cible optimale rentabilité : 65–75% (couverture charges fixes)
                   </div>
                 </div>
@@ -701,70 +701,70 @@ export default function ComptabilitePage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F0F4FA", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
-  sidebar: { width: 220, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E2E4E9", display: "flex", flexDirection: "column" },
-  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #EEF2F8" },
+  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F2F1EE", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
+  sidebar: { width: 220, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E5E3DD", display: "flex", flexDirection: "column" },
+  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #F2F1EE" },
   sbBrand: { display: "flex", alignItems: "center", gap: 9 },
   sbMark:  { width: 28, height: 28, background: "#5B4FE8", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  sbName:  { fontSize: 15, fontWeight: 300, color: "#0C1B33", letterSpacing: "-0.02em", lineHeight: 1.1 },
+  sbName:  { fontSize: 15, fontWeight: 300, color: "#1A1814", letterSpacing: "-0.02em", lineHeight: 1.1 },
   sbIQ:    { fontWeight: 800, color: "#5B4FE8" },
-  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9EA3AE", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
+  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9C9890", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
   sbNav:   { flex: 1, padding: "10px 8px", overflowY: "auto", display: "flex", flexDirection: "column" },
-  sbSec:   { fontSize: 9, fontWeight: 600, color: "#B5D4F4", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
-  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#6B7280", fontSize: 12, textDecoration: "none", marginBottom: 1 },
+  sbSec:   { fontSize: 9, fontWeight: 600, color: "#C7C2F7", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
+  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#5C5852", fontSize: 12, textDecoration: "none", marginBottom: 1 },
   sbItemActive: { background: "#EEEDFB", color: "#5B4FE8", fontWeight: 500 },
-  sbItemBtn: { display: "flex", alignItems: "center", padding: "6px 8px", borderRadius: 7, cursor: "pointer", color: "#6B7280", fontSize: 11, textDecoration: "none", marginBottom: 1, border: "none", background: "none", fontFamily: "inherit", width: "100%", textAlign: "left" as const },
-  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #EEF2F8" },
+  sbItemBtn: { display: "flex", alignItems: "center", padding: "6px 8px", borderRadius: 7, cursor: "pointer", color: "#5C5852", fontSize: 11, textDecoration: "none", marginBottom: 1, border: "none", background: "none", fontFamily: "inherit", width: "100%", textAlign: "left" as const },
+  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #F2F1EE" },
   logoutBtn: { width: "100%", padding: "8px", borderRadius: 7, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit" },
 
   main:    { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  topbar:  { background: "#fff", borderBottom: "0.5px solid #E2E4E9", padding: "0 20px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
-  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1D23" },
-  topSub:  { fontSize: 11, color: "#9EA3AE", marginTop: 2 },
+  topbar:  { background: "#fff", borderBottom: "0.5px solid #E5E3DD", padding: "0 20px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
+  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1814" },
+  topSub:  { fontSize: 11, color: "#9C9890", marginTop: 2 },
 
   periodBar:      { display: "flex", gap: 4 },
-  periodBtn:      { fontSize: 11, fontWeight: 500, padding: "5px 12px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
+  periodBtn:      { fontSize: 11, fontWeight: 500, padding: "5px 12px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit" },
   periodBtnActive:{ background: "#EEEDFB", color: "#5B4FE8", border: "0.5px solid #C4C0F8", fontWeight: 600 },
 
   content: { flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 },
 
   sectionTabs:    { display: "flex", gap: 4, marginBottom: 4 },
-  sectionTab:     { fontSize: 12, fontWeight: 500, padding: "8px 16px", borderRadius: 8, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
+  sectionTab:     { fontSize: 12, fontWeight: 500, padding: "8px 16px", borderRadius: 8, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit" },
   sectionTabActive:{ background: "#EEEDFB", color: "#5B4FE8", border: "0.5px solid #C4C0F8", fontWeight: 600 },
 
   kpiGrid:  { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 },
   kpi:      { borderRadius: 10, padding: "14px 14px 12px", position: "relative", overflow: "hidden", border: "0.5px solid rgba(0,0,0,0.06)" },
   kpiBar:   { position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "10px 10px 0 0" },
-  kpiLbl:   { fontSize: 9, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 },
+  kpiLbl:   { fontSize: 9, fontWeight: 600, color: "#5C5852", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 },
   kpiVal:   { fontSize: 15, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 4 },
-  kpiSub:   { fontSize: 9, color: "#9EA3AE" },
+  kpiSub:   { fontSize: 9, color: "#9C9890" },
 
   twoCol:    { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 },
-  card:      { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: 16 },
-  cardTitle: { fontSize: 12, fontWeight: 600, color: "#1A1D23" },
+  card:      { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 16 },
+  cardTitle: { fontSize: 12, fontWeight: 600, color: "#1A1814" },
 
   table:    { width: "100%", borderCollapse: "collapse", fontSize: 12 },
-  th:       { textAlign: "left", padding: "6px 12px", fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #EEF2F8" },
-  tr:       { borderBottom: "0.5px solid #F5F7FA" },
+  th:       { textAlign: "left", padding: "6px 12px", fontSize: 9, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #F2F1EE" },
+  tr:       { borderBottom: "0.5px solid #F5F4F1" },
   td:       { padding: "10px 12px", verticalAlign: "middle", color: "#57534E" },
 
   saisirBtn:  { fontSize: 12, fontWeight: 600, padding: "7px 16px", borderRadius: 8, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit" },
-  overlay:    { position: "fixed", inset: 0, background: "rgba(12,27,51,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 },
+  overlay:    { position: "fixed", inset: 0, background: "rgba(26,24,20,0.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 },
   modal:      { background: "#fff", borderRadius: 14, width: "100%", maxWidth: 580, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,0.2)" },
-  modalHdr:   { display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "20px 22px 16px", borderBottom: "0.5px solid #EEF2F8" },
-  modalTitle: { fontSize: 15, fontWeight: 600, color: "#1A1D23" },
-  modalSub:   { fontSize: 11, color: "#9EA3AE", marginTop: 3 },
-  closeBtn:   { background: "none", border: "none", fontSize: 16, color: "#9EA3AE", cursor: "pointer" },
-  modalTabs:  { display: "flex", gap: 0, padding: "12px 22px 0", borderBottom: "0.5px solid #EEF2F8" },
-  modalTab:   { fontSize: 12, fontWeight: 500, padding: "8px 16px", borderRadius: "8px 8px 0 0", cursor: "pointer", border: "none", background: "none", color: "#6B7280", fontFamily: "inherit" },
+  modalHdr:   { display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "20px 22px 16px", borderBottom: "0.5px solid #F2F1EE" },
+  modalTitle: { fontSize: 15, fontWeight: 600, color: "#1A1814" },
+  modalSub:   { fontSize: 11, color: "#9C9890", marginTop: 3 },
+  closeBtn:   { background: "none", border: "none", fontSize: 16, color: "#9C9890", cursor: "pointer" },
+  modalTabs:  { display: "flex", gap: 0, padding: "12px 22px 0", borderBottom: "0.5px solid #F2F1EE" },
+  modalTab:   { fontSize: 12, fontWeight: 500, padding: "8px 16px", borderRadius: "8px 8px 0 0", cursor: "pointer", border: "none", background: "none", color: "#5C5852", fontFamily: "inherit" },
   modalTabActive: { background: "#EEEDFB", color: "#5B4FE8", fontWeight: 600 },
   modalBody:  { padding: "20px 22px" },
-  modalNote:  { fontSize: 12, color: "#9EA3AE", marginBottom: 16, background: "#F8FBFF", padding: "8px 12px", borderRadius: 7 },
+  modalNote:  { fontSize: 12, color: "#9C9890", marginBottom: 16, background: "#F8F7FE", padding: "8px 12px", borderRadius: 7 },
   formGrid:   { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 },
   formField:  { display: "flex", flexDirection: "column", gap: 4 },
   formLabel:  { fontSize: 10, fontWeight: 600, color: "#374151", textTransform: "uppercase" as const, letterSpacing: "0.06em" },
-  formInput:  { padding: "9px 12px", border: "0.5px solid #E2E4E9", borderRadius: 8, fontSize: 13, color: "#1A1D23", fontFamily: "inherit", outline: "none" },
-  formHint:   { fontSize: 10, color: "#9EA3AE" },
+  formInput:  { padding: "9px 12px", border: "0.5px solid #E5E3DD", borderRadius: 8, fontSize: 13, color: "#1A1814", fontFamily: "inherit", outline: "none" },
+  formHint:   { fontSize: 10, color: "#9C9890" },
   saveBtn:    { width: "100%", padding: "11px", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit", marginTop: 4 },
   successMsg: { background: "#DCFCE7", border: "0.5px solid #86EFAC", borderRadius: 7, padding: "8px 12px", fontSize: 12, color: "#166534", marginBottom: 10 },
   errorMsg:   { background: "#FEE2E2", border: "0.5px solid #FCA5A5", borderRadius: 7, padding: "8px 12px", fontSize: 12, color: "#991B1B", marginBottom: 10 },

@@ -35,7 +35,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_STYLES: Record<string, { bg: string; color: string }> = {
-  admin:    { bg: "#E6F1FB", color: "#1E40AF" },
+  admin:    { bg: "#EEEDFB", color: "#1E40AF" },
   biller:   { bg: "#F0FDF4", color: "#166534" },
   auditor:  { bg: "#FFF7ED", color: "#9A3412" },
   director: { bg: "#F5F3FF", color: "#6D28D9" },
@@ -227,15 +227,15 @@ export default function SettingsPage() {
             <div style={s.sbMark}>
               <svg width="14" height="14" viewBox="0 0 44 44" fill="none">
                 <circle cx="22" cy="22" r="6" fill="white"/>
-                <circle cx="22" cy="22" r="2.8" fill="#0F62FE"/>
+                <circle cx="22" cy="22" r="2.8" fill="#5B4FE8"/>
                 <line x1="22" y1="7"    x2="22" y2="14"   stroke="white"   strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="22" y1="30"   x2="22" y2="37"   stroke="white"   strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="7"  y1="22"   x2="14" y2="22"   stroke="white"   strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="30" y1="22"   x2="37" y2="22"   stroke="white"   strokeWidth="2.2" strokeLinecap="round"/>
-                <line x1="12"   y1="12"   x2="16.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="27.5" y1="27.5" x2="32"   y2="32"   stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="32"   y1="12"   x2="27.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="16.5" y1="27.5" x2="12"   y2="32"   stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="12"   y1="12"   x2="16.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="27.5" y1="27.5" x2="32"   y2="32"   stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="32"   y1="12"   x2="27.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="16.5" y1="27.5" x2="12"   y2="32"   stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
             </div>
             <div>
@@ -391,7 +391,7 @@ export default function SettingsPage() {
 
                   <div style={{ marginTop: 16 }}>
                     {agents.map(agent => {
-                      const rs = ROLE_STYLES[agent.role] ?? { bg: "#F3F4F6", color: "#6B7280" };
+                      const rs = ROLE_STYLES[agent.role] ?? { bg: "#F3F4F6", color: "#5C5852" };
                       return (
                         <div key={agent.id} style={s.agentRow}>
                           <div style={s.agentAvatar}>
@@ -442,7 +442,7 @@ export default function SettingsPage() {
                         </button>
                       ))}
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 12, color: "#6B7280" }}>Personnalisé :</span>
+                        <span style={{ fontSize: 12, color: "#5C5852" }}>Personnalisé :</span>
                         <input
                           style={{ ...s.input, width: 70 }}
                           type="number"
@@ -451,7 +451,7 @@ export default function SettingsPage() {
                           value={forclusionDays}
                           onChange={e => setForclusionDays(parseInt(e.target.value) || 7)}
                         />
-                        <span style={{ fontSize: 12, color: "#6B7280" }}>jours</span>
+                        <span style={{ fontSize: 12, color: "#5C5852" }}>jours</span>
                       </div>
                     </div>
                   </div>
@@ -536,68 +536,68 @@ export default function SettingsPage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F0F4FA", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
-  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E2E4E9", display: "flex", flexDirection: "column" },
-  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #EEF2F8" },
+  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F2F1EE", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
+  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E5E3DD", display: "flex", flexDirection: "column" },
+  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #F2F1EE" },
   sbBrand: { display: "flex", alignItems: "center", gap: 9 },
-  sbMark:  { width: 28, height: 28, background: "#0F62FE", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  sbName:  { fontSize: 15, fontWeight: 300, color: "#0C1B33", letterSpacing: "-0.02em", lineHeight: 1.1 },
-  sbIQ:    { fontWeight: 800, color: "#0F62FE" },
-  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9EA3AE", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
+  sbMark:  { width: 28, height: 28, background: "#5B4FE8", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  sbName:  { fontSize: 15, fontWeight: 300, color: "#1A1814", letterSpacing: "-0.02em", lineHeight: 1.1 },
+  sbIQ:    { fontWeight: 800, color: "#5B4FE8" },
+  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9C9890", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
   sbNav:   { flex: 1, padding: "10px 8px", overflowY: "auto", display: "flex", flexDirection: "column" },
-  sbSec:   { fontSize: 9, fontWeight: 600, color: "#B5D4F4", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
-  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#6B7280", fontSize: 12, textDecoration: "none", marginBottom: 1 },
-  sbItemActive: { background: "#E6F1FB", color: "#0F62FE", fontWeight: 500 },
-  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #EEF2F8" },
+  sbSec:   { fontSize: 9, fontWeight: 600, color: "#C7C2F7", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
+  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#5C5852", fontSize: 12, textDecoration: "none", marginBottom: 1 },
+  sbItemActive: { background: "#EEEDFB", color: "#5B4FE8", fontWeight: 500 },
+  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #F2F1EE" },
   logoutBtn: { width: "100%", padding: "8px", borderRadius: 7, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit" },
 
   main:    { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  topbar:  { background: "#fff", borderBottom: "0.5px solid #E2E4E9", padding: "0 20px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
-  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1D23" },
-  topSub:  { fontSize: 11, color: "#9EA3AE", marginTop: 2 },
+  topbar:  { background: "#fff", borderBottom: "0.5px solid #E5E3DD", padding: "0 20px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
+  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1814" },
+  topSub:  { fontSize: 11, color: "#9C9890", marginTop: 2 },
   msgBanner: { fontSize: 12, padding: "7px 14px", borderRadius: 8, fontWeight: 500 },
 
   content: { flex: 1, overflowY: "auto", padding: "20px" },
   layout:  { display: "flex", gap: 20, alignItems: "flex-start" },
 
   tabNav:  { width: 220, flexShrink: 0, display: "flex", flexDirection: "column", gap: 4 },
-  tabBtn:  { textAlign: "left", padding: "10px 14px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontSize: 13, color: "#6B7280", fontFamily: "inherit" },
-  tabBtnActive: { background: "#E6F1FB", color: "#0F62FE", fontWeight: 500 },
+  tabBtn:  { textAlign: "left", padding: "10px 14px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontSize: 13, color: "#5C5852", fontFamily: "inherit" },
+  tabBtnActive: { background: "#EEEDFB", color: "#5B4FE8", fontWeight: 500 },
 
   tabContent: { flex: 1 },
-  card:    { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 12, padding: "24px" },
-  cardTitle: { fontSize: 15, fontWeight: 600, color: "#1A1D23", marginBottom: 4 },
-  cardSub:   { fontSize: 12, color: "#9EA3AE", marginBottom: 20 },
-  loading:   { fontSize: 13, color: "#9EA3AE", padding: "20px 0" },
+  card:    { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 12, padding: "24px" },
+  cardTitle: { fontSize: 15, fontWeight: 600, color: "#1A1814", marginBottom: 4 },
+  cardSub:   { fontSize: 12, color: "#9C9890", marginBottom: 20 },
+  loading:   { fontSize: 13, color: "#9C9890", padding: "20px 0" },
 
   formGrid:  { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 },
   formGroup: { display: "flex", flexDirection: "column", gap: 6 },
-  label:     { fontSize: 10, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.06em" },
-  input:     { padding: "9px 12px", border: "0.5px solid #E2E4E9", borderRadius: 8, fontSize: 13, color: "#1A1D23", fontFamily: "inherit", outline: "none", background: "#FAFAFA" },
-  saveBtn:   { marginTop: 20, padding: "10px 24px", background: "#0F62FE", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" },
-  cancelBtn: { marginTop: 20, padding: "10px 24px", background: "#fff", color: "#6B7280", border: "0.5px solid #E2E4E9", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" },
-  addBtn:    { padding: "7px 14px", background: "#0F62FE", color: "#fff", border: "none", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" },
+  label:     { fontSize: 10, fontWeight: 600, color: "#5C5852", textTransform: "uppercase", letterSpacing: "0.06em" },
+  input:     { padding: "9px 12px", border: "0.5px solid #E5E3DD", borderRadius: 8, fontSize: 13, color: "#1A1814", fontFamily: "inherit", outline: "none", background: "#FAFAFA" },
+  saveBtn:   { marginTop: 20, padding: "10px 24px", background: "#5B4FE8", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" },
+  cancelBtn: { marginTop: 20, padding: "10px 24px", background: "#fff", color: "#5C5852", border: "0.5px solid #E5E3DD", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" },
+  addBtn:    { padding: "7px 14px", background: "#5B4FE8", color: "#fff", border: "none", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" },
 
-  agentForm:      { background: "#F8FBFF", border: "0.5px solid #B5D4F4", borderRadius: 10, padding: 16, marginBottom: 16 },
-  agentFormTitle: { fontSize: 12, fontWeight: 600, color: "#185FA5", marginBottom: 12 },
+  agentForm:      { background: "#F8F7FE", border: "0.5px solid #C7C2F7", borderRadius: 10, padding: 16, marginBottom: 16 },
+  agentFormTitle: { fontSize: 12, fontWeight: 600, color: "#4A3FD4", marginBottom: 12 },
   agentRow:   { display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "0.5px solid #F3F4F6" },
-  agentAvatar:{ width: 32, height: 32, borderRadius: "50%", background: "#E6F1FB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#0F62FE", flexShrink: 0 },
-  agentName:  { fontSize: 13, fontWeight: 500, color: "#1A1D23" },
-  agentEmail: { fontSize: 11, color: "#9EA3AE", marginTop: 2 },
+  agentAvatar:{ width: 32, height: 32, borderRadius: "50%", background: "#EEEDFB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#5B4FE8", flexShrink: 0 },
+  agentName:  { fontSize: 13, fontWeight: 500, color: "#1A1814" },
+  agentEmail: { fontSize: 11, color: "#9C9890", marginTop: 2 },
   roleBadge:  { fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20 },
   toggleBtn:  { fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 20, border: "none", cursor: "pointer", fontFamily: "inherit" },
   deleteAgentBtn: { fontSize: 14, background: "none", border: "none", cursor: "pointer", color: "#DC2626", padding: "2px 6px" },
 
-  settingSection: { marginBottom: 28, paddingBottom: 28, borderBottom: "0.5px solid #EEF2F8" },
-  settingTitle:   { fontSize: 13, fontWeight: 600, color: "#1A1D23", marginBottom: 4 },
-  settingDesc:    { fontSize: 12, color: "#6B7280" },
-  dayBtn:     { padding: "8px 16px", borderRadius: 8, border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" },
-  dayBtnActive: { background: "#E6F1FB", color: "#0F62FE", borderColor: "#B5D4F4", fontWeight: 600 },
-  payerBtn:     { padding: "8px 18px", borderRadius: 8, border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontSize: 13, cursor: "pointer", fontFamily: "inherit" },
-  payerBtnActive: { background: "#E6F1FB", color: "#0F62FE", borderColor: "#B5D4F4", fontWeight: 600 },
+  settingSection: { marginBottom: 28, paddingBottom: 28, borderBottom: "0.5px solid #F2F1EE" },
+  settingTitle:   { fontSize: 13, fontWeight: 600, color: "#1A1814", marginBottom: 4 },
+  settingDesc:    { fontSize: 12, color: "#5C5852" },
+  dayBtn:     { padding: "8px 16px", borderRadius: 8, border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" },
+  dayBtnActive: { background: "#EEEDFB", color: "#5B4FE8", borderColor: "#C7C2F7", fontWeight: 600 },
+  payerBtn:     { padding: "8px 18px", borderRadius: 8, border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontSize: 13, cursor: "pointer", fontFamily: "inherit" },
+  payerBtnActive: { background: "#EEEDFB", color: "#5B4FE8", borderColor: "#C7C2F7", fontWeight: 600 },
 
   pwMismatch: { fontSize: 12, color: "#DC2626", marginTop: 8 },
-  securityInfo: { marginTop: 24, background: "#F8FBFF", border: "0.5px solid #B5D4F4", borderRadius: 10, padding: "14px 16px" },
-  securityInfoTitle: { fontSize: 12, fontWeight: 600, color: "#185FA5", marginBottom: 10 },
-  securityInfoItem:  { fontSize: 12, color: "#6B7280", marginBottom: 6 },
+  securityInfo: { marginTop: 24, background: "#F8F7FE", border: "0.5px solid #C7C2F7", borderRadius: 10, padding: "14px 16px" },
+  securityInfoTitle: { fontSize: 12, fontWeight: 600, color: "#4A3FD4", marginBottom: 10 },
+  securityInfoItem:  { fontSize: 12, color: "#5C5852", marginBottom: 6 },
 };

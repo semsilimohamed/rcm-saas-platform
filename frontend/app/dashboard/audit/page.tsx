@@ -19,15 +19,15 @@ const ACTION_STYLES: Record<string, { bg: string; color: string; label: string }
   "DOSSIER_APPROUVÉ":  { bg: "#DCFCE7", color: "#166534", label: "Approuvé" },
   "DOSSIER_REJETÉ":    { bg: "#FEE2E2", color: "#991B1B", label: "Rejeté" },
   "DOSSIER_SUPPRIMÉ":  { bg: "#FEF9C3", color: "#854D0E", label: "Supprimé" },
-  "DOSSIER_CRÉÉ":      { bg: "#E6F1FB", color: "#1E40AF", label: "Créé" },
+  "DOSSIER_CRÉÉ":      { bg: "#EEEDFB", color: "#1E40AF", label: "Créé" },
   "PATIENT_CRÉÉ":      { bg: "#F0FDF4", color: "#166534", label: "Patient créé" },
   "PATIENT_SUPPRIMÉ":  { bg: "#FEE2E2", color: "#991B1B", label: "Patient supprimé" },
   "CONNEXION":         { bg: "#F5F3FF", color: "#6D28D9", label: "Connexion" },
-  "DÉCONNEXION":       { bg: "#F3F4F6", color: "#6B7280", label: "Déconnexion" },
+  "DÉCONNEXION":       { bg: "#F3F4F6", color: "#5C5852", label: "Déconnexion" },
 };
 
 function getActionStyle(action: string) {
-  return ACTION_STYLES[action] ?? { bg: "#F3F4F6", color: "#6B7280", label: action };
+  return ACTION_STYLES[action] ?? { bg: "#F3F4F6", color: "#5C5852", label: action };
 }
 
 function formatDateTime(iso: string) {
@@ -123,15 +123,15 @@ export default function AuditPage() {
             <div style={s.sbMark}>
               <svg width="14" height="14" viewBox="0 0 44 44" fill="none">
                 <circle cx="22" cy="22" r="6" fill="white"/>
-                <circle cx="22" cy="22" r="2.8" fill="#0F62FE"/>
+                <circle cx="22" cy="22" r="2.8" fill="#5B4FE8"/>
                 <line x1="22" y1="7"    x2="22" y2="14"   stroke="white"   strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="22" y1="30"   x2="22" y2="37"   stroke="white"   strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="7"  y1="22"   x2="14" y2="22"   stroke="white"   strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="30" y1="22"   x2="37" y2="22"   stroke="white"   strokeWidth="2.2" strokeLinecap="round"/>
-                <line x1="12"   y1="12"   x2="16.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="27.5" y1="27.5" x2="32"   y2="32"   stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="32"   y1="12"   x2="27.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="16.5" y1="27.5" x2="12"   y2="32"   stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="12"   y1="12"   x2="16.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="27.5" y1="27.5" x2="32"   y2="32"   stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="32"   y1="12"   x2="27.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="16.5" y1="27.5" x2="12"   y2="32"   stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
             </div>
             <div>
@@ -188,8 +188,8 @@ export default function AuditPage() {
           {/* KPI ROW */}
           <div style={s.kpiGrid}>
             {[
-              { lbl: "Total événements", val: String(logs.length),   accent: "#0F62FE", sub: "depuis le début" },
-              { lbl: "Aujourd'hui",      val: String(totalToday),    accent: "#8B5CF6", sub: "actions enregistrées" },
+              { lbl: "Total événements", val: String(logs.length),   accent: "#5B4FE8", sub: "depuis le début" },
+              { lbl: "Aujourd'hui",      val: String(totalToday),    accent: "#F2711C", sub: "actions enregistrées" },
               { lbl: "Utilisateurs",     val: String(uniqueUsers),   accent: "#16A34A", sub: "actifs sur la plateforme" },
               { lbl: "Suppressions",     val: String(deletions),     accent: "#F59E0B", sub: "dossiers supprimés" },
               { lbl: "Rejets saisis",    val: String(rejections),    accent: "#DC2626", sub: "statuts rejetés" },
@@ -216,7 +216,7 @@ export default function AuditPage() {
                       <div style={{
                         ...s.histBarFill,
                         height: `${pct}%`,
-                        background: pct > 66 ? "#0F62FE" : pct > 33 ? "#8B5CF6" : "#B5D4F4",
+                        background: pct > 66 ? "#5B4FE8" : pct > 33 ? "#8B5CF6" : "#C7C2F7",
                       }} />
                     </div>
                     <div style={s.histBarLabel}>{d.label}</div>
@@ -319,67 +319,67 @@ export default function AuditPage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F0F4FA", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
-  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E2E4E9", display: "flex", flexDirection: "column" },
-  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #EEF2F8" },
+  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F2F1EE", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
+  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E5E3DD", display: "flex", flexDirection: "column" },
+  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #F2F1EE" },
   sbBrand: { display: "flex", alignItems: "center", gap: 9 },
-  sbMark:  { width: 28, height: 28, background: "#0F62FE", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  sbName:  { fontSize: 15, fontWeight: 300, color: "#0C1B33", letterSpacing: "-0.02em", lineHeight: 1.1 },
-  sbIQ:    { fontWeight: 800, color: "#0F62FE" },
-  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9EA3AE", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
+  sbMark:  { width: 28, height: 28, background: "#5B4FE8", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  sbName:  { fontSize: 15, fontWeight: 300, color: "#1A1814", letterSpacing: "-0.02em", lineHeight: 1.1 },
+  sbIQ:    { fontWeight: 800, color: "#5B4FE8" },
+  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9C9890", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
   sbNav:   { flex: 1, padding: "10px 8px", overflowY: "auto", display: "flex", flexDirection: "column" },
-  sbSec:   { fontSize: 9, fontWeight: 600, color: "#B5D4F4", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
-  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#6B7280", fontSize: 12, textDecoration: "none", marginBottom: 1 },
-  sbItemActive: { background: "#E6F1FB", color: "#0F62FE", fontWeight: 500 },
-  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #EEF2F8" },
+  sbSec:   { fontSize: 9, fontWeight: 600, color: "#C7C2F7", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
+  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#5C5852", fontSize: 12, textDecoration: "none", marginBottom: 1 },
+  sbItemActive: { background: "#EEEDFB", color: "#5B4FE8", fontWeight: 500 },
+  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #F2F1EE" },
   logoutBtn: { width: "100%", padding: "8px", borderRadius: 7, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit" },
 
   main:    { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  topbar:  { background: "#fff", borderBottom: "0.5px solid #E2E4E9", padding: "0 20px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
-  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1D23" },
-  topSub:  { fontSize: 11, color: "#9EA3AE", marginTop: 2 },
+  topbar:  { background: "#fff", borderBottom: "0.5px solid #E5E3DD", padding: "0 20px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
+  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1814" },
+  topSub:  { fontSize: 11, color: "#9C9890", marginTop: 2 },
   topRight:{ display: "flex", alignItems: "center", gap: 10 },
-  searchInput: { padding: "7px 14px", border: "0.5px solid #D1D5DB", borderRadius: 8, fontSize: 12, color: "#1A1D23", outline: "none", fontFamily: "inherit", background: "#fff", width: 280 },
+  searchInput: { padding: "7px 14px", border: "0.5px solid #D1D5DB", borderRadius: 8, fontSize: 12, color: "#1A1814", outline: "none", fontFamily: "inherit", background: "#fff", width: 280 },
 
   content: { flex: 1, overflowY: "auto", padding: "16px 20px" },
 
   kpiGrid:  { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10, marginBottom: 14 },
-  kpi:      { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: "14px 14px 12px", position: "relative", overflow: "hidden" },
+  kpi:      { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: "14px 14px 12px", position: "relative", overflow: "hidden" },
   kpiAccent:{ position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "10px 10px 0 0" },
-  kpiLbl:   { fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 },
+  kpiLbl:   { fontSize: 9, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 },
   kpiVal:   { fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1 },
-  kpiSub:   { fontSize: 10, color: "#9EA3AE", marginTop: 5 },
+  kpiSub:   { fontSize: 10, color: "#9C9890", marginTop: 5 },
 
   filterBar:   { display: "flex", alignItems: "center", gap: 12, marginBottom: 14, flexWrap: "wrap" },
-  filterLabel: { fontSize: 11, color: "#6B7280", fontWeight: 500, flexShrink: 0 },
+  filterLabel: { fontSize: 11, color: "#5C5852", fontWeight: 500, flexShrink: 0 },
   chips:       { display: "flex", gap: 5, flexWrap: "wrap" },
-  chip:        { fontSize: 10, fontWeight: 500, padding: "4px 10px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
-  chipActive:  { background: "#E6F1FB", color: "#0F62FE", borderColor: "#B5D4F4" },
+  chip:        { fontSize: 10, fontWeight: 500, padding: "4px 10px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit" },
+  chipActive:  { background: "#EEEDFB", color: "#5B4FE8", borderColor: "#C7C2F7" },
 
-  tableCard:  { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, overflow: "hidden" },
-  tableHdr:   { padding: "12px 16px", borderBottom: "0.5px solid #EEF2F8", display: "flex", alignItems: "center", justifyContent: "space-between" },
-  tableTitle: { fontSize: 12, fontWeight: 600, color: "#1A1D23" },
-  immutable:  { fontSize: 10, color: "#6B7280", background: "#F0F4FA", padding: "3px 8px", borderRadius: 20 },
-  loading:    { padding: "24px 16px", fontSize: 13, color: "#9EA3AE" },
+  tableCard:  { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, overflow: "hidden" },
+  tableHdr:   { padding: "12px 16px", borderBottom: "0.5px solid #F2F1EE", display: "flex", alignItems: "center", justifyContent: "space-between" },
+  tableTitle: { fontSize: 12, fontWeight: 600, color: "#1A1814" },
+  immutable:  { fontSize: 10, color: "#5C5852", background: "#F2F1EE", padding: "3px 8px", borderRadius: 20 },
+  loading:    { padding: "24px 16px", fontSize: 13, color: "#9C9890" },
   table:      { width: "100%", borderCollapse: "collapse", fontSize: 12 },
-  th:         { textAlign: "left", padding: "8px 14px", fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #EEF2F8", background: "#FAFBFF", whiteSpace: "nowrap" },
-  tr:         { borderBottom: "0.5px solid #F5F7FA" },
+  th:         { textAlign: "left", padding: "8px 14px", fontSize: 9, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #F2F1EE", background: "#FAFAF7", whiteSpace: "nowrap" },
+  tr:         { borderBottom: "0.5px solid #F5F4F1" },
   td:         { padding: "10px 14px", verticalAlign: "middle" },
 
-  datetime:   { fontSize: 11, color: "#6B7280", whiteSpace: "nowrap" },
+  datetime:   { fontSize: 11, color: "#5C5852", whiteSpace: "nowrap" },
   userCell:   { display: "flex", alignItems: "center", gap: 8 },
-  avatar:     { width: 24, height: 24, borderRadius: "50%", background: "#E6F1FB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: "#0F62FE", flexShrink: 0 },
-  userEmail:  { fontSize: 11, color: "#1A1D23", fontWeight: 500 },
+  avatar:     { width: 24, height: 24, borderRadius: "50%", background: "#EEEDFB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: "#5B4FE8", flexShrink: 0 },
+  userEmail:  { fontSize: 11, color: "#1A1814", fontWeight: 500 },
   actionBadge:{ display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20, whiteSpace: "nowrap" },
-  resourceId: { fontFamily: "monospace", fontSize: 11, color: "#0F62FE", fontWeight: 500 },
-  details:    { fontSize: 11, color: "#6B7280", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" },
-  dash:       { fontSize: 11, color: "#9EA3AE" },
-  histCard:      { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: "16px 20px", marginBottom: 14 },
-  histTitle:     { fontSize: 12, fontWeight: 600, color: "#1A1D23", marginBottom: 14 },
+  resourceId: { fontFamily: "monospace", fontSize: 11, color: "#5B4FE8", fontWeight: 500 },
+  details:    { fontSize: 11, color: "#5C5852", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" },
+  dash:       { fontSize: 11, color: "#9C9890" },
+  histCard:      { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: "16px 20px", marginBottom: 14 },
+  histTitle:     { fontSize: 12, fontWeight: 600, color: "#1A1814", marginBottom: 14 },
   histBars:      { display: "flex", gap: 8, alignItems: "flex-end", height: 80 },
   histBarGroup:  { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 },
-  histBarCount:  { fontSize: 10, fontWeight: 600, color: "#6B7280", height: 14 },
+  histBarCount:  { fontSize: 10, fontWeight: 600, color: "#5C5852", height: 14 },
   histBarTrack:  { width: "100%", height: 52, background: "#F3F4F6", borderRadius: 4, display: "flex", alignItems: "flex-end", overflow: "hidden" },
   histBarFill:   { width: "100%", borderRadius: "4px 4px 0 0", transition: "height 0.3s" },
-  histBarLabel:  { fontSize: 9, color: "#9EA3AE", textAlign: "center", whiteSpace: "nowrap" },
+  histBarLabel:  { fontSize: 9, color: "#9C9890", textAlign: "center", whiteSpace: "nowrap" },
 };

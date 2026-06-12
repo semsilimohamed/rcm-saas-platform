@@ -25,7 +25,7 @@ function daysUntil(deadline: string | null): number | null {
 }
 
 function urgencyStyle(days: number | null) {
-  if (days === null) return { bg: "#F3F4F6", color: "#6B7280", label: "—" };
+  if (days === null) return { bg: "#F3F4F6", color: "#5C5852", label: "—" };
   if (days < 0)   return { bg: "#FEE2E2", color: "#991B1B", label: "Expiré" };
   if (days <= 3)  return { bg: "#FEE2E2", color: "#991B1B", label: `J-${days}` };
   if (days <= 7)  return { bg: "#FEF3C7", color: "#92400E", label: `J-${days}` };
@@ -42,7 +42,7 @@ function formatDate(iso: string) {
 }
 
 function payerStyle(payer: string) {
-  if (payer === "CNOPS") return { bg: "#E6F1FB", color: "#1E40AF" };
+  if (payer === "CNOPS") return { bg: "#EEEDFB", color: "#1E40AF" };
   if (payer === "CNSS")  return { bg: "#F0FDF4", color: "#166534" };
   if (payer === "AMO")   return { bg: "#FFF7ED", color: "#9A3412" };
   return { bg: "#F5F3FF", color: "#6D28D9" };
@@ -115,15 +115,15 @@ export default function ForclusionPage() {
             <div style={s.sbMark}>
               <svg width="14" height="14" viewBox="0 0 44 44" fill="none">
                 <circle cx="22" cy="22" r="6" fill="white"/>
-                <circle cx="22" cy="22" r="2.8" fill="#0F62FE"/>
+                <circle cx="22" cy="22" r="2.8" fill="#5B4FE8"/>
                 <line x1="22" y1="7" x2="22" y2="14" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="22" y1="30" x2="22" y2="37" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="7" y1="22" x2="14" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="30" y1="22" x2="37" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
-                <line x1="12" y1="12" x2="16.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="27.5" y1="27.5" x2="32" y2="32" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="32" y1="12" x2="27.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="16.5" y1="27.5" x2="12" y2="32" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="12" y1="12" x2="16.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="27.5" y1="27.5" x2="32" y2="32" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="32" y1="12" x2="27.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="16.5" y1="27.5" x2="12" y2="32" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
             </div>
             <div>
@@ -183,9 +183,9 @@ export default function ForclusionPage() {
               <div style={{ ...s.kpiVal, color: "#854D0E" }}>{attention.length}</div>
               <div style={s.kpiSub}>Ce mois</div>
             </div>
-            <div style={{ ...s.kpi, borderTop: "3px solid #6B7280" }}>
+            <div style={{ ...s.kpi, borderTop: "3px solid #5C5852" }}>
               <div style={s.kpiLbl}>Expirés</div>
-              <div style={{ ...s.kpiVal, color: "#6B7280" }}>{expire.length}</div>
+              <div style={{ ...s.kpiVal, color: "#5C5852" }}>{expire.length}</div>
               <div style={s.kpiSub}>Perdus définitivement</div>
             </div>
             <div style={{ ...s.kpi, borderTop: "3px solid #8B5CF6" }}>
@@ -265,7 +265,7 @@ export default function ForclusionPage() {
                         <td style={s.td}><strong>{formatMAD(claim.amount)}</strong></td>
                         <td style={s.td}>{formatDate(claim.service_date)}</td>
                         <td style={s.td}>
-                          <span style={{ color: days !== null && days <= 7 ? "#DC2626" : "#6B7280", fontWeight: 600, fontSize: 12 }}>
+                          <span style={{ color: days !== null && days <= 7 ? "#DC2626" : "#5C5852", fontWeight: 600, fontSize: 12 }}>
                             {claim.forclusion_deadline ? formatDate(claim.forclusion_deadline) : "—"}
                           </span>
                         </td>
@@ -295,55 +295,55 @@ export default function ForclusionPage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F0F4FA", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
-  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E2E4E9", display: "flex", flexDirection: "column" },
-  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #EEF2F8" },
+  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F2F1EE", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
+  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E5E3DD", display: "flex", flexDirection: "column" },
+  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #F2F1EE" },
   sbBrand: { display: "flex", alignItems: "center", gap: 9 },
-  sbMark:  { width: 28, height: 28, background: "#0F62FE", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  sbName:  { fontSize: 15, fontWeight: 300, color: "#0C1B33", letterSpacing: "-0.02em", lineHeight: 1.1 },
-  sbIQ:    { fontWeight: 800, color: "#0F62FE" },
-  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9EA3AE", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
+  sbMark:  { width: 28, height: 28, background: "#5B4FE8", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  sbName:  { fontSize: 15, fontWeight: 300, color: "#1A1814", letterSpacing: "-0.02em", lineHeight: 1.1 },
+  sbIQ:    { fontWeight: 800, color: "#5B4FE8" },
+  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9C9890", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
   sbNav:   { flex: 1, padding: "10px 8px", overflowY: "auto", display: "flex", flexDirection: "column" },
-  sbSec:   { fontSize: 9, fontWeight: 600, color: "#B5D4F4", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
-  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#6B7280", fontSize: 12, textDecoration: "none", marginBottom: 1 },
-  sbItemActive: { background: "#E6F1FB", color: "#0F62FE", fontWeight: 500 },
-  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #EEF2F8" },
+  sbSec:   { fontSize: 9, fontWeight: 600, color: "#C7C2F7", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
+  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#5C5852", fontSize: 12, textDecoration: "none", marginBottom: 1 },
+  sbItemActive: { background: "#EEEDFB", color: "#5B4FE8", fontWeight: 500 },
+  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #F2F1EE" },
   logoutBtn:{ width: "100%", padding: "8px", borderRadius: 7, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit" },
 
   main:    { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  topbar:  { background: "#fff", borderBottom: "0.5px solid #E2E4E9", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
-  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1D23" },
-  topDate: { fontSize: 11, color: "#9EA3AE", marginTop: 2 },
+  topbar:  { background: "#fff", borderBottom: "0.5px solid #E5E3DD", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
+  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1814" },
+  topDate: { fontSize: 11, color: "#9C9890", marginTop: 2 },
 
   content: { flex: 1, overflowY: "auto", padding: "16px 20px" },
 
   kpiGrid: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10, marginBottom: 14 },
-  kpi:     { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: "12px 14px" },
-  kpiLbl:  { fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 },
+  kpi:     { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: "12px 14px" },
+  kpiLbl:  { fontSize: 9, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 },
   kpiVal:  { fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1 },
-  kpiSub:  { fontSize: 10, color: "#9EA3AE", marginTop: 4 },
+  kpiSub:  { fontSize: 10, color: "#9C9890", marginTop: 4 },
 
   alertBanner: { background: "#FEF2F2", border: "0.5px solid #FECACA", borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, marginBottom: 14 },
   alertIcon:   { fontSize: 16, flexShrink: 0 },
   alertText:   { fontSize: 12, color: "#991B1B" },
 
   filterBar: { display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" },
-  chip:      { fontSize: 11, fontWeight: 500, padding: "5px 12px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6 },
-  chipActive:{ background: "#E6F1FB", color: "#0F62FE", border: "0.5px solid #B5D4F4" },
+  chip:      { fontSize: 11, fontWeight: 500, padding: "5px 12px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6 },
+  chipActive:{ background: "#EEEDFB", color: "#5B4FE8", border: "0.5px solid #C7C2F7" },
   chipCount: { fontSize: 10, fontWeight: 700, background: "rgba(0,0,0,0.08)", padding: "1px 5px", borderRadius: 10 },
 
-  tableCard: { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, overflow: "hidden" },
-  loading:   { padding: "24px 16px", fontSize: 13, color: "#9EA3AE" },
+  tableCard: { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, overflow: "hidden" },
+  loading:   { padding: "24px 16px", fontSize: 13, color: "#9C9890" },
   empty:     { padding: "40px 16px", textAlign: "center" },
   emptyIcon: { fontSize: 32, marginBottom: 8 },
-  emptyText: { fontSize: 13, color: "#9EA3AE" },
+  emptyText: { fontSize: 13, color: "#9C9890" },
   table:     { width: "100%", borderCollapse: "collapse", fontSize: 12 },
-  th:        { textAlign: "left", padding: "8px 14px", fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #EEF2F8", background: "#FAFBFF", whiteSpace: "nowrap" },
-  tr:        { borderBottom: "0.5px solid #F5F7FA" },
+  th:        { textAlign: "left", padding: "8px 14px", fontSize: 9, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #F2F1EE", background: "#FAFAF7", whiteSpace: "nowrap" },
+  tr:        { borderBottom: "0.5px solid #F5F4F1" },
   td:        { padding: "10px 14px", verticalAlign: "middle" },
   urgBadge:  { display: "inline-flex", fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 20 },
-  mono:      { fontFamily: "monospace", fontSize: 11, color: "#1A1D23", fontWeight: 500 },
-  patientName:{ fontSize: 12, fontWeight: 500, color: "#1A1D23" },
+  mono:      { fontFamily: "monospace", fontSize: 11, color: "#1A1814", fontWeight: 500 },
+  patientName:{ fontSize: 12, fontWeight: 500, color: "#1A1814" },
   badge:     { display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20 },
-  dash:      { fontSize: 11, color: "#9EA3AE" },
+  dash:      { fontSize: 11, color: "#9C9890" },
 };

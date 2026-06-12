@@ -210,15 +210,15 @@ export default function PredictionPage() {
             <div style={s.sbMark}>
               <svg width="14" height="14" viewBox="0 0 44 44" fill="none">
                 <circle cx="22" cy="22" r="6" fill="white"/>
-                <circle cx="22" cy="22" r="2.8" fill="#0F62FE"/>
+                <circle cx="22" cy="22" r="2.8" fill="#5B4FE8"/>
                 <line x1="22" y1="7" x2="22" y2="14" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="22" y1="30" x2="22" y2="37" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="7" y1="22" x2="14" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="30" y1="22" x2="37" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
-                <line x1="12" y1="12" x2="16.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="27.5" y1="27.5" x2="32" y2="32" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="32" y1="12" x2="27.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="16.5" y1="27.5" x2="12" y2="32" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="12" y1="12" x2="16.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="27.5" y1="27.5" x2="32" y2="32" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="32" y1="12" x2="27.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="16.5" y1="27.5" x2="12" y2="32" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
             </div>
             <div>
@@ -345,7 +345,7 @@ export default function PredictionPage() {
                     ].map(f => (
                       <div key={f.key} style={s.toggleItem}
                         onClick={() => update(f.key, form[f.key as keyof typeof form] === 1 ? 0 : 1)}>
-                        <div style={{ ...s.toggle, background: form[f.key as keyof typeof form] === 1 ? "#0F62FE" : "#E5E7EB" }}>
+                        <div style={{ ...s.toggle, background: form[f.key as keyof typeof form] === 1 ? "#5B4FE8" : "#E5E7EB" }}>
                           <div style={{ ...s.toggleThumb, transform: form[f.key as keyof typeof form] === 1 ? "translateX(16px)" : "translateX(0)" }} />
                         </div>
                         <span style={s.toggleLabel}>{f.label}</span>
@@ -471,7 +471,7 @@ export default function PredictionPage() {
                   {/* Progress bar */}
                   {batchRunning && (
                     <div style={{ marginTop: 16 }}>
-                      <div style={{ fontSize: 12, color: "#185FA5", marginBottom: 6 }}>
+                      <div style={{ fontSize: 12, color: "#4A3FD4", marginBottom: 6 }}>
                         Analyse en cours... {batchProgress} / {batchRows.length}
                       </div>
                       <div style={s.progressTrack}>
@@ -485,13 +485,13 @@ export default function PredictionPage() {
                 {batchDone && (
                   <div style={s.batchKpis}>
                     {[
-                      { lbl: "Analysés",    val: String(doneRows.length),       color: "#0F62FE" },
+                      { lbl: "Analysés",    val: String(doneRows.length),       color: "#5B4FE8" },
                       { lbl: "Risque élevé",val: String(highRisk),              color: "#DC2626" },
                       { lbl: "Score moyen", val: `${Math.round(avgScore * 100)}%`, color: "#F59E0B" },
                       { lbl: "Feedbacks",   val: String(batchRows.filter(r => r.feedback).length), color: "#16A34A" },
                     ].map(k => (
                       <div key={k.lbl} style={s.batchKpi}>
-                        <div style={{ fontSize: 10, color: "#9EA3AE", marginBottom: 4 }}>{k.lbl}</div>
+                        <div style={{ fontSize: 10, color: "#9C9890", marginBottom: 4 }}>{k.lbl}</div>
                         <div style={{ fontSize: 22, fontWeight: 700, color: k.color, letterSpacing: "-0.02em" }}>{k.val}</div>
                       </div>
                     ))}
@@ -532,7 +532,7 @@ export default function PredictionPage() {
                             <td style={s.td}><span style={s.rowNum}>{row.index}</span></td>
                             <td style={s.td}><span style={s.patName}>{row.patient_name}</span></td>
                             <td style={s.td}>
-                              <span style={{ ...s.payerBadge, background: row.payer === "CNOPS" ? "#E6F1FB" : row.payer === "CNSS" ? "#F0FDF4" : "#FFF7ED", color: row.payer === "CNOPS" ? "#1E40AF" : row.payer === "CNSS" ? "#166534" : "#9A3412" }}>
+                              <span style={{ ...s.payerBadge, background: row.payer === "CNOPS" ? "#EEEDFB" : row.payer === "CNSS" ? "#F0FDF4" : "#FFF7ED", color: row.payer === "CNOPS" ? "#1E40AF" : row.payer === "CNSS" ? "#166534" : "#9A3412" }}>
                                 {row.payer}
                               </span>
                             </td>
@@ -561,11 +561,11 @@ export default function PredictionPage() {
                               {row.status === "done" && (
                                 <div style={{ display: "flex", gap: 5 }}>
                                   <button
-                                    style={{ ...s.fbBtn, background: row.feedback === "approved" ? "#DCFCE7" : "#F3F4F6", color: row.feedback === "approved" ? "#166534" : "#6B7280", border: row.feedback === "approved" ? "0.5px solid #86EFAC" : "0.5px solid #E2E4E9" }}
+                                    style={{ ...s.fbBtn, background: row.feedback === "approved" ? "#DCFCE7" : "#F3F4F6", color: row.feedback === "approved" ? "#166534" : "#5C5852", border: row.feedback === "approved" ? "0.5px solid #86EFAC" : "0.5px solid #E5E3DD" }}
                                     onClick={() => setFeedback(row.index, "approved")}
                                   >✓</button>
                                   <button
-                                    style={{ ...s.fbBtn, background: row.feedback === "rejected" ? "#FEE2E2" : "#F3F4F6", color: row.feedback === "rejected" ? "#991B1B" : "#6B7280", border: row.feedback === "rejected" ? "0.5px solid #FCA5A5" : "0.5px solid #E2E4E9" }}
+                                    style={{ ...s.fbBtn, background: row.feedback === "rejected" ? "#FEE2E2" : "#F3F4F6", color: row.feedback === "rejected" ? "#991B1B" : "#5C5852", border: row.feedback === "rejected" ? "0.5px solid #FCA5A5" : "0.5px solid #E5E3DD" }}
                                     onClick={() => setFeedback(row.index, "rejected")}
                                   >✗</button>
                                 </div>
@@ -582,7 +582,7 @@ export default function PredictionPage() {
               {batchRows.length === 0 && (
                 <div style={s.batchEmpty}>
                   <div style={{ fontSize: 36, marginBottom: 12 }}>📊</div>
-                  <div style={{ fontSize: 14, color: "#9EA3AE", marginBottom: 6 }}>Aucun fichier chargé</div>
+                  <div style={{ fontSize: 14, color: "#9C9890", marginBottom: 6 }}>Aucun fichier chargé</div>
                   <div style={{ fontSize: 12, color: "#C4C4C4" }}>
                     Importez un CSV avec les colonnes : payer, service_type, ngap_code, patient_name
                   </div>
@@ -598,72 +598,72 @@ export default function PredictionPage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F0F4FA", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
-  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E2E4E9", display: "flex", flexDirection: "column" },
-  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #EEF2F8" },
+  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F2F1EE", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
+  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E5E3DD", display: "flex", flexDirection: "column" },
+  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #F2F1EE" },
   sbBrand: { display: "flex", alignItems: "center", gap: 9 },
-  sbMark:  { width: 28, height: 28, background: "#0F62FE", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  sbName:  { fontSize: 15, fontWeight: 300, color: "#0C1B33", letterSpacing: "-0.02em", lineHeight: 1.1 },
-  sbIQ:    { fontWeight: 800, color: "#0F62FE" },
-  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9EA3AE", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
+  sbMark:  { width: 28, height: 28, background: "#5B4FE8", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  sbName:  { fontSize: 15, fontWeight: 300, color: "#1A1814", letterSpacing: "-0.02em", lineHeight: 1.1 },
+  sbIQ:    { fontWeight: 800, color: "#5B4FE8" },
+  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9C9890", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
   sbNav:   { flex: 1, padding: "10px 8px", overflowY: "auto", display: "flex", flexDirection: "column" },
-  sbSec:   { fontSize: 9, fontWeight: 600, color: "#B5D4F4", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
-  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#6B7280", fontSize: 12, textDecoration: "none", marginBottom: 1 },
-  sbItemActive: { background: "#E6F1FB", color: "#0F62FE", fontWeight: 500 },
-  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #EEF2F8" },
+  sbSec:   { fontSize: 9, fontWeight: 600, color: "#C7C2F7", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
+  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#5C5852", fontSize: 12, textDecoration: "none", marginBottom: 1 },
+  sbItemActive: { background: "#EEEDFB", color: "#5B4FE8", fontWeight: 500 },
+  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #F2F1EE" },
   logoutBtn:{ width: "100%", padding: "8px", borderRadius: 7, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit" },
 
   main:    { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  topbar:  { background: "#fff", borderBottom: "0.5px solid #E2E4E9", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, gap: 16 },
-  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1D23" },
-  topDate: { fontSize: 11, color: "#9EA3AE", marginTop: 2 },
+  topbar:  { background: "#fff", borderBottom: "0.5px solid #E5E3DD", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, gap: 16 },
+  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1814" },
+  topDate: { fontSize: 11, color: "#9C9890", marginTop: 2 },
 
   tabBar:    { display: "flex", gap: 4 },
-  tab:       { fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 8, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
-  tabActive: { background: "#E6F1FB", color: "#0F62FE", borderColor: "#B5D4F4", fontWeight: 600 },
+  tab:       { fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 8, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit" },
+  tabActive: { background: "#EEEDFB", color: "#5B4FE8", borderColor: "#C7C2F7", fontWeight: 600 },
 
   content: { flex: 1, overflowY: "auto", padding: "16px 20px" },
   layout:  { display: "grid", gridTemplateColumns: "1fr 380px", gap: 14 },
 
-  formPanel:   { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: 20, overflowY: "auto" },
-  resultPanel: { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: 20, overflowY: "auto" },
-  panelTitle:  { fontSize: 13, fontWeight: 600, color: "#1A1D23", marginBottom: 4 },
-  panelSub:    { fontSize: 12, color: "#9EA3AE", marginBottom: 16, lineHeight: 1.5 },
+  formPanel:   { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 20, overflowY: "auto" },
+  resultPanel: { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 20, overflowY: "auto" },
+  panelTitle:  { fontSize: 13, fontWeight: 600, color: "#1A1814", marginBottom: 4 },
+  panelSub:    { fontSize: 12, color: "#9C9890", marginBottom: 16, lineHeight: 1.5 },
 
-  section:      { marginBottom: 18, paddingBottom: 18, borderBottom: "0.5px solid #EEF2F8" },
-  sectionTitle: { fontSize: 10, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 },
+  section:      { marginBottom: 18, paddingBottom: 18, borderBottom: "0.5px solid #F2F1EE" },
+  sectionTitle: { fontSize: 10, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 },
   fieldGrid:    { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 },
   field:        { display: "flex", flexDirection: "column", gap: 5 },
   label:        { fontSize: 10, fontWeight: 500, color: "#374151", textTransform: "uppercase", letterSpacing: "0.06em" },
-  input:        { padding: "7px 10px", border: "0.5px solid #D1D5DB", borderRadius: 7, fontSize: 12, color: "#1A1D23", outline: "none", fontFamily: "inherit", background: "#FAFAFA" },
+  input:        { padding: "7px 10px", border: "0.5px solid #D1D5DB", borderRadius: 7, fontSize: 12, color: "#1A1814", outline: "none", fontFamily: "inherit", background: "#FAFAFA" },
   range:        { width: "100%", marginTop: 4 },
   toggleGrid:   { display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8 },
   toggleItem:   { display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "4px 0" },
   toggle:       { width: 32, height: 18, borderRadius: 9, position: "relative", flexShrink: 0, transition: "background 0.2s" },
   toggleThumb:  { position: "absolute", top: 2, left: 2, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "transform 0.2s" },
   toggleLabel:  { fontSize: 11, color: "#4B5060" },
-  predictBtn:   { width: "100%", padding: "11px", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: "#0F62FE", color: "#fff", fontFamily: "inherit", marginTop: 4 },
+  predictBtn:   { width: "100%", padding: "11px", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit", marginTop: 4 },
   errorBox:     { background: "#FEE2E2", border: "0.5px solid #FCA5A5", borderRadius: 7, padding: "8px 12px", fontSize: 12, color: "#991B1B", marginBottom: 10 },
 
   emptyResult:  { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 300, gap: 12 },
   emptyIcon:    { fontSize: 40 },
-  emptyText:    { fontSize: 13, color: "#9EA3AE", textAlign: "center", lineHeight: 1.6, maxWidth: 280 },
+  emptyText:    { fontSize: 13, color: "#9C9890", textAlign: "center", lineHeight: 1.6, maxWidth: 280 },
   scoreCard:    { borderRadius: 10, padding: 16, marginBottom: 12 },
-  scoreLabel:   { fontSize: 10, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 },
+  scoreLabel:   { fontSize: 10, fontWeight: 600, color: "#5C5852", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 },
   scoreVal:     { fontSize: 36, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 8 },
   scoreBar:     { height: 6, background: "rgba(0,0,0,0.1)", borderRadius: 3, overflow: "hidden", marginBottom: 10 },
   scoreBarFill: { height: "100%", borderRadius: 3, transition: "width 0.5s" },
   scoreBadge:   { display: "inline-block", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, marginBottom: 8 },
-  scoreModel:   { fontSize: 10, color: "#9EA3AE" },
-  factorsCard:  { background: "#F8FBFF", border: "0.5px solid #E6F1FB", borderRadius: 10, padding: 14, marginBottom: 12 },
-  factorsTitle: { fontSize: 11, fontWeight: 600, color: "#1A1D23", marginBottom: 10 },
-  factorRow:    { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "0.5px solid #EEF2F8" },
+  scoreModel:   { fontSize: 10, color: "#9C9890" },
+  factorsCard:  { background: "#F8F7FE", border: "0.5px solid #EEEDFB", borderRadius: 10, padding: 14, marginBottom: 12 },
+  factorsTitle: { fontSize: 11, fontWeight: 600, color: "#1A1814", marginBottom: 10 },
+  factorRow:    { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "0.5px solid #F2F1EE" },
   factorLeft:   { display: "flex", alignItems: "center", gap: 8 },
-  factorRank:   { width: 18, height: 18, borderRadius: "50%", background: "#E6F1FB", color: "#0F62FE", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" },
-  factorName:   { fontSize: 12, color: "#1A1D23" },
+  factorRank:   { width: 18, height: 18, borderRadius: "50%", background: "#EEEDFB", color: "#5B4FE8", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" },
+  factorName:   { fontSize: 12, color: "#1A1814" },
   factorRight:  { display: "flex", alignItems: "center", gap: 8 },
   factorDir:    { fontSize: 10, fontWeight: 500 },
-  factorImpact: { fontSize: 11, fontWeight: 600, color: "#6B7280", fontFamily: "monospace" },
+  factorImpact: { fontSize: 11, fontWeight: 600, color: "#5C5852", fontFamily: "monospace" },
   actionsCard:  { background: "#FFF8F0", border: "0.5px solid #FED7AA", borderRadius: 10, padding: 14 },
   actionsTitle: { fontSize: 11, fontWeight: 600, color: "#9A3412", marginBottom: 10 },
   actionRow:    { display: "flex", gap: 8, marginBottom: 8, alignItems: "flex-start" },
@@ -672,36 +672,36 @@ const s: Record<string, React.CSSProperties> = {
 
   // Batch styles
   batchHeader:     { display: "flex", gap: 14, marginBottom: 14, flexWrap: "wrap" },
-  batchUploadCard: { flex: 1, background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: 18 },
-  batchUploadTitle:{ fontSize: 13, fontWeight: 600, color: "#1A1D23", marginBottom: 6 },
-  batchUploadSub:  { fontSize: 12, color: "#9EA3AE", lineHeight: 1.5 },
-  batchCode:       { fontFamily: "monospace", fontSize: 11, color: "#185FA5", background: "#E6F1FB", padding: "1px 5px", borderRadius: 4 },
-  uploadLabel:     { fontSize: 12, fontWeight: 600, padding: "7px 14px", borderRadius: 8, cursor: "pointer", border: "0.5px solid #B5D4F4", background: "#E6F1FB", color: "#185FA5", fontFamily: "inherit" },
-  fileName:        { fontSize: 12, color: "#6B7280", background: "#F3F4F6", padding: "6px 10px", borderRadius: 6 },
-  runBtn:          { fontSize: 12, fontWeight: 600, padding: "7px 16px", borderRadius: 8, cursor: "pointer", border: "none", background: "#0F62FE", color: "#fff", fontFamily: "inherit" },
+  batchUploadCard: { flex: 1, background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 18 },
+  batchUploadTitle:{ fontSize: 13, fontWeight: 600, color: "#1A1814", marginBottom: 6 },
+  batchUploadSub:  { fontSize: 12, color: "#9C9890", lineHeight: 1.5 },
+  batchCode:       { fontFamily: "monospace", fontSize: 11, color: "#4A3FD4", background: "#EEEDFB", padding: "1px 5px", borderRadius: 4 },
+  uploadLabel:     { fontSize: 12, fontWeight: 600, padding: "7px 14px", borderRadius: 8, cursor: "pointer", border: "0.5px solid #C7C2F7", background: "#EEEDFB", color: "#4A3FD4", fontFamily: "inherit" },
+  fileName:        { fontSize: 12, color: "#5C5852", background: "#F3F4F6", padding: "6px 10px", borderRadius: 6 },
+  runBtn:          { fontSize: 12, fontWeight: 600, padding: "7px 16px", borderRadius: 8, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit" },
   downloadBtn:     { fontSize: 12, fontWeight: 600, padding: "7px 16px", borderRadius: 8, cursor: "pointer", border: "0.5px solid #86EFAC", background: "#DCFCE7", color: "#166534", fontFamily: "inherit" },
-  progressTrack:   { height: 6, background: "#E6F1FB", borderRadius: 3, overflow: "hidden" },
-  progressFill:    { height: "100%", background: "#0F62FE", borderRadius: 3, transition: "width 0.2s" },
+  progressTrack:   { height: 6, background: "#EEEDFB", borderRadius: 3, overflow: "hidden" },
+  progressFill:    { height: "100%", background: "#5B4FE8", borderRadius: 3, transition: "width 0.2s" },
   batchKpis:       { display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, width: 220 },
-  batchKpi:        { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 8, padding: "10px 12px" },
-  chip:            { fontSize: 10, fontWeight: 500, padding: "4px 10px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
-  chipActive:      { background: "#E6F1FB", color: "#0F62FE", borderColor: "#B5D4F4" },
+  batchKpi:        { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 8, padding: "10px 12px" },
+  chip:            { fontSize: 10, fontWeight: 500, padding: "4px 10px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit" },
+  chipActive:      { background: "#EEEDFB", color: "#5B4FE8", borderColor: "#C7C2F7" },
 
-  batchTable:      { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, overflow: "auto" },
+  batchTable:      { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, overflow: "auto" },
   table:           { width: "100%", borderCollapse: "collapse", fontSize: 12 },
-  th:              { textAlign: "left", padding: "8px 12px", fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #EEF2F8", background: "#FAFBFF", whiteSpace: "nowrap" },
-  tr:              { borderBottom: "0.5px solid #F5F7FA" },
+  th:              { textAlign: "left", padding: "8px 12px", fontSize: 9, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #F2F1EE", background: "#FAFAF7", whiteSpace: "nowrap" },
+  tr:              { borderBottom: "0.5px solid #F5F4F1" },
   td:              { padding: "10px 12px", verticalAlign: "middle" },
-  rowNum:          { fontFamily: "monospace", fontSize: 10, color: "#9EA3AE" },
-  patName:         { fontSize: 12, fontWeight: 500, color: "#1A1D23" },
+  rowNum:          { fontFamily: "monospace", fontSize: 10, color: "#9C9890" },
+  patName:         { fontSize: 12, fontWeight: 500, color: "#1A1814" },
   payerBadge:      { display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20 },
-  serviceType:     { fontSize: 11, color: "#6B7280" },
-  pendingDot:      { fontSize: 10, color: "#9EA3AE" },
+  serviceType:     { fontSize: 11, color: "#5C5852" },
+  pendingDot:      { fontSize: 10, color: "#9C9890" },
   scoreSmall:      { fontSize: 14, fontWeight: 700, letterSpacing: "-0.01em" },
-  scoreBarSmall:   { height: 3, background: "#EEF2F8", borderRadius: 2, overflow: "hidden", marginTop: 3, width: 60 },
+  scoreBarSmall:   { height: 3, background: "#F2F1EE", borderRadius: 2, overflow: "hidden", marginTop: 3, width: 60 },
   scoreBarSmallFill:{ height: "100%", borderRadius: 2 },
   riskBadge:       { display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20 },
   topFactor:       { fontSize: 11, color: "#9A3412", lineHeight: 1.4 },
   fbBtn:           { fontSize: 11, fontWeight: 700, width: 26, height: 26, borderRadius: 6, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center" },
-  batchEmpty:      { textAlign: "center", padding: "60px 20px", background: "#fff", borderRadius: 10, border: "0.5px solid #E2E4E9" },
+  batchEmpty:      { textAlign: "center", padding: "60px 20px", background: "#fff", borderRadius: 10, border: "0.5px solid #E5E3DD" },
 };

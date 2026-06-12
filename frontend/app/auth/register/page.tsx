@@ -78,7 +78,7 @@ export default function RegisterPage() {
       localStorage.setItem("sihaiq_token", data.access_token);
       localStorage.setItem("sihaiq_tenant_id", data.tenant_id);
       localStorage.setItem("sihaiq_user", JSON.stringify({ name: data.full_name, role: data.role }));
-      router.push("/dashboard");
+      router.push("/onboarding");
     } catch {
       setError("Impossible de contacter le serveur. Vérifiez que le backend est actif.");
     } finally {

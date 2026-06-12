@@ -16,11 +16,11 @@ interface Patient {
 }
 
 function payerStyle(payer: string | null) {
-  if (payer === "CNOPS") return { bg: "#E6F1FB", color: "#1E40AF" };
+  if (payer === "CNOPS") return { bg: "#EEEDFB", color: "#1E40AF" };
   if (payer === "CNSS")  return { bg: "#F0FDF4", color: "#166534" };
   if (payer === "AMO")   return { bg: "#FFF7ED", color: "#9A3412" };
   if (payer === "AMO-Tadamon") return { bg: "#F5F3FF", color: "#6D28D9" };
-  return { bg: "#F3F4F6", color: "#6B7280" };
+  return { bg: "#F3F4F6", color: "#5C5852" };
 }
 
 function formatDate(iso: string) {
@@ -122,15 +122,15 @@ export default function PatientsPage() {
             <div style={s.sbMark}>
               <svg width="14" height="14" viewBox="0 0 44 44" fill="none">
                 <circle cx="22" cy="22" r="6" fill="white"/>
-                <circle cx="22" cy="22" r="2.8" fill="#0F62FE"/>
+                <circle cx="22" cy="22" r="2.8" fill="#5B4FE8"/>
                 <line x1="22" y1="7" x2="22" y2="14" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="22" y1="30" x2="22" y2="37" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="7" y1="22" x2="14" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="30" y1="22" x2="37" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
-                <line x1="12" y1="12" x2="16.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="27.5" y1="27.5" x2="32" y2="32" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="32" y1="12" x2="27.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="16.5" y1="27.5" x2="12" y2="32" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="12" y1="12" x2="16.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="27.5" y1="27.5" x2="32" y2="32" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="32" y1="12" x2="27.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="16.5" y1="27.5" x2="12" y2="32" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
             </div>
             <div>
@@ -318,26 +318,26 @@ export default function PatientsPage() {
         <div style={s.overlay} onClick={() => setShowDeleteModal(false)}>
           <div style={s.deleteModal} onClick={e => e.stopPropagation()}>
             <div style={s.deleteModalHdr}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: "#1A1D23" }}>Supprimer le patient</div>
-              <button style={{ background: "none", border: "none", fontSize: 16, color: "#9EA3AE", cursor: "pointer" }} onClick={() => setShowDeleteModal(false)}>✕</button>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#1A1814" }}>Supprimer le patient</div>
+              <button style={{ background: "none", border: "none", fontSize: 16, color: "#9C9890", cursor: "pointer" }} onClick={() => setShowDeleteModal(false)}>✕</button>
             </div>
             <div style={{ padding: "16px 20px" }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#0F62FE", marginBottom: 10 }}>{selected.full_name}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#5B4FE8", marginBottom: 10 }}>{selected.full_name}</div>
               <div style={{ fontSize: 12, color: "#9A3412", background: "#FFF8F0", border: "0.5px solid #FED7AA", borderRadius: 7, padding: "8px 10px", marginBottom: 14 }}>
                 ⚠️ Cette action est irréversible. Tous les dossiers BAF associés seront également supprimés.
               </div>
-              <label style={{ fontSize: 10, fontWeight: 600, color: "#6B7280", textTransform: "uppercase" as const, letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>
+              <label style={{ fontSize: 10, fontWeight: 600, color: "#5C5852", textTransform: "uppercase" as const, letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>
                 Raison de suppression *
               </label>
               <input
-                style={{ width: "100%", padding: "9px 12px", border: "0.5px solid #E2E4E9", borderRadius: 8, fontSize: 12, fontFamily: "inherit", outline: "none", boxSizing: "border-box" as const }}
+                style={{ width: "100%", padding: "9px 12px", border: "0.5px solid #E5E3DD", borderRadius: 8, fontSize: 12, fontFamily: "inherit", outline: "none", boxSizing: "border-box" as const }}
                 placeholder="Ex: doublon, erreur de saisie..."
                 value={deleteReason}
                 onChange={e => setDeleteReason(e.target.value)}
                 autoFocus
               />
             </div>
-            <div style={{ display: "flex", gap: 10, padding: "14px 20px", borderTop: "0.5px solid #EEF2F8", justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", gap: 10, padding: "14px 20px", borderTop: "0.5px solid #F2F1EE", justifyContent: "flex-end" }}>
               <button style={s.cancelBtn} onClick={() => setShowDeleteModal(false)}>Annuler</button>
               <button
                 style={{ ...s.confirmDeleteBtn, opacity: !deleteReason || deleting ? 0.5 : 1 }}
@@ -355,70 +355,70 @@ export default function PatientsPage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F0F4FA", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
-  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E2E4E9", display: "flex", flexDirection: "column" },
-  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #EEF2F8" },
+  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F2F1EE", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
+  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E5E3DD", display: "flex", flexDirection: "column" },
+  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #F2F1EE" },
   sbBrand: { display: "flex", alignItems: "center", gap: 9 },
-  sbMark:  { width: 28, height: 28, background: "#0F62FE", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  sbName:  { fontSize: 15, fontWeight: 300, color: "#0C1B33", letterSpacing: "-0.02em", lineHeight: 1.1 },
-  sbIQ:    { fontWeight: 800, color: "#0F62FE" },
-  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9EA3AE", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
+  sbMark:  { width: 28, height: 28, background: "#5B4FE8", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  sbName:  { fontSize: 15, fontWeight: 300, color: "#1A1814", letterSpacing: "-0.02em", lineHeight: 1.1 },
+  sbIQ:    { fontWeight: 800, color: "#5B4FE8" },
+  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9C9890", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
   sbNav:   { flex: 1, padding: "10px 8px", overflowY: "auto", display: "flex", flexDirection: "column" },
-  sbSec:   { fontSize: 9, fontWeight: 600, color: "#B5D4F4", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
-  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#6B7280", fontSize: 12, textDecoration: "none", marginBottom: 1 },
-  sbItemActive: { background: "#E6F1FB", color: "#0F62FE", fontWeight: 500 },
-  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #EEF2F8" },
+  sbSec:   { fontSize: 9, fontWeight: 600, color: "#C7C2F7", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
+  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#5C5852", fontSize: 12, textDecoration: "none", marginBottom: 1 },
+  sbItemActive: { background: "#EEEDFB", color: "#5B4FE8", fontWeight: 500 },
+  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #F2F1EE" },
   logoutBtn:{ width: "100%", padding: "8px", borderRadius: 7, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit" },
 
   main:    { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  topbar:  { background: "#fff", borderBottom: "0.5px solid #E2E4E9", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
-  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1D23" },
-  topDate: { fontSize: 11, color: "#9EA3AE", marginTop: 2 },
-  topBtnPrimary: { fontSize: 11, fontWeight: 600, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "none", background: "#0F62FE", color: "#fff", fontFamily: "inherit" },
+  topbar:  { background: "#fff", borderBottom: "0.5px solid #E5E3DD", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
+  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1814" },
+  topDate: { fontSize: 11, color: "#9C9890", marginTop: 2 },
+  topBtnPrimary: { fontSize: 11, fontWeight: 600, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit" },
 
   content: { flex: 1, overflowY: "auto", padding: "16px 20px" },
 
-  formCard:  { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: 16, marginBottom: 14 },
-  formTitle: { fontSize: 13, fontWeight: 600, color: "#1A1D23", marginBottom: 12 },
+  formCard:  { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 16, marginBottom: 14 },
+  formTitle: { fontSize: 13, fontWeight: 600, color: "#1A1814", marginBottom: 12 },
   formGrid:  { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 14 },
   field:     { display: "flex", flexDirection: "column", gap: 5 },
   label:     { fontSize: 10, fontWeight: 500, color: "#374151", textTransform: "uppercase", letterSpacing: "0.06em" },
-  input:     { padding: "8px 12px", border: "0.5px solid #D1D5DB", borderRadius: 7, fontSize: 12, color: "#1A1D23", outline: "none", fontFamily: "inherit", background: "#FAFAFA" },
-  saveBtn:   { padding: "9px 20px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: "#0F62FE", color: "#fff", fontFamily: "inherit" },
+  input:     { padding: "8px 12px", border: "0.5px solid #D1D5DB", borderRadius: 7, fontSize: 12, color: "#1A1814", outline: "none", fontFamily: "inherit", background: "#FAFAFA" },
+  saveBtn:   { padding: "9px 20px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit" },
   errorBox:  { background: "#FEE2E2", border: "0.5px solid #FCA5A5", borderRadius: 7, padding: "8px 12px", fontSize: 12, color: "#991B1B", marginBottom: 10 },
 
   filterBar:      { marginBottom: 10 },
-  searchInput:    { padding: "8px 14px", border: "0.5px solid #D1D5DB", borderRadius: 8, fontSize: 12, color: "#1A1D23", outline: "none", fontFamily: "inherit", background: "#fff", width: 280 },
+  searchInput:    { padding: "8px 14px", border: "0.5px solid #D1D5DB", borderRadius: 8, fontSize: 12, color: "#1A1814", outline: "none", fontFamily: "inherit", background: "#fff", width: 280 },
   tableLayout:    { display: "flex", gap: 12 },
   tableWrap:      { flex: 1 },
   tableWrapNarrow:{ flex: 1, minWidth: 0 },
-  tableCard:      { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, overflow: "auto" },
-  loading:        { padding: "24px 16px", fontSize: 13, color: "#9EA3AE" },
+  tableCard:      { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, overflow: "auto" },
+  loading:        { padding: "24px 16px", fontSize: 13, color: "#9C9890" },
   table:          { width: "100%", borderCollapse: "collapse", fontSize: 12 },
-  th:    { textAlign: "left", padding: "8px 14px", fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #EEF2F8", background: "#FAFBFF", whiteSpace: "nowrap" },
-  tr:    { borderBottom: "0.5px solid #F5F7FA", cursor: "pointer" },
+  th:    { textAlign: "left", padding: "8px 14px", fontSize: 9, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #F2F1EE", background: "#FAFAF7", whiteSpace: "nowrap" },
+  tr:    { borderBottom: "0.5px solid #F5F4F1", cursor: "pointer" },
   trSelected: { background: "#EEF4FF" },
   td:    { padding: "10px 14px", verticalAlign: "middle" },
-  patientName:{ fontSize: 12, fontWeight: 500, color: "#1A1D23" },
+  patientName:{ fontSize: 12, fontWeight: 500, color: "#1A1814" },
   mono:  { fontFamily: "monospace", fontSize: 11, color: "#4B5060" },
   badge: { display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20 },
-  dash:  { fontSize: 11, color: "#9EA3AE" },
+  dash:  { fontSize: 11, color: "#9C9890" },
 
-  detailPanel:  { width: 280, flexShrink: 0, background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: 16, overflowY: "auto" },
-  detailHdr:    { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, paddingBottom: 12, borderBottom: "0.5px solid #EEF2F8" },
-  detailName:   { fontSize: 14, fontWeight: 600, color: "#1A1D23" },
-  detailSub:    { fontSize: 11, color: "#9EA3AE", marginTop: 3 },
-  closeBtn:     { fontSize: 14, color: "#9EA3AE", cursor: "pointer", border: "none", background: "none", padding: 0 },
+  detailPanel:  { width: 280, flexShrink: 0, background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 16, overflowY: "auto" },
+  detailHdr:    { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, paddingBottom: 12, borderBottom: "0.5px solid #F2F1EE" },
+  detailName:   { fontSize: 14, fontWeight: 600, color: "#1A1814" },
+  detailSub:    { fontSize: 11, color: "#9C9890", marginTop: 3 },
+  closeBtn:     { fontSize: 14, color: "#9C9890", cursor: "pointer", border: "none", background: "none", padding: 0 },
   detailSection:{ marginBottom: 16 },
-  detailSectionTitle: { fontSize: 10, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 },
+  detailSectionTitle: { fontSize: 10, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 },
   detailRow:    { display: "flex", justifyContent: "space-between", marginBottom: 8 },
-  detailLbl:    { fontSize: 12, color: "#6B7280" },
-  detailVal:    { fontSize: 12, fontWeight: 500, color: "#1A1D23" },
-  viewClaimsBtn:{ display: "block", textAlign: "center", padding: "9px", borderRadius: 7, fontSize: 12, fontWeight: 600, background: "#E6F1FB", color: "#0F62FE", textDecoration: "none", marginTop: 8 },
+  detailLbl:    { fontSize: 12, color: "#5C5852" },
+  detailVal:    { fontSize: 12, fontWeight: 500, color: "#1A1814" },
+  viewClaimsBtn:{ display: "block", textAlign: "center", padding: "9px", borderRadius: 7, fontSize: 12, fontWeight: 600, background: "#EEEDFB", color: "#5B4FE8", textDecoration: "none", marginTop: 8 },
 deletePatientBtn: { display: "block", width: "100%", textAlign: "center", padding: "9px", borderRadius: 7, fontSize: 12, fontWeight: 500, background: "#FEF2F2", color: "#DC2626", border: "0.5px solid #FCA5A5", cursor: "pointer", marginTop: 8, fontFamily: "inherit" },
-  overlay:      { position: "fixed", inset: 0, background: "rgba(12,27,51,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 },
+  overlay:      { position: "fixed", inset: 0, background: "rgba(26,24,20,0.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 },
   deleteModal:  { background: "#fff", borderRadius: 12, width: "100%", maxWidth: 440, boxShadow: "0 20px 50px rgba(0,0,0,0.18)" },
-  deleteModalHdr: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 20px 14px", borderBottom: "0.5px solid #EEF2F8" },
-  cancelBtn:    { fontSize: 12, fontWeight: 500, padding: "8px 16px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
+  deleteModalHdr: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 20px 14px", borderBottom: "0.5px solid #F2F1EE" },
+  cancelBtn:    { fontSize: 12, fontWeight: 500, padding: "8px 16px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit" },
   confirmDeleteBtn: { fontSize: 12, fontWeight: 600, padding: "8px 16px", borderRadius: 7, cursor: "pointer", border: "none", background: "#DC2626", color: "#fff", fontFamily: "inherit" },
 };

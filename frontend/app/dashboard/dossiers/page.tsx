@@ -34,8 +34,8 @@ function statusStyle(status: string) {
   if (status === "rejected")  return { bg: "#FEE2E2", color: "#991B1B" };
   if (status === "contested") return { bg: "#FFF7ED", color: "#9A3412" };
   if (status === "settled")   return { bg: "#DCFCE7", color: "#166534" };
-  if (status === "closed")    return { bg: "#F3F4F6", color: "#6B7280" };
-  if (status === "abandoned") return { bg: "#F3F4F6", color: "#6B7280" };
+  if (status === "closed")    return { bg: "#F3F4F6", color: "#5C5852" };
+  if (status === "abandoned") return { bg: "#F3F4F6", color: "#5C5852" };
   return { bg: "#FEF9C3", color: "#854D0E" };
 }
 
@@ -50,7 +50,7 @@ function statusLabel(status: string) {
 }
 
 function payerStyle(payer: string) {
-  if (payer === "CNOPS") return { bg: "#E6F1FB", color: "#1E40AF" };
+  if (payer === "CNOPS") return { bg: "#EEEDFB", color: "#1E40AF" };
   if (payer === "CNSS")  return { bg: "#F0FDF4", color: "#166534" };
   if (payer === "AMO")   return { bg: "#FFF7ED", color: "#9A3412" };
   return { bg: "#F5F3FF", color: "#6D28D9" };
@@ -218,15 +218,15 @@ export default function DossiersPage() {
             <div style={s.sbMark}>
               <svg width="14" height="14" viewBox="0 0 44 44" fill="none">
                 <circle cx="22" cy="22" r="6" fill="white"/>
-                <circle cx="22" cy="22" r="2.8" fill="#0F62FE"/>
+                <circle cx="22" cy="22" r="2.8" fill="#5B4FE8"/>
                 <line x1="22" y1="7"    x2="22" y2="14"   stroke="white"   strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="22" y1="30"   x2="22" y2="37"   stroke="white"   strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="7"  y1="22"   x2="14" y2="22"   stroke="white"   strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="30" y1="22"   x2="37" y2="22"   stroke="white"   strokeWidth="2.2" strokeLinecap="round"/>
-                <line x1="12"   y1="12"   x2="16.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="27.5" y1="27.5" x2="32"   y2="32"   stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="32"   y1="12"   x2="27.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="16.5" y1="27.5" x2="12"   y2="32"   stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="12"   y1="12"   x2="16.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="27.5" y1="27.5" x2="32"   y2="32"   stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="32"   y1="12"   x2="27.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="16.5" y1="27.5" x2="12"   y2="32"   stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
             </div>
             <div>
@@ -493,7 +493,7 @@ export default function DossiersPage() {
                 {selected.status === "contested" && (
                   <div style={s.detailSection}>
                     <div style={s.detailSectionTitle}>Résultat de la contestation</div>
-                    <div style={{ fontSize: 11, color: "#185FA5", background: "#E6F1FB", border: "0.5px solid #B5D4F4", borderRadius: 6, padding: "8px 10px", marginBottom: 10 }}>
+                    <div style={{ fontSize: 11, color: "#4A3FD4", background: "#EEEDFB", border: "0.5px solid #C7C2F7", borderRadius: 6, padding: "8px 10px", marginBottom: 10 }}>
                       Contestation envoyée · En attente de réponse de la caisse.
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
@@ -501,7 +501,7 @@ export default function DossiersPage() {
                         disabled={updating} onClick={() => updateStatus(selected.id, "settled")}>
                         ✓ Réglé
                       </button>
-                      <button style={{ ...s.actionBtn, background: "#F3F4F6", color: "#6B7280", border: "0.5px solid #D1D5DB" }}
+                      <button style={{ ...s.actionBtn, background: "#F3F4F6", color: "#5C5852", border: "0.5px solid #D1D5DB" }}
                         disabled={updating} onClick={() => updateStatus(selected.id, "abandoned")}>
                         ✗ Abandonné
                       </button>
@@ -516,7 +516,7 @@ export default function DossiersPage() {
                     <div style={{ fontSize: 11, color: "#166534", background: "#DCFCE7", border: "0.5px solid #86EFAC", borderRadius: 6, padding: "8px 10px", marginBottom: 10 }}>
                       Contestation acceptée · Paiement reçu. Clôturez le dossier.
                     </div>
-                    <button style={{ ...s.actionBtn, background: "#F3F4F6", color: "#6B7280", border: "0.5px solid #D1D5DB", width: "100%" }}
+                    <button style={{ ...s.actionBtn, background: "#F3F4F6", color: "#5C5852", border: "0.5px solid #D1D5DB", width: "100%" }}
                       disabled={updating} onClick={() => updateStatus(selected.id, "closed")}>
                       Solder le dossier
                     </button>
@@ -527,7 +527,7 @@ export default function DossiersPage() {
                 {["approved","closed","abandoned"].includes(selected.status) && (
                   <div style={{ ...s.detailSection, borderBottom: "none" }}>
                     <div style={s.detailSectionTitle}>Feedback IA</div>
-                    <div style={{ fontSize: 11, color: "#6B7280", background: "#F0F4FA", borderRadius: 6, padding: "8px 10px" }}>
+                    <div style={{ fontSize: 11, color: "#5C5852", background: "#F2F1EE", borderRadius: 6, padding: "8px 10px" }}>
                       ✅ Résultat enregistré — le modèle XGBoost apprendra de ce dossier lors du prochain cycle d&apos;entraînement.
                     </div>
                   </div>
@@ -584,76 +584,76 @@ export default function DossiersPage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F0F4FA", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
-  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E2E4E9", display: "flex", flexDirection: "column" },
-  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #EEF2F8" },
+  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F2F1EE", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
+  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E5E3DD", display: "flex", flexDirection: "column" },
+  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #F2F1EE" },
   sbBrand: { display: "flex", alignItems: "center", gap: 9 },
-  sbMark:  { width: 28, height: 28, background: "#0F62FE", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  sbName:  { fontSize: 15, fontWeight: 300, color: "#0C1B33", letterSpacing: "-0.02em", lineHeight: 1.1 },
-  sbIQ:    { fontWeight: 800, color: "#0F62FE" },
-  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9EA3AE", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
+  sbMark:  { width: 28, height: 28, background: "#5B4FE8", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  sbName:  { fontSize: 15, fontWeight: 300, color: "#1A1814", letterSpacing: "-0.02em", lineHeight: 1.1 },
+  sbIQ:    { fontWeight: 800, color: "#5B4FE8" },
+  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9C9890", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
   sbNav:   { flex: 1, padding: "10px 8px", overflowY: "auto", display: "flex", flexDirection: "column" },
-  sbSec:   { fontSize: 9, fontWeight: 600, color: "#B5D4F4", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
-  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#6B7280", fontSize: 12, textDecoration: "none", marginBottom: 1 },
-  sbItemActive: { background: "#E6F1FB", color: "#0F62FE", fontWeight: 500 },
-  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #EEF2F8" },
+  sbSec:   { fontSize: 9, fontWeight: 600, color: "#C7C2F7", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
+  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#5C5852", fontSize: 12, textDecoration: "none", marginBottom: 1 },
+  sbItemActive: { background: "#EEEDFB", color: "#5B4FE8", fontWeight: 500 },
+  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #F2F1EE" },
   logoutBtn: { width: "100%", padding: "8px", borderRadius: 7, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit" },
 
   main:    { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  topbar:  { background: "#fff", borderBottom: "0.5px solid #E2E4E9", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
-  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1D23" },
-  topDate: { fontSize: 11, color: "#9EA3AE", marginTop: 2 },
-  topBtnPrimary: { fontSize: 11, fontWeight: 600, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "none", background: "#0F62FE", color: "#fff", fontFamily: "inherit" },
+  topbar:  { background: "#fff", borderBottom: "0.5px solid #E5E3DD", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
+  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1814" },
+  topDate: { fontSize: 11, color: "#9C9890", marginTop: 2 },
+  topBtnPrimary: { fontSize: 11, fontWeight: 600, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit" },
 
   content:     { flex: 1, overflowY: "auto", padding: "16px 20px" },
   filterBar:   { display: "flex", alignItems: "center", gap: 12, marginBottom: 14, flexWrap: "wrap" },
-  searchInput: { padding: "8px 14px", border: "0.5px solid #D1D5DB", borderRadius: 8, fontSize: 12, color: "#1A1D23", outline: "none", fontFamily: "inherit", background: "#fff", width: 240 },
+  searchInput: { padding: "8px 14px", border: "0.5px solid #D1D5DB", borderRadius: 8, fontSize: 12, color: "#1A1814", outline: "none", fontFamily: "inherit", background: "#fff", width: 240 },
   chips:       { display: "flex", gap: 5, flexWrap: "wrap" },
-  chip:        { fontSize: 10, fontWeight: 500, padding: "4px 10px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
-  chipActive:  { background: "#E6F1FB", color: "#0F62FE", borderColor: "#B5D4F4" },
+  chip:        { fontSize: 10, fontWeight: 500, padding: "4px 10px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit" },
+  chipActive:  { background: "#EEEDFB", color: "#5B4FE8", borderColor: "#C7C2F7" },
 
   tableLayout:     { display: "flex", gap: 12 },
   tableWrap:       { flex: 1 },
   tableWrapNarrow: { flex: 1, minWidth: 0 },
-  tableCard:       { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, overflow: "auto" },
-  loading:         { padding: "24px 16px", fontSize: 13, color: "#9EA3AE" },
+  tableCard:       { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, overflow: "auto" },
+  loading:         { padding: "24px 16px", fontSize: 13, color: "#9C9890" },
   table:           { width: "100%", borderCollapse: "collapse", fontSize: 12 },
-  th:          { textAlign: "left", padding: "8px 14px", fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #EEF2F8", background: "#FAFBFF", whiteSpace: "nowrap" },
-  tr:          { borderBottom: "0.5px solid #F5F7FA", cursor: "pointer" },
+  th:          { textAlign: "left", padding: "8px 14px", fontSize: 9, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #F2F1EE", background: "#FAFAF7", whiteSpace: "nowrap" },
+  tr:          { borderBottom: "0.5px solid #F5F4F1", cursor: "pointer" },
   trSelected:  { background: "#EEF4FF" },
   td:          { padding: "10px 14px", verticalAlign: "middle" },
-  claimNum:    { fontFamily: "monospace", fontSize: 11, color: "#1A1D23", fontWeight: 500 },
-  patientName: { fontSize: 12, fontWeight: 500, color: "#1A1D23" },
+  claimNum:    { fontFamily: "monospace", fontSize: 11, color: "#1A1814", fontWeight: 500 },
+  patientName: { fontSize: 12, fontWeight: 500, color: "#1A1814" },
   badge:       { display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20 },
-  dash:        { fontSize: 11, color: "#9EA3AE" },
+  dash:        { fontSize: 11, color: "#9C9890" },
 
-  detailPanel:        { width: 300, flexShrink: 0, background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: 16, overflowY: "auto" },
-  detailHdr:          { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, paddingBottom: 12, borderBottom: "0.5px solid #EEF2F8" },
-  detailNum:          { fontSize: 13, fontWeight: 600, color: "#1A1D23", fontFamily: "monospace" },
-  detailPatient:      { fontSize: 12, color: "#6B7280", marginTop: 3 },
-  closeBtn:           { fontSize: 14, color: "#9EA3AE", cursor: "pointer", border: "none", background: "none", padding: 0 },
-  detailSection:      { marginBottom: 16, paddingBottom: 16, borderBottom: "0.5px solid #EEF2F8" },
-  detailSectionTitle: { fontSize: 10, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 },
+  detailPanel:        { width: 300, flexShrink: 0, background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 16, overflowY: "auto" },
+  detailHdr:          { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, paddingBottom: 12, borderBottom: "0.5px solid #F2F1EE" },
+  detailNum:          { fontSize: 13, fontWeight: 600, color: "#1A1814", fontFamily: "monospace" },
+  detailPatient:      { fontSize: 12, color: "#5C5852", marginTop: 3 },
+  closeBtn:           { fontSize: 14, color: "#9C9890", cursor: "pointer", border: "none", background: "none", padding: 0 },
+  detailSection:      { marginBottom: 16, paddingBottom: 16, borderBottom: "0.5px solid #F2F1EE" },
+  detailSectionTitle: { fontSize: 10, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 },
   detailRow:          { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 7 },
-  detailLbl:          { fontSize: 12, color: "#6B7280" },
-  detailVal:          { fontSize: 12, fontWeight: 500, color: "#1A1D23" },
+  detailLbl:          { fontSize: 12, color: "#5C5852" },
+  detailVal:          { fontSize: 12, fontWeight: 500, color: "#1A1814" },
   rejectionReason:    { fontSize: 11, color: "#991B1B", marginTop: 8, background: "#FEE2E2", padding: "6px 10px", borderRadius: 6 },
   riskBox:            { borderRadius: 8, padding: "10px 12px", marginTop: 4 },
   riskCause:          { fontSize: 11, marginTop: 6, lineHeight: 1.5 },
   forclusionBox:      { fontSize: 12, color: "#9A3412", background: "#FFF8F0", border: "0.5px solid #FED7AA", borderRadius: 6, padding: "8px 10px", marginTop: 4 },
   actionBtn:          { fontSize: 11, fontWeight: 600, padding: "7px 14px", borderRadius: 7, cursor: "pointer", fontFamily: "inherit", flex: 1 },
-  rejectInput:        { width: "100%", padding: "7px 10px", border: "0.5px solid #E2E4E9", borderRadius: 7, fontSize: 11, fontFamily: "inherit", outline: "none", boxSizing: "border-box" },
+  rejectInput:        { width: "100%", padding: "7px 10px", border: "0.5px solid #E5E3DD", borderRadius: 7, fontSize: 11, fontFamily: "inherit", outline: "none", boxSizing: "border-box" },
   deleteBtn:          { fontSize: 11, fontWeight: 500, padding: "4px 10px", borderRadius: 6, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit" },
-  overlay:          { position: "fixed", inset: 0, background: "rgba(12,27,51,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 },
+  overlay:          { position: "fixed", inset: 0, background: "rgba(26,24,20,0.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 },
   deleteModal:      { background: "#fff", borderRadius: 12, width: "100%", maxWidth: 440, boxShadow: "0 20px 50px rgba(0,0,0,0.18)" },
-  deleteModalHdr:   { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 20px 14px", borderBottom: "0.5px solid #EEF2F8" },
-  deleteModalTitle: { fontSize: 14, fontWeight: 600, color: "#1A1D23" },
+  deleteModalHdr:   { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 20px 14px", borderBottom: "0.5px solid #F2F1EE" },
+  deleteModalTitle: { fontSize: 14, fontWeight: 600, color: "#1A1814" },
   deleteModalBody:  { padding: "16px 20px" },
-  deleteModalClaim: { fontFamily: "monospace", fontSize: 13, fontWeight: 600, color: "#0F62FE", marginBottom: 10 },
+  deleteModalClaim: { fontFamily: "monospace", fontSize: 13, fontWeight: 600, color: "#5B4FE8", marginBottom: 10 },
   deleteModalWarn:  { fontSize: 12, color: "#9A3412", background: "#FFF8F0", border: "0.5px solid #FED7AA", borderRadius: 7, padding: "8px 10px", marginBottom: 14 },
-  deleteModalLabel: { fontSize: 10, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 },
-  deleteModalInput: { width: "100%", padding: "9px 12px", border: "0.5px solid #E2E4E9", borderRadius: 8, fontSize: 12, fontFamily: "inherit", outline: "none", boxSizing: "border-box" },
-  deleteModalFooter:{ display: "flex", gap: 10, padding: "14px 20px", borderTop: "0.5px solid #EEF2F8", justifyContent: "flex-end" },
-  cancelBtn:        { fontSize: 12, fontWeight: 500, padding: "8px 16px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
+  deleteModalLabel: { fontSize: 10, fontWeight: 600, color: "#5C5852", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 },
+  deleteModalInput: { width: "100%", padding: "9px 12px", border: "0.5px solid #E5E3DD", borderRadius: 8, fontSize: 12, fontFamily: "inherit", outline: "none", boxSizing: "border-box" },
+  deleteModalFooter:{ display: "flex", gap: 10, padding: "14px 20px", borderTop: "0.5px solid #F2F1EE", justifyContent: "flex-end" },
+  cancelBtn:        { fontSize: 12, fontWeight: 500, padding: "8px 16px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit" },
   confirmDeleteBtn: { fontSize: 12, fontWeight: 600, padding: "8px 16px", borderRadius: 7, cursor: "pointer", border: "none", background: "#DC2626", color: "#fff", fontFamily: "inherit" },
 };
