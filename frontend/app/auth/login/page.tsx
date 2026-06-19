@@ -84,6 +84,21 @@ export default function LoginPage() {
       localStorage.setItem("sihaiq_user", JSON.stringify({ name: data.full_name, role: data.role, email: email }));
       const redirect = localStorage.getItem("sihaiq_redirect") || "/dashboard";
       localStorage.removeItem("sihaiq_redirect");
+      // Show onboarding if account < 2 days old and no data yet
+      const createdAt = new Date(data.created_at || Date.now());
+      const ageHours = (Date.now() - createdAt.getTime()) / 3600000;
+      if (ageHours < 48 && redirect === "/dashboard") {
+        const statsRes = await fetch(`${API_URL}/claims/stats/summary`, {
+          headers: { Authorization: `Bearer ${data.access_token}` },
+        });
+        if (statsRes.ok) {
+          const stats = await statsRes.json();
+          if (stats.total_claims === 0) {
+            router.push("/onboarding");
+            return;
+          }
+        }
+      }
       router.push(redirect);
     } catch {
       setError("Impossible de contacter le serveur. Vérifiez que le backend est actif.");

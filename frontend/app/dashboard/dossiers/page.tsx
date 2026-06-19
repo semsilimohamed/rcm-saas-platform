@@ -1,5 +1,5 @@
 "use client";
-
+import ScanReviewModal from "./ScanReviewModal";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -81,6 +81,17 @@ export default function DossiersPage() {
   const [claimToDelete, setClaimToDelete]     = useState<{id: string, number: string} | null>(null);
   const [selectedForBordereau, setSelectedForBordereau] = useState<string[]>([]);
   const [generatingBordereau, setGeneratingBordereau] = useState(false);
+  const [showScanModal, setShowScanModal] = useState(false);
+
+  async function reloadClaims() {
+    const token = localStorage.getItem("sihaiq_token");
+    const tenantId = localStorage.getItem("sihaiq_tenant_id");
+    const res = await fetch(`${API_URL}/claims/with-patients?tenant_id=${tenantId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) setClaims(await res.json());
+  }
+
   useEffect(() => {
     const load = async () => {
       const token = localStorage.getItem("sihaiq_token");
@@ -162,6 +173,7 @@ export default function DossiersPage() {
       alert("❌ " + message);
     }
   }
+
   async function generateBordereau() {
     if (selectedForBordereau.length === 0) { alert("Sélectionnez au moins un dossier."); return; }
     setGeneratingBordereau(true);
@@ -194,6 +206,7 @@ export default function DossiersPage() {
       alert("❌ " + message);
     } finally { setGeneratingBordereau(false); }
   }
+
   const filtered = claims.filter(c => {
     const matchSearch =
       search === "" ||
@@ -276,7 +289,10 @@ export default function DossiersPage() {
                 {generatingBordereau ? "Génération..." : `📄 Bordereau (${selectedForBordereau.length})`}
               </button>
             )}
-            <button style={s.topBtnPrimary}>+ Nouveau dossier</button>
+            {/* ── CHANGED: button now opens the scan modal ── */}
+            <button style={s.topBtnPrimary} onClick={() => setShowScanModal(true)}>
+              + Nouveau dossier
+            </button>
           </div>
         </div>
 
@@ -365,25 +381,18 @@ export default function DossiersPage() {
             {/* DETAIL PANEL */}
             {selected && (
               <div style={s.detailPanel}>
-
-                {/* Header */}
                 <div style={s.detailHdr}>
                   <div>
                     <div style={s.detailNum}>{selected.claim_number}</div>
                     <div style={s.detailPatient}>{selected.patient_name}</div>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <button
-                      style={s.deleteBtn}
-                      onClick={() => openDeleteModal(selected.id, selected.claim_number)}
-                    >
+                    <button style={s.deleteBtn} onClick={() => openDeleteModal(selected.id, selected.claim_number)}>
                       🗑 Supprimer
                     </button>
                     <button style={s.closeBtn} onClick={() => setSelected(null)}>✕</button>
                   </div>
                 </div>
-
-                {/* Info */}
                 <div style={s.detailSection}>
                   <div style={s.detailSectionTitle}>Informations du dossier</div>
                   {[
@@ -399,19 +408,13 @@ export default function DossiersPage() {
                     </div>
                   ))}
                 </div>
-
-                {/* Status */}
                 <div style={s.detailSection}>
                   <div style={s.detailSectionTitle}>Statut</div>
-                  <span style={{ ...s.badge, ...statusStyle(selected.status) }}>
-                    {statusLabel(selected.status)}
-                  </span>
+                  <span style={{ ...s.badge, ...statusStyle(selected.status) }}>{statusLabel(selected.status)}</span>
                   {selected.rejection_reason && (
                     <div style={s.rejectionReason}>Motif : {selected.rejection_reason}</div>
                   )}
                 </div>
-
-                {/* AI */}
                 {selected.risk_level && (
                   <div style={s.detailSection}>
                     <div style={s.detailSectionTitle}>Analyse IA</div>
@@ -425,8 +428,6 @@ export default function DossiersPage() {
                     </div>
                   </div>
                 )}
-
-                {/* Forclusion */}
                 {selected.forclusion_deadline && (
                   <div style={s.detailSection}>
                     <div style={s.detailSectionTitle}>Forclusion</div>
@@ -435,22 +436,20 @@ export default function DossiersPage() {
                     </div>
                   </div>
                 )}
-
-                {/* STATUS UPDATE — disposition codes */}
                 {selected.status === "pending" && (
                   <div style={s.detailSection}>
                     <div style={s.detailSectionTitle}>Mettre à jour le statut</div>
                     <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                      <button
-                        style={{ ...s.actionBtn, background: "#DCFCE7", color: "#166534", border: "0.5px solid #86EFAC" }}
+                      <button style={{ ...s.actionBtn, background: "#DCFCE7", color: "#166534", border: "0.5px solid #86EFAC" }}
                         disabled={updating}
-                        onClick={() => { setShowRejectInput(false); setRejectReason(""); updateStatus(selected.id, "approved"); }}
-                      >✓ Approuvé</button>
-                      <button
-                        style={{ ...s.actionBtn, background: "#FEE2E2", color: "#991B1B", border: "0.5px solid #FCA5A5" }}
+                        onClick={() => { setShowRejectInput(false); setRejectReason(""); updateStatus(selected.id, "approved"); }}>
+                        ✓ Approuvé
+                      </button>
+                      <button style={{ ...s.actionBtn, background: "#FEE2E2", color: "#991B1B", border: "0.5px solid #FCA5A5" }}
                         disabled={updating}
-                        onClick={() => { setShowContestInput(false); setShowRejectInput(true); }}
-                      >✗ Rejeté</button>
+                        onClick={() => { setShowContestInput(false); setShowRejectInput(true); }}>
+                        ✗ Rejeté
+                      </button>
                     </div>
                     {showRejectInput && (
                       <div>
@@ -464,7 +463,6 @@ export default function DossiersPage() {
                     {updateMsg && <div style={{ fontSize: 11, marginTop: 8, color: updateMsg.startsWith("✅") ? "#166534" : "#991B1B" }}>{updateMsg}</div>}
                   </div>
                 )}
-
                 {selected.status === "rejected" && (
                   <div style={s.detailSection}>
                     <div style={s.detailSectionTitle}>Contester le rejet</div>
@@ -473,9 +471,7 @@ export default function DossiersPage() {
                     </div>
                     {!showContestInput ? (
                       <button style={{ ...s.actionBtn, background: "#FFF7ED", color: "#9A3412", border: "0.5px solid #FED7AA", width: "100%" }}
-                        onClick={() => setShowContestInput(true)}>
-                        ✉ Contester ce rejet
-                      </button>
+                        onClick={() => setShowContestInput(true)}>✉ Contester ce rejet</button>
                     ) : (
                       <div>
                         <input style={s.rejectInput} placeholder="Motif de contestation..." value={contestReason} onChange={e => setContestReason(e.target.value)} />
@@ -489,7 +485,6 @@ export default function DossiersPage() {
                     {updateMsg && <div style={{ fontSize: 11, marginTop: 8, color: updateMsg.startsWith("✅") ? "#166534" : "#991B1B" }}>{updateMsg}</div>}
                   </div>
                 )}
-
                 {selected.status === "contested" && (
                   <div style={s.detailSection}>
                     <div style={s.detailSectionTitle}>Résultat de la contestation</div>
@@ -498,18 +493,13 @@ export default function DossiersPage() {
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                       <button style={{ ...s.actionBtn, background: "#DCFCE7", color: "#166534", border: "0.5px solid #86EFAC" }}
-                        disabled={updating} onClick={() => updateStatus(selected.id, "settled")}>
-                        ✓ Réglé
-                      </button>
+                        disabled={updating} onClick={() => updateStatus(selected.id, "settled")}>✓ Réglé</button>
                       <button style={{ ...s.actionBtn, background: "#F3F4F6", color: "#5C5852", border: "0.5px solid #D1D5DB" }}
-                        disabled={updating} onClick={() => updateStatus(selected.id, "abandoned")}>
-                        ✗ Abandonné
-                      </button>
+                        disabled={updating} onClick={() => updateStatus(selected.id, "abandoned")}>✗ Abandonné</button>
                     </div>
                     {updateMsg && <div style={{ fontSize: 11, marginTop: 8, color: updateMsg.startsWith("✅") ? "#166534" : "#991B1B" }}>{updateMsg}</div>}
                   </div>
                 )}
-
                 {selected.status === "settled" && (
                   <div style={s.detailSection}>
                     <div style={s.detailSectionTitle}>Clôturer le dossier</div>
@@ -517,13 +507,10 @@ export default function DossiersPage() {
                       Contestation acceptée · Paiement reçu. Clôturez le dossier.
                     </div>
                     <button style={{ ...s.actionBtn, background: "#F3F4F6", color: "#5C5852", border: "0.5px solid #D1D5DB", width: "100%" }}
-                      disabled={updating} onClick={() => updateStatus(selected.id, "closed")}>
-                      Solder le dossier
-                    </button>
+                      disabled={updating} onClick={() => updateStatus(selected.id, "closed")}>Solder le dossier</button>
                     {updateMsg && <div style={{ fontSize: 11, marginTop: 8, color: updateMsg.startsWith("✅") ? "#166534" : "#991B1B" }}>{updateMsg}</div>}
                   </div>
                 )}
-
                 {["approved","closed","abandoned"].includes(selected.status) && (
                   <div style={{ ...s.detailSection, borderBottom: "none" }}>
                     <div style={s.detailSectionTitle}>Feedback IA</div>
@@ -532,14 +519,22 @@ export default function DossiersPage() {
                     </div>
                   </div>
                 )}
-
-                
-
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* ── CHANGED: Scan modal ── */}
+      {showScanModal && (
+        <ScanReviewModal
+          onClose={() => setShowScanModal(false)}
+          onConfirm={() => {
+            setShowScanModal(false);
+            reloadClaims();
+          }}
+        />
+      )}
 
       {/* DELETE MODAL */}
       {showDeleteModal && claimToDelete && (
@@ -564,9 +559,7 @@ export default function DossiersPage() {
               />
             </div>
             <div style={s.deleteModalFooter}>
-              <button style={s.cancelBtn} onClick={() => setShowDeleteModal(false)}>
-                Annuler
-              </button>
+              <button style={s.cancelBtn} onClick={() => setShowDeleteModal(false)}>Annuler</button>
               <button
                 style={{ ...s.confirmDeleteBtn, opacity: !deleteReason ? 0.5 : 1 }}
                 disabled={!deleteReason}
@@ -598,20 +591,17 @@ const s: Record<string, React.CSSProperties> = {
   sbItemActive: { background: "#EEEDFB", color: "#5B4FE8", fontWeight: 500 },
   sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #F2F1EE" },
   logoutBtn: { width: "100%", padding: "8px", borderRadius: 7, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit" },
-
   main:    { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
   topbar:  { background: "#fff", borderBottom: "0.5px solid #E5E3DD", padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
   topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1814" },
   topDate: { fontSize: 11, color: "#9C9890", marginTop: 2 },
   topBtnPrimary: { fontSize: 11, fontWeight: 600, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit" },
-
   content:     { flex: 1, overflowY: "auto", padding: "16px 20px" },
   filterBar:   { display: "flex", alignItems: "center", gap: 12, marginBottom: 14, flexWrap: "wrap" },
   searchInput: { padding: "8px 14px", border: "0.5px solid #D1D5DB", borderRadius: 8, fontSize: 12, color: "#1A1814", outline: "none", fontFamily: "inherit", background: "#fff", width: 240 },
   chips:       { display: "flex", gap: 5, flexWrap: "wrap" },
   chip:        { fontSize: 10, fontWeight: 500, padding: "4px 10px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit" },
   chipActive:  { background: "#EEEDFB", color: "#5B4FE8", borderColor: "#C7C2F7" },
-
   tableLayout:     { display: "flex", gap: 12 },
   tableWrap:       { flex: 1 },
   tableWrapNarrow: { flex: 1, minWidth: 0 },
@@ -626,7 +616,6 @@ const s: Record<string, React.CSSProperties> = {
   patientName: { fontSize: 12, fontWeight: 500, color: "#1A1814" },
   badge:       { display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20 },
   dash:        { fontSize: 11, color: "#9C9890" },
-
   detailPanel:        { width: 300, flexShrink: 0, background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 16, overflowY: "auto" },
   detailHdr:          { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, paddingBottom: 12, borderBottom: "0.5px solid #F2F1EE" },
   detailNum:          { fontSize: 13, fontWeight: 600, color: "#1A1814", fontFamily: "monospace" },
