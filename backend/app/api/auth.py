@@ -36,6 +36,7 @@ class LoginResponse(BaseModel):
     tenant_id: str
     full_name: str
     role: str
+    created_at: Optional[str] = None
 
 class UserResponse(BaseModel):
     id: UUID
@@ -117,7 +118,8 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
         user_id=str(user.id),
         tenant_id=str(tenant.id),
         full_name=user.full_name,
-        role=user.role
+        role=user.role,
+        created_at=user.created_at.isoformat() if user.created_at else None
     )
 
 @router.post("/login", response_model=LoginResponse)
@@ -138,7 +140,8 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
         user_id=str(user.id),
         tenant_id=str(user.tenant_id),
         full_name=user.full_name,
-        role=user.role
+        role=user.role,
+        created_at=user.created_at.isoformat() if user.created_at else None
     )
 
 @router.get("/me", response_model=UserResponse)

@@ -3,6 +3,33 @@ from datetime import datetime, date
 from typing import Optional
 from uuid import UUID
 
+
+class ClaimActCreate(BaseModel):
+    ngap_code: str
+    service_type: str
+    quantity: int = 1
+    amount: float
+    ngap_coding_valid: Optional[bool] = None
+    prescription_legible: Optional[bool] = None
+    pec_required: Optional[bool] = None
+    pec_obtained: Optional[bool] = None
+
+
+class ClaimActResponse(BaseModel):
+    id: UUID
+    ngap_code: str
+    service_type: str
+    quantity: int
+    amount: float
+    risk_score: Optional[float] = None
+    risk_level: Optional[str] = None
+    rejection_cause_predicted: Optional[str] = None
+    status: str
+
+    class Config:
+        from_attributes = True
+
+
 class ClaimCreate(BaseModel):
     patient_id: UUID
     claim_number: str
@@ -10,6 +37,8 @@ class ClaimCreate(BaseModel):
     insurance_type: str
     service_type: str
     service_date: datetime
+    acts: Optional[list[ClaimActCreate]] = None
+
 
 class ClaimResponse(BaseModel):
     id: UUID
@@ -39,6 +68,8 @@ class ClaimResponse(BaseModel):
     submitted_at: Optional[datetime] = None
     resolved_at: Optional[datetime] = None
     created_at: datetime
+
+    acts: Optional[list[ClaimActResponse]] = []
 
     class Config:
         from_attributes = True

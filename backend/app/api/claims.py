@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+import tempfile
+import os
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func, text
@@ -17,6 +19,7 @@ import joblib
 import shap
 import json
 from pathlib import Path
+from app.models.claim_act import ClaimAct
 
 router = APIRouter(prefix="/claims", tags=["Claims"], dependencies=[Depends(get_current_user)])
 
@@ -116,6 +119,21 @@ def create_claim(
     if not patient:
         raise HTTPException(status_code=404, detail="Patient introuvable")
 
+    # If acts are provided, the entered total amount must match their sum.
+    # The platform never calculates this for the agent — it only flags disagreement.
+    if claim.acts:
+        acts_sum = round(sum(act.amount for act in claim.acts), 2)
+        entered_amount = round(claim.amount, 2)
+        if acts_sum != entered_amount:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Discordance détectée : le montant total saisi ({entered_amount} MAD) "
+                    f"ne correspond pas à la somme des actes ({acts_sum} MAD). "
+                    f"Veuillez vérifier et recalculer."
+                ),
+            )
+
     prediction = run_prediction({
         "payer": claim.insurance_type,
         "service_type": claim.service_type,
@@ -140,10 +158,30 @@ def create_claim(
         rejection_cause_predicted=prediction.get("rejection_cause_predicted"),
     )
     db.add(new_claim)
+    db.flush()  # assigns new_claim.id without committing yet
+
+    # If acts were provided, create one ClaimAct row per act.
+    if claim.acts:
+        for act in claim.acts:
+            new_act = ClaimAct(
+                id=uuid.uuid4(),
+                tenant_id=current_user.tenant_id,
+                claim_id=new_claim.id,
+                ngap_code=act.ngap_code,
+                service_type=act.service_type,
+                quantity=act.quantity,
+                amount=act.amount,
+                ngap_coding_valid=act.ngap_coding_valid,
+                prescription_legible=act.prescription_legible,
+                pec_required=act.pec_required,
+                pec_obtained=act.pec_obtained,
+                status="pending",
+            )
+            db.add(new_act)
+
     db.commit()
     db.refresh(new_claim)
     return new_claim
-
 
 @router.get("/stats/summary")
 def get_stats(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -250,13 +288,15 @@ def update_claim_status(
             payer, service_type,
             days_since_service,
             actual_outcome, rejection_reason,
-            days_to_resolution, resolved_at
+            days_to_resolution, resolved_at,
+            label_source, rule_version
         ) VALUES (
             gen_random_uuid(), :tenant_id, :claim_id,
             :payer, :service_type,
             :days_since_service,
             :actual_outcome, :rejection_reason,
-            :days_to_resolution, now()
+            :days_to_resolution, now(),
+            :label_source, :rule_version
         )
     """), {
         "tenant_id": str(claim.tenant_id),
@@ -267,6 +307,8 @@ def update_claim_status(
         "actual_outcome": actual_outcome,
         "rejection_reason": update.rejection_reason,
         "days_to_resolution": days_to_resolution,
+        "label_source": "BAF_INTERNAL",
+        "rule_version": "2026-01",
     })
     ACTION_MAP = {
         "approved":  "DOSSIER_APPROUVÉ",
@@ -303,6 +345,91 @@ def update_claim_status(
     }
 class DeleteClaimRequest(BaseModel):
     reason: str
+
+@router.post("/scan")
+async def scan_fse(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Upload a CNSS FSE PDF scan.
+    Runs OCR + extraction + prediction.
+    Returns extracted fields for agent review — nothing is saved yet.
+    Agent confirms via POST /claims/ with the returned data.
+    """
+    # Validate file type
+    # Validate file type — accept PDF and common image formats
+    allowed_extensions = (".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".tif")
+    filename_lower = file.filename.lower()
+    if not filename_lower.endswith(allowed_extensions):
+        raise HTTPException(
+            status_code=400,
+            detail="Format non supporté. Formats acceptés : PDF, JPG, PNG, TIFF."
+        )
+
+    # Preserve original extension so fse_parser knows how to read the file
+    original_ext = Path(filename_lower).suffix
+
+    # Write upload to a temp file — deleted immediately after processing
+    try:
+        with tempfile.NamedTemporaryFile(
+            delete=False, suffix=original_ext, prefix="sihaiq_fse_"
+        ) as tmp:
+            content = await file.read()
+            tmp.write(content)
+            tmp_path = tmp.name
+
+        # Run the FSE parser
+        from app.services.fse_parser import parse_fse
+        result = parse_fse(tmp_path)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Erreur lecture document : {str(e)}"
+        )
+    finally:
+        # Always delete the temp file — scanned document never stays on disk
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+    # Run prediction on extracted fields
+    prediction = run_prediction(result["prediction_input"])
+
+    # Return extracted fields + prediction for agent review
+    # Nothing written to DB yet — agent must confirm first
+    return {
+        "extracted": {
+            "claim_number":   result["claim"]["claim_number"],
+            "amount":         result["claim"]["amount"],
+            "service_date":   result["claim"]["service_date"],
+            "insurance_type": result["claim"]["insurance_type"],
+            "service_type":   result["claim"]["service_type"],
+            "acts":           result["acts"],
+        },
+        "prediction": {
+            "risk_score":                prediction.get("risk_score"),
+            "risk_level":                prediction.get("risk_level"),
+            "rejection_cause_predicted": prediction.get("rejection_cause_predicted"),
+            "ml_top_factors":            prediction.get("ml_top_factors"),
+        },
+        "validation": {
+            "immatriculation_valid": result["prediction_input"]["immatriculation_valid"],
+            "cin_valid":             result["prediction_input"]["cin_valid"],
+            "inpe_present":          result["prediction_input"]["inpe_present"],
+            "pec_obtained":          result["prediction_input"]["pec_obtained"],
+        },
+        "confidence":       result["confidence"],
+        "needs_review":     result["needs_review"],
+        "critical_missing": result["critical_missing"],
+        "tenant_id":        str(current_user.tenant_id),
+        "message":          (
+            "Document lu avec succès — vérifiez les champs extraits avant confirmation."
+            if not result["needs_review"] else
+            "Champs manquants détectés — veuillez compléter avant de confirmer."
+        )
+    }
 
 @router.delete("/{claim_id}")
 def delete_claim(

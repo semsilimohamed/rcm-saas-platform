@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.database import Base, engine
-from app.models import tenant, user, patient, claim
+from app.models import tenant, user, patient, claim, claim_act
 from app.api import auth
 from app.ml import predict
 

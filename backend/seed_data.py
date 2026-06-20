@@ -35,21 +35,21 @@ p3 = Patient(id=uuid.uuid4(), tenant_id=TENANT_ID,
 p4 = Patient(id=uuid.uuid4(), tenant_id=TENANT_ID,
              full_name="Omar Benkirane", cin="GG567890",
              phone="0665678901", insurance_type="RAMED",
-             insurance_number="RAMED-2026-005", is_active=True)
+             insurance_number="RAMED-2026-005", is_active=True) 
 
-db.add_all([p1, p2, p3, p4])
-db.commit()  # Save patients to Supabase FIRST
+db.add_all([p1, p2, p3, p4]) 
+db.commit()  # Save patients to Supabase FIRST 
 
-# Refresh to confirm IDs are saved
-db.refresh(p1)
-db.refresh(p2)
-db.refresh(p3)
-db.refresh(p4)
+# Refresh to confirm IDs are saved 
+db.refresh(p1) 
+db.refresh(p2) 
+db.refresh(p3) 
+db.refresh(p4) 
 
-print(f"  + {p1.full_name} — {p1.id}")
-print(f"  + {p2.full_name} — {p2.id}")
-print(f"  + {p3.full_name} — {p3.id}")
-print(f"  + {p4.full_name} — {p4.id}")
+print(f"  + {p1.full_name} — {p1.id}") 
+print(f"  + {p2.full_name} — {p2.id}") 
+print(f"  + {p3.full_name} — {p3.id}") 
+print(f"  + {p4.full_name} — {p4.id}") 
 print("Patients saved.\n")
 
 # ── STEP 2: Now insert claims ────────────────────────────────

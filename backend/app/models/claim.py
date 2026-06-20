@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Float, Text, Date, Integer
+from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
 from datetime import datetime
@@ -40,3 +41,4 @@ class Claim(Base):
     submitted_at = Column(DateTime, nullable=True)
     resolved_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    acts = relationship("ClaimAct", backref="claim", lazy="joined")

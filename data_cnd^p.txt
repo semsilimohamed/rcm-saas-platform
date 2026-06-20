@@ -1,0 +1,3 @@
+Personal identifiers extracted from scanned documents are used only for in-memory validation and patient matching,
+and are discarded immediately — they are never written to disk, never transmitted, 
+never stored in any log or database."
