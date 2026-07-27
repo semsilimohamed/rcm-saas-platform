@@ -30,7 +30,7 @@ def generate_bordereau(
     if not req.claim_ids:
         raise HTTPException(status_code=400, detail="Aucun dossier selectionne.")
     stmt = text("""
-        SELECT c.claim_number, p.full_name, c.insurance_type,
+        SELECT c.claim_number, p.ne_number, c.insurance_type,
                c.service_type, c.service_date, c.amount,
                c.status, c.forclusion_deadline
         FROM claims c
@@ -104,12 +104,13 @@ def generate_bordereau(
         else:
             pdf.set_fill_color(255, 255, 255)
         fd = forclusion.strftime("%d/%m/%Y") if forclusion else "-"
-        pt = patient[:20] if len(patient) > 20 else patient
+        pt = "NE " + str(patient)
         row_data = [str(idx+1), claim_num[:16], pt, payer_val, service_type[:15], f"{amount:,.0f}", fd]
         aligns = ["C","L","L","C","C","R","C"]
         for w, cell, align in zip(col_widths, row_data, aligns):
             pdf.cell(w, 6, cell, border=1, fill=fill, align=align)
         pdf.ln()
+
     pdf.set_fill_color(15, 98, 254)
     pdf.set_text_color(255, 255, 255)
     pdf.set_font("Helvetica", "B", 9)

@@ -24,23 +24,22 @@ from app.models.claim_act import ClaimAct
 router = APIRouter(prefix="/claims", tags=["Claims"], dependencies=[Depends(get_current_user)])
 
 # ── Load model once at startup ─────────────────────────────────────────────
-MODEL_PATH = Path(__file__).parent.parent / "ml" / "models" / "sihaiq_xgboost_model.pkl"
-model = joblib.load(MODEL_PATH)
-explainer = shap.TreeExplainer(model, feature_perturbation="tree_path_dependent")
+from xgboost import XGBClassifier
+MODEL_PATH = Path(__file__).parent.parent / "ml" / "models" / "sihaiq_xgb_v2.json"
+model = XGBClassifier()
+model.load_model(str(MODEL_PATH))
+explainer = shap.TreeExplainer(model)
 
 SHAP_MESSAGES = {
-    "ngap_code": "Code NGAP Invalide : Vérifiez le référentiel des actes CNSS/CNOPS.",
-    "immatriculation_valid": "Erreur d'Immatriculation : Clé de contrôle invalide.",
-    "inpe_present": "INPE Manquant : L'Identifiant National du Praticien est obligatoire.",
-    "docs_completeness_ratio": "Dossier Incomplet : Des pièces justificatives manquent.",
-    "droits_active": "Droits AMO Expirés : Vérifiez les droits ouverts du patient.",
-    "cin_valid": "CIN Invalide : Le numéro de carte d'identité nationale contient une erreur.",
-    "prescription_legible": "Prescription Illisible : La prescription doit être numérisée clairement.",
-    "pec_obtained": "PEC Manquante : Une prise en charge préalable est requise.",
-    "payer": "Caisse non reconnue : Vérifiez le type d'assurance du patient.",
-    "ngap_coding_valid": "Codage NGAP Invalide : Le code acte ne correspond pas à la spécialité.",
-    "days_since_service": "Délai trop long : Risque de rejet pour dépassement de délai.",
-    "pec_required": "PEC Requise non obtenue : Cet acte nécessite une autorisation préalable.",
+    "duree_sejour":   "Durée de séjour élevée : facteur de risque majeur de rejet.",
+    "montant_total":  "Montant élevé : risque de surfacturation / dépassement tarifaire.",
+    "part_organisme": "Part organisme atypique : vérifiez la répartition de prise en charge.",
+    "mois":           "Période à taux de rejet élevé (saisonnalité).",
+    "org_CNOPS":      "Régime CNOPS : profil de rejet spécifique à vérifier.",
+    "org_CNSS":       "Régime CNSS : profil de rejet spécifique à vérifier.",
+    "org_FAR":        "Régime FAR : profil de rejet spécifique à vérifier.",
+    "org_AMO":        "Régime AMO : profil de rejet spécifique à vérifier.",
+    "org_AMO-Tadamon":"Régime AMO-Tadamon : profil de rejet spécifique à vérifier.",
 }
 def write_audit_log(db: Session, tenant_id: str, user_email: str, action: str, resource_type: str, resource_id: str, details: str):
     try:
@@ -102,6 +101,169 @@ def run_prediction(claim_data: dict) -> dict:
         return {}
 
 # ── Routes ─────────────────────────────────────────────────────────────────
+class PredictInput(BaseModel):
+    organisme: str
+    duree_sejour: int
+    part_organisme: float
+    montant_total: float
+    mois: int
+
+
+@router.post("/predict")
+def predict_only(
+    payload: PredictInput,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Prédit le risque de rejet SANS créer de dossier.
+    Outil d'analyse pour l'agent BAF (simulation).
+    """
+    prediction = run_prediction(payload.dict())
+    if not prediction:
+        raise HTTPException(status_code=422, detail="Erreur lors de la prédiction.")
+
+    risk_score = prediction["risk_score"]
+    factors = json.loads(prediction["ml_top_factors"])
+
+    return {
+        "risk_score": risk_score,
+        "risk_level": prediction["risk_level"],
+        "risk_percentage": f"{round(risk_score * 100)}%",
+        "zone": "danger" if risk_score >= 0.20 else "sure",
+        "seuil": 0.20,
+        "top_factors": [
+            {
+                "feature": f["feature"],
+                "impact": f["impact"],
+                "direction": "augmente le risque" if f["impact"] > 0 else "réduit le risque",
+            }
+            for f in factors
+        ],
+        "recommended_action": prediction.get("rejection_cause_predicted"),
+        "model_used": "XGBoost v2 (5 features réelles)",
+    }
+
+# ── Import CSV (Phase D) ───────────────────────────────────────────────────
+import csv, io
+from datetime import datetime
+from fastapi import UploadFile, File
+
+_FALLBACK_RATES = {"CNOPS": 0.80, "CNSS": 0.70, "FAR": 0.90, "AMO": 0.75, "AMO-Tadamon": 0.85}
+_FORBIDDEN_COLS = {"nom", "prenom", "full_name", "name", "cin", "patient_name", "nom_patient"}
+_PAYER_NORM = {"CNOPS": "CNOPS", "CNSS": "CNSS", "FAR": "FAR", "AMO": "AMO", "AMO-TADAMON": "AMO-Tadamon"}
+
+
+@router.post("/import-csv")
+async def import_csv(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    content = (await file.read()).decode("utf-8-sig")
+    reader = csv.DictReader(io.StringIO(content))
+    cols = [c.strip().lower() for c in (reader.fieldnames or [])]
+
+    # 1. Rejet CNDP
+    forbidden = _FORBIDDEN_COLS.intersection(cols)
+    if forbidden:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Fichier refusé (CNDP) : colonnes interdites {sorted(forbidden)}. "
+                   f"Remplacez les noms/CIN par le Numéro d'Entrée (NE)."
+        )
+
+    required = {"ne_number", "organisme", "date_entree", "date_sortie", "montant_total"}
+    missing = required - set(cols)
+    if missing:
+        raise HTTPException(status_code=400, detail=f"Colonnes manquantes : {sorted(missing)}")
+
+    created, errors, estimated = 0, [], 0
+
+    for i, raw in enumerate(reader, start=2):
+        row = {k.strip().lower(): (v.strip() if v else "") for k, v in raw.items()}
+        try:
+            payer = _PAYER_NORM.get(row["organisme"].upper())
+            if not payer:
+                errors.append(f"Ligne {i}: organisme inconnu '{row['organisme']}'"); continue
+
+            # patient par NE (dans le tenant courant)
+            patient = db.query(Patient).filter(
+                Patient.ne_number == row["ne_number"],
+                Patient.tenant_id == current_user.tenant_id,
+            ).first()
+            if not patient:
+                # Création automatique du patient (NE seul, conforme CNDP).
+                patient = Patient(
+                    id=uuid.uuid4(),
+                    tenant_id=current_user.tenant_id,
+                    ne_number=row["ne_number"],
+                    payer_type=payer,
+                    is_active=True,
+                )
+                db.add(patient)
+                db.flush()   # obtient patient.id sans commit complet
+
+            d_in = datetime.strptime(row["date_entree"], "%Y-%m-%d")
+            d_out = datetime.strptime(row["date_sortie"], "%Y-%m-%d")
+            duree = (d_out - d_in).days
+            if duree < 0:
+                errors.append(f"Ligne {i}: date de sortie avant l'entrée"); continue
+            duree = max(duree, 1)
+
+            montant = float(row["montant_total"])
+            if montant <= 0:
+                errors.append(f"Ligne {i}: montant invalide"); continue
+
+            part_patient = row.get("part_patient", "")
+            if part_patient:
+                part_org = round(1 - (float(part_patient) / montant), 2)
+                part_org = min(max(part_org, 0.0), 1.0)
+            else:
+                part_org = _FALLBACK_RATES[payer]
+                estimated += 1
+
+            prediction = run_prediction({
+                "organisme": payer,
+                "duree_sejour": duree,
+                "part_organisme": part_org,
+                "montant_total": montant,
+                "mois": d_out.month,
+            })
+
+            claim_number = row.get("claim_number") or f"CSV-{row['ne_number']}-{int(datetime.utcnow().timestamp())}-{i}"
+
+            new_claim = Claim(
+                id=uuid.uuid4(),
+                tenant_id=current_user.tenant_id,
+                patient_id=patient.id,
+                claim_number=claim_number,
+                amount=montant,
+                insurance_type=payer,
+                service_type=row.get("service_type", "hospitalisation"),
+                service_date=d_out,
+                duree_sejour=duree,
+                part_organisme=part_org,
+                status="pending",
+                forclusion_deadline=(d_out.date() + timedelta(days=60)),
+                days_in_ar=(datetime.utcnow().date() - d_out.date()).days,
+                risk_score=prediction.get("risk_score") if prediction else None,
+                risk_level=prediction.get("risk_level") if prediction else None,
+                rejection_cause_predicted=prediction.get("rejection_cause_predicted") if prediction else None,
+                ml_top_factors=prediction.get("ml_top_factors") if prediction else None,
+            )
+            db.add(new_claim)
+            created += 1
+        except Exception as e:
+            errors.append(f"Ligne {i}: {e}")
+
+    db.commit()
+    return {
+        "created": created,
+        "errors": errors,
+        "estimated_count": estimated,
+        "message": f"{created} dossier(s) créé(s), {len(errors)} erreur(s), "
+                   f"{estimated} part(s) organisme estimée(s).",
+    }
 
 @router.post("/", response_model=ClaimResponse)
 def create_claim(
@@ -111,44 +273,53 @@ def create_claim(
 ):
     service_date = claim.service_date.date() if hasattr(claim.service_date, 'date') else claim.service_date
 
-    # Ensure the patient belongs to the caller's tenant before creating a claim.
-    patient = db.query(Patient).filter(
-        Patient.id == claim.patient_id,
-        Patient.tenant_id == current_user.tenant_id,
-    ).first()
-    if not patient:
-        raise HTTPException(status_code=404, detail="Patient introuvable")
-
-    # If acts are provided, the entered total amount must match their sum.
-    # The platform never calculates this for the agent — it only flags disagreement.
-    if claim.acts:
-        acts_sum = round(sum(act.amount for act in claim.acts), 2)
-        entered_amount = round(claim.amount, 2)
-        if acts_sum != entered_amount:
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    f"Discordance détectée : le montant total saisi ({entered_amount} MAD) "
-                    f"ne correspond pas à la somme des actes ({acts_sum} MAD). "
-                    f"Veuillez vérifier et recalculer."
-                ),
+    # Résoudre le patient par NE (crée à la volée si absent — cohérent avec l'import CSV
+    # et la vision "intégration SIH" : le NE suffit, aucune donnée d'identité requise).
+    patient = None
+    if getattr(claim, "ne_number", None):
+        patient = db.query(Patient).filter(
+            Patient.ne_number == claim.ne_number,
+            Patient.tenant_id == current_user.tenant_id,
+        ).first()
+        if not patient:
+            patient = Patient(
+                id=uuid.uuid4(),
+                tenant_id=current_user.tenant_id,
+                ne_number=claim.ne_number,
+                payer_type=claim.insurance_type,
+                is_active=True,
             )
+            db.add(patient)
+            db.flush()
+    elif getattr(claim, "patient_id", None):
+        # Compatibilité : si un patient_id est fourni, on l'utilise
+        patient = db.query(Patient).filter(
+            Patient.id == claim.patient_id,
+            Patient.tenant_id == current_user.tenant_id,
+        ).first()
+
+    if not patient:
+        raise HTTPException(status_code=400, detail="Numéro d'Entrée (NE) requis.")
 
     prediction = run_prediction({
-        "payer": claim.insurance_type,
-        "service_type": claim.service_type,
-        "days_since_service": (date.today() - service_date).days,
+        "organisme":      claim.insurance_type,
+        "duree_sejour":   claim.duree_sejour,
+        "part_organisme": claim.part_organisme,
+        "montant_total":  claim.amount,
+        "mois":           service_date.month,
     })
 
     new_claim = Claim(
         id=uuid.uuid4(),
         tenant_id=current_user.tenant_id,
-        patient_id=claim.patient_id,
+        patient_id=patient.id,
         claim_number=claim.claim_number,
         amount=claim.amount,
         insurance_type=claim.insurance_type,
         service_type=claim.service_type,
         service_date=claim.service_date,
+        duree_sejour=claim.duree_sejour,
+        part_organisme=claim.part_organisme,
         status="pending",
         forclusion_deadline=service_date + timedelta(days=60),
         days_in_ar=(date.today() - service_date).days,
@@ -158,27 +329,6 @@ def create_claim(
         rejection_cause_predicted=prediction.get("rejection_cause_predicted"),
     )
     db.add(new_claim)
-    db.flush()  # assigns new_claim.id without committing yet
-
-    # If acts were provided, create one ClaimAct row per act.
-    if claim.acts:
-        for act in claim.acts:
-            new_act = ClaimAct(
-                id=uuid.uuid4(),
-                tenant_id=current_user.tenant_id,
-                claim_id=new_claim.id,
-                ngap_code=act.ngap_code,
-                service_type=act.service_type,
-                quantity=act.quantity,
-                amount=act.amount,
-                ngap_coding_valid=act.ngap_coding_valid,
-                prescription_legible=act.prescription_legible,
-                pec_required=act.pec_required,
-                pec_obtained=act.pec_obtained,
-                status="pending",
-            )
-            db.add(new_act)
-
     db.commit()
     db.refresh(new_claim)
     return new_claim
@@ -206,17 +356,17 @@ def get_stats(current_user: User = Depends(get_current_user), db: Session = Depe
 @router.get("/with-patients")
 def get_claims_with_patients(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     results = (
-        db.query(Claim, Patient.full_name)
+        db.query(Claim, Patient.ne_number)
         .join(Patient, Claim.patient_id == Patient.id)
         .filter(Claim.tenant_id == current_user.tenant_id)
         .all()
     )
     claims_with_names = []
-    for claim, full_name in results:
+    for claim, ne_number in results:
         claims_with_names.append({
             "id": str(claim.id),
             "claim_number": claim.claim_number,
-            "patient_name": full_name,
+            "patient_ne": ne_number,
             "amount": claim.amount,
             "insurance_type": claim.insurance_type,
             "service_type": claim.service_type,
@@ -282,11 +432,15 @@ def update_claim_status(
     service_date = claim.service_date.date() if hasattr(claim.service_date, "date") else claim.service_date
     days_since_service = (date.today() - service_date).days if service_date else None
 
+    mois_val = service_date.month if service_date else None
+
     db.execute(text("""
         INSERT INTO training_feedback (
             id, tenant_id, claim_id,
             payer, service_type,
             days_since_service,
+            duree_sejour, part_organisme, montant_total, mois,
+            risk_score_predicted,
             actual_outcome, rejection_reason,
             days_to_resolution, resolved_at,
             label_source, rule_version
@@ -294,6 +448,8 @@ def update_claim_status(
             gen_random_uuid(), :tenant_id, :claim_id,
             :payer, :service_type,
             :days_since_service,
+            :duree_sejour, :part_organisme, :montant_total, :mois,
+            :risk_score_predicted,
             :actual_outcome, :rejection_reason,
             :days_to_resolution, now(),
             :label_source, :rule_version
@@ -304,6 +460,11 @@ def update_claim_status(
         "payer": claim.insurance_type,
         "service_type": claim.service_type,
         "days_since_service": days_since_service,
+        "duree_sejour": claim.duree_sejour,
+        "part_organisme": claim.part_organisme,
+        "montant_total": claim.amount,
+        "mois": mois_val,
+        "risk_score_predicted": claim.risk_score,
         "actual_outcome": actual_outcome,
         "rejection_reason": update.rejection_reason,
         "days_to_resolution": days_to_resolution,
@@ -352,83 +513,53 @@ async def scan_fse(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Upload a CNSS FSE PDF scan.
-    Runs OCR + extraction + prediction.
-    Returns extracted fields for agent review — nothing is saved yet.
-    Agent confirms via POST /claims/ with the returned data.
-    """
-    # Validate file type
-    # Validate file type — accept PDF and common image formats
     allowed_extensions = (".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".tif")
-    filename_lower = file.filename.lower()
-    if not filename_lower.endswith(allowed_extensions):
-        raise HTTPException(
-            status_code=400,
-            detail="Format non supporté. Formats acceptés : PDF, JPG, PNG, TIFF."
-        )
+    if not file.filename.lower().endswith(allowed_extensions):
+        raise HTTPException(status_code=400, detail="Format non supporté (PDF, JPG, PNG, TIFF).")
 
-    # Preserve original extension so fse_parser knows how to read the file
-    original_ext = Path(filename_lower).suffix
-
-    # Write upload to a temp file — deleted immediately after processing
+    original_ext = Path(file.filename.lower()).suffix
+    tmp_path = None
     try:
-        with tempfile.NamedTemporaryFile(
-            delete=False, suffix=original_ext, prefix="sihaiq_fse_"
-        ) as tmp:
-            content = await file.read()
-            tmp.write(content)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=original_ext, prefix="sihaiq_fse_") as tmp:
+            tmp.write(await file.read())
             tmp_path = tmp.name
 
-        # Run the FSE parser
         from app.services.fse_parser import parse_fse
         result = parse_fse(tmp_path)
-
     except Exception as e:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Erreur lecture document : {str(e)}"
-        )
+        raise HTTPException(status_code=422, detail=f"Erreur lecture document : {str(e)}")
     finally:
-        # Always delete the temp file — scanned document never stays on disk
-        if os.path.exists(tmp_path):
+        if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
-    # Run prediction on extracted fields
-    prediction = run_prediction(result["prediction_input"])
+    ex = result["extracted"]
 
-    # Return extracted fields + prediction for agent review
-    # Nothing written to DB yet — agent must confirm first
+    # Prédiction seulement si les 5 features sont présentes ; sinon on renvoie
+    # les champs détectés et l'agent complète (pas de prédiction sur du vide).
+    prediction = None
+    if not result["needs_review"]:
+        prediction = run_prediction({
+            "organisme": ex["organisme"],
+            "duree_sejour": ex["duree_sejour"],
+            "part_organisme": ex["part_organisme"],
+            "montant_total": ex["montant_total"],
+            "mois": ex["mois"],
+        })
+
     return {
-        "extracted": {
-            "claim_number":   result["claim"]["claim_number"],
-            "amount":         result["claim"]["amount"],
-            "service_date":   result["claim"]["service_date"],
-            "insurance_type": result["claim"]["insurance_type"],
-            "service_type":   result["claim"]["service_type"],
-            "acts":           result["acts"],
-        },
+        "extracted": ex,
         "prediction": {
-            "risk_score":                prediction.get("risk_score"),
-            "risk_level":                prediction.get("risk_level"),
-            "rejection_cause_predicted": prediction.get("rejection_cause_predicted"),
-            "ml_top_factors":            prediction.get("ml_top_factors"),
-        },
-        "validation": {
-            "immatriculation_valid": result["prediction_input"]["immatriculation_valid"],
-            "cin_valid":             result["prediction_input"]["cin_valid"],
-            "inpe_present":          result["prediction_input"]["inpe_present"],
-            "pec_obtained":          result["prediction_input"]["pec_obtained"],
-        },
-        "confidence":       result["confidence"],
-        "needs_review":     result["needs_review"],
-        "critical_missing": result["critical_missing"],
-        "tenant_id":        str(current_user.tenant_id),
-        "message":          (
-            "Document lu avec succès — vérifiez les champs extraits avant confirmation."
+            "risk_score": prediction.get("risk_score") if prediction else None,
+            "risk_level": prediction.get("risk_level") if prediction else None,
+            "rejection_cause_predicted": prediction.get("rejection_cause_predicted") if prediction else None,
+        } if prediction else None,
+        "missing": result["missing"],
+        "needs_review": result["needs_review"],
+        "message": (
+            "Document lu — vérifiez les champs avant confirmation."
             if not result["needs_review"] else
-            "Champs manquants détectés — veuillez compléter avant de confirmer."
-        )
+            f"Champs à compléter : {', '.join(result['missing'])}."
+        ),
     }
 
 @router.delete("/{claim_id}")

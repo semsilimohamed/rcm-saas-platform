@@ -14,7 +14,6 @@ export default function OnboardingPage() {
     setError("");
     try {
       const token    = localStorage.getItem("sihaiq_token");
-      const tenantId = localStorage.getItem("sihaiq_tenant_id");
 
       // Seed demo patients
       const patients = [

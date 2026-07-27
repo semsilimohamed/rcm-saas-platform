@@ -399,7 +399,6 @@ export default function LoginPage() {
 
             {/* Header */}
             <div style={s.vzHeader}>
-              <span className="vz-live-dot" />
               <span style={s.vzHeaderTxt}>Moteur SihaIQ · analyse en temps réel</span>
             </div>
 

@@ -22,7 +22,17 @@ def ensure_same_tenant(tenant_id: UUID, current_user: User):
     if tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=403, detail="Accès refusé à cet établissement.")
 
+# Rôles autorisés à gérer les comptes utilisateurs.
+ADMIN_ROLES = {"admin", "director"}
 
+
+def ensure_admin(current_user: User):
+    """Seuls les rôles administratifs peuvent gérer les comptes."""
+    if current_user.role not in ADMIN_ROLES:
+        raise HTTPException(
+            status_code=403,
+            detail="Action réservée aux administrateurs de l'établissement."
+        )
 # ── Schemas ────────────────────────────────────────────────────────────────
 
 class TenantUpdate(BaseModel):
@@ -53,11 +63,12 @@ class UpdateAgent(BaseModel):
 # ── Tenant routes ──────────────────────────────────────────────────────────
 
 @router.post("/", response_model=TenantResponse)
-def create_tenant(tenant: TenantCreate, db: Session = Depends(get_db)):
+def create_tenant(tenant: TenantCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ensure_admin(current_user)
     new_tenant = Tenant(
         id=uuid.uuid4(),
         name=tenant.name,
-        email=tenant.email
+        email=tenant.email.strip().lower()
     )
     db.add(new_tenant)
     db.commit()
@@ -139,14 +150,17 @@ def get_users(tenant_id: UUID, current_user: User = Depends(get_current_user), d
 @router.post("/{tenant_id}/users")
 def create_agent(tenant_id: UUID, agent: NewAgent, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     ensure_same_tenant(tenant_id, current_user)
-    existing = db.query(User).filter(User.email == agent.email).first()
+    ensure_admin(current_user)                          # ← AJOUT
+
+    email_norm = agent.email.strip().lower()            # ← AJOUT (cohérence casse)
+    existing = db.query(User).filter(User.email == email_norm).first()
     if existing:
         raise HTTPException(status_code=400, detail="Un compte avec cet email existe déjà.")
     hashed = bcrypt.hashpw(agent.password.encode(), bcrypt.gensalt()).decode()
     new_user = User(
         id=uuid.uuid4(),
         tenant_id=tenant_id,
-        email=agent.email,
+        email=email_norm,
         full_name=agent.full_name,
         hashed_password=hashed,
         role=agent.role,
@@ -160,11 +174,27 @@ def create_agent(tenant_id: UUID, agent: NewAgent, current_user: User = Depends(
 @router.patch("/{tenant_id}/users/{user_id}")
 def update_agent(tenant_id: UUID, user_id: UUID, update: UpdateAgent, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     ensure_same_tenant(tenant_id, current_user)
+    ensure_admin(current_user)
+
+    # Un administrateur ne peut pas modifier son propre rôle ni se désactiver
+    # (empêche l'auto-promotion et le verrouillage accidentel du tenant).
+    if user_id == current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="Vous ne pouvez pas modifier votre propre rôle ou statut."
+        )
+
     user = db.query(User).filter(User.id == user_id, User.tenant_id == tenant_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable")
-    if update.role is not None:      user.role = update.role
-    if update.is_active is not None: user.is_active = update.is_active
+
+    if update.role is not None:
+        if update.role not in {"admin", "director", "chef_baf", "biller", "agent"}:
+            raise HTTPException(status_code=400, detail="Rôle invalide.")
+        user.role = update.role
+    if update.is_active is not None:
+        user.is_active = update.is_active
+
     db.commit()
     return {"message": "Compte mis à jour."}
 
@@ -172,6 +202,11 @@ def update_agent(tenant_id: UUID, user_id: UUID, update: UpdateAgent, current_us
 @router.delete("/{tenant_id}/users/{user_id}")
 def delete_agent(tenant_id: UUID, user_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     ensure_same_tenant(tenant_id, current_user)
+    ensure_admin(current_user)
+
+    if user_id == current_user.id:
+        raise HTTPException(status_code=403, detail="Vous ne pouvez pas supprimer votre propre compte.")
+
     user = db.query(User).filter(User.id == user_id, User.tenant_id == tenant_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable")
@@ -184,9 +219,12 @@ def delete_agent(tenant_id: UUID, user_id: UUID, current_user: User = Depends(ge
 
 @router.post("/change-password")
 def change_password(req: PasswordChange, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    # A user may only change a password within their own tenant.
+    # Un utilisateur ne peut changer QUE son propre mot de passe.
+    if str(req.user_id) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Vous ne pouvez modifier que votre propre mot de passe.")
+
     user = db.query(User).filter(
-        User.id == req.user_id,
+        User.id == current_user.id,
         User.tenant_id == current_user.tenant_id,
     ).first()
     if not user:

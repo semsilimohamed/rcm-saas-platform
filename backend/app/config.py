@@ -6,6 +6,17 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
     raise RuntimeError("SECRET_KEY not set")
 
+# Fail fast if CORS origins are not explicitly configured.
+# Never fall back to "*" — that would expose the API to any origin.
+_ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS")
+if not _ALLOWED_ORIGINS:
+    raise RuntimeError("ALLOWED_ORIGINS not set")
+
+# Liste des origines autorisées — variable module, pas un champ Settings
+# (pydantic-settings tenterait de parser la valeur du .env comme du JSON).
+ALLOWED_ORIGINS = [o.strip() for o in _ALLOWED_ORIGINS.split(",") if o.strip()]
+
+
 class Settings(BaseSettings):
     database_url: str
     secret_key: str = SECRET_KEY
@@ -14,8 +25,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
-        # Allow .env to hold keys that aren't Settings fields (e.g. ALLOWED_ORIGINS,
-        # which main.py reads directly from os.environ).
         extra = "ignore"
+
 
 settings = Settings()

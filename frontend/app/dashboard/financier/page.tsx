@@ -66,7 +66,7 @@ function formatMonth(m: string) {
 }
 
 const PAYER_COLORS: Record<string, { bg: string; color: string }> = {
-  "CNOPS":       { bg: "#EEEDFB", color: "#1E40AF" },
+  "CNOPS":       { bg: "#E6F1FB", color: "#1E40AF" },
   "CNSS":        { bg: "#F0FDF4", color: "#166534" },
   "AMO":         { bg: "#FFF7ED", color: "#9A3412" },
   "AMO-Tadamon": { bg: "#F5F3FF", color: "#6D28D9" },
@@ -118,12 +118,12 @@ export default function FinancierPage() {
   }
 
   if (error) return (
-    <div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center", background: "#F2F1EE" }}>
-      <div style={{ background: "#fff", borderRadius: 12, padding: 32, maxWidth: 400, textAlign: "center", border: "0.5px solid #E5E3DD" }}>
+    <div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center", background: "#F0F4FA" }}>
+      <div style={{ background: "#fff", borderRadius: 12, padding: 32, maxWidth: 400, textAlign: "center", border: "0.5px solid #E2E4E9" }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "#1A1814", marginBottom: 8 }}>Accès restreint</div>
-        <div style={{ fontSize: 13, color: "#5C5852", lineHeight: 1.6, marginBottom: 20 }}>{error}</div>
-        <a href="/dashboard" style={{ fontSize: 13, color: "#5B4FE8", textDecoration: "none" }}>← Retour au tableau de bord</a>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#1A1D23", marginBottom: 8 }}>Accès restreint</div>
+        <div style={{ fontSize: 13, color: "#6B7280", lineHeight: 1.6, marginBottom: 20 }}>{error}</div>
+        <a href="/dashboard" style={{ fontSize: 13, color: "#0F62FE", textDecoration: "none" }}>← Retour au tableau de bord</a>
       </div>
     </div>
   );
@@ -140,15 +140,15 @@ export default function FinancierPage() {
             <div style={s.sbMark}>
               <svg width="14" height="14" viewBox="0 0 44 44" fill="none">
                 <circle cx="22" cy="22" r="6" fill="white"/>
-                <circle cx="22" cy="22" r="2.8" fill="#5B4FE8"/>
+                <circle cx="22" cy="22" r="2.8" fill="#0F62FE"/>
                 <line x1="22" y1="7" x2="22" y2="14" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="22" y1="30" x2="22" y2="37" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="7"  y1="22" x2="14" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
                 <line x1="30" y1="22" x2="37" y2="22" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
-                <line x1="12"   y1="12"   x2="16.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="27.5" y1="27.5" x2="32"   y2="32"   stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="32"   y1="12"   x2="27.5" y2="16.5" stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="16.5" y1="27.5" x2="12"   y2="32"   stroke="#C7C2F7" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="12"   y1="12"   x2="16.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="27.5" y1="27.5" x2="32"   y2="32"   stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="32"   y1="12"   x2="27.5" y2="16.5" stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="16.5" y1="27.5" x2="12"   y2="32"   stroke="#93C5FD" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
             </div>
             <div>
@@ -167,7 +167,8 @@ export default function FinancierPage() {
           <Link href="/dashboard/performance" style={s.sbItem}> Performance</Link>
           <Link href="/dashboard/forclusion"  style={s.sbItem}> Forclusion</Link>
           <Link href="/dashboard/encours"     style={s.sbItem}> Encours A/R</Link>
-          <div style={{ ...s.sbItem, ...s.sbItemActive }}> Activité financière</div>
+          <Link href="/dashboard/financier" style={s.sbItem}> Activité financière</Link>
+          <Link href="/dashboard/comptabilite" style={s.sbItem}>📒 Comptabilité DAF</Link>
           <div style={s.sbSec}>Système</div>
           <Link href="/dashboard/audit"    style={s.sbItem}> Journal d&apos;audit</Link>
           <Link href="/dashboard/settings" style={s.sbItem}> Paramètres</Link>
@@ -204,7 +205,7 @@ export default function FinancierPage() {
 
         {loading ? (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ fontSize: 13, color: "#9C9890" }}>Chargement des données financières...</div>
+            <div style={{ fontSize: 13, color: "#9EA3AE" }}>Chargement des données financières...</div>
           </div>
         ) : (
           <div style={s.content}>
@@ -212,12 +213,12 @@ export default function FinancierPage() {
             {/* KPI CARDS */}
             <div style={s.kpiGrid}>
               {[
-                { lbl: "Total facturé",        val: formatMAD(k?.total_facture || 0),   sub: `${k?.nb_total || 0} dossiers`,             color: "#5B4FE8", accent: "#EEEDFB" },
+                { lbl: "Total facturé",        val: formatMAD(k?.total_facture || 0),   sub: `${k?.nb_total || 0} dossiers`,             color: "#0F62FE", accent: "#E6F1FB" },
                 { lbl: "Taux recouvrement",    val: `${k?.taux_recouvrement || 0}%`,    sub: "approuvé + réglé / total",                 color: "#16A34A", accent: "#DCFCE7" },
                 { lbl: "Montant approuvé",     val: formatMAD(k?.total_approuve || 0),  sub: `${k?.nb_approuve || 0} dossiers`,          color: "#16A34A", accent: "#DCFCE7" },
                 { lbl: "Montant rejeté",       val: formatMAD(k?.total_rejete || 0),    sub: `Taux rejet ${k?.taux_rejet || 0}%`,        color: "#DC2626", accent: "#FEE2E2" },
                 { lbl: "Montant à risque",     val: formatMAD(k?.montant_risque || 0),  sub: "rejeté + contesté + abandonné",            color: "#F59E0B", accent: "#FEF9C3" },
-                { lbl: "Forclos",              val: formatMAD(k?.total_forclos || 0),   sub: `${k?.nb_forclos || 0} dossiers expirés`,   color: "#5C5852", accent: "#F3F4F6" },
+                { lbl: "Forclos",              val: formatMAD(k?.total_forclos || 0),   sub: `${k?.nb_forclos || 0} dossiers expirés`,   color: "#6B7280", accent: "#F3F4F6" },
               ].map(kpi => (
                 <div key={kpi.lbl} style={{ ...s.kpi, background: kpi.accent }}>
                   <div style={{ ...s.kpiBar, background: kpi.color }} />
@@ -233,7 +234,7 @@ export default function FinancierPage() {
               <div style={s.cardTitle}>Cycle de revenus A → Z</div>
               <div style={s.flowRow}>
                 {([
-                  { lbl: "Total facturé", val: k?.total_facture  || 0, color: "#5B4FE8", icon: "📋" },
+                  { lbl: "Total facturé", val: k?.total_facture  || 0, color: "#0F62FE", icon: "📋" },
                   null,
                   { lbl: "Approuvé",     val: k?.total_approuve || 0, color: "#16A34A", icon: "✅" },
                   { lbl: "En attente",   val: k?.total_pending  || 0, color: "#F59E0B", icon: "⏳" },
@@ -242,7 +243,7 @@ export default function FinancierPage() {
                   { lbl: "Contesté",     val: k?.total_conteste || 0, color: "#F97316", icon: "✉️" },
                   null,
                   { lbl: "Réglé",        val: k?.total_regle    || 0, color: "#16A34A", icon: "💰" },
-                  { lbl: "Abandonné",    val: k?.total_abandonne|| 0, color: "#5C5852", icon: "🚫" },
+                  { lbl: "Abandonné",    val: k?.total_abandonne|| 0, color: "#6B7280", icon: "🚫" },
                   { lbl: "Forclos",      val: k?.total_forclos  || 0, color: "#9CA3AF", icon: "⛔" },
                 ] as ({ lbl: string; val: number; color: string; icon: string } | null)[]).map((item, i) =>
                   item === null ? (
@@ -257,7 +258,7 @@ export default function FinancierPage() {
                 )}
               </div>
               <div style={{ marginTop: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#5C5852", marginBottom: 6 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280", marginBottom: 6 }}>
                   <span>Taux de recouvrement net</span>
                   <span style={{ fontWeight: 700, color: "#16A34A" }}>{k?.taux_recouvrement || 0}%</span>
                 </div>
@@ -293,7 +294,7 @@ export default function FinancierPage() {
                     </div>
                     <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
                       <span style={{ fontSize: 10, color: "#16A34A" }}>■ Approuvé</span>
-                      <span style={{ fontSize: 10, color: "#C7C2F7" }}>■ Total facturé</span>
+                      <span style={{ fontSize: 10, color: "#B5D4F4" }}>■ Total facturé</span>
                     </div>
                   </>
                 ) : (
@@ -314,7 +315,7 @@ export default function FinancierPage() {
                   </thead>
                   <tbody>
                     {data?.payer_breakdown.map((p, i) => {
-                      const pc = PAYER_COLORS[p.payer] || { bg: "#F3F4F6", color: "#5C5852" };
+                      const pc = PAYER_COLORS[p.payer] || { bg: "#F3F4F6", color: "#6B7280" };
                       return (
                         <tr key={i} style={s.tr}>
                           <td style={s.td}>
@@ -324,7 +325,7 @@ export default function FinancierPage() {
                           <td style={s.td}>{formatMAD(p.total)}</td>
                           <td style={s.td}>
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <div style={{ width: 50, height: 5, background: "#F2F1EE", borderRadius: 3, overflow: "hidden" }}>
+                              <div style={{ width: 50, height: 5, background: "#EEF2F8", borderRadius: 3, overflow: "hidden" }}>
                                 <div style={{ width: `${p.rejection_rate}%`, height: "100%", borderRadius: 3, background: p.rejection_rate > 50 ? "#DC2626" : p.rejection_rate > 25 ? "#F59E0B" : "#16A34A" }} />
                               </div>
                               <span style={{ fontSize: 11, fontWeight: 600, color: p.rejection_rate > 50 ? "#DC2626" : p.rejection_rate > 25 ? "#854D0E" : "#166534" }}>{p.rejection_rate}%</span>
@@ -354,7 +355,7 @@ export default function FinancierPage() {
                       <div style={s.causeReason}>{c.reason}</div>
                       <div style={s.causeStats}>
                         <span style={{ color: "#DC2626", fontWeight: 600 }}>{c.nb} dossier{c.nb > 1 ? "s" : ""}</span>
-                        <span style={{ color: "#5C5852" }}>{formatMAD(c.total)}</span>
+                        <span style={{ color: "#6B7280" }}>{formatMAD(c.total)}</span>
                       </div>
                     </div>
                   ))}
@@ -370,71 +371,71 @@ export default function FinancierPage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F2F1EE", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
-  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E5E3DD", display: "flex", flexDirection: "column" },
-  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #F2F1EE" },
+  shell:   { display: "flex", height: "100vh", overflow: "hidden", background: "#F0F4FA", fontFamily: "'DM Sans','Segoe UI',system-ui,sans-serif" },
+  sidebar: { width: 210, flexShrink: 0, background: "#fff", borderRight: "0.5px solid #E2E4E9", display: "flex", flexDirection: "column" },
+  sbTop:   { padding: "16px 14px 12px", borderBottom: "0.5px solid #EEF2F8" },
   sbBrand: { display: "flex", alignItems: "center", gap: 9 },
-  sbMark:  { width: 28, height: 28, background: "#5B4FE8", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  sbName:  { fontSize: 15, fontWeight: 300, color: "#1A1814", letterSpacing: "-0.02em", lineHeight: 1.1 },
-  sbIQ:    { fontWeight: 800, color: "#5B4FE8" },
-  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9C9890", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
+  sbMark:  { width: 28, height: 28, background: "#0F62FE", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  sbName:  { fontSize: 15, fontWeight: 300, color: "#0C1B33", letterSpacing: "-0.02em", lineHeight: 1.1 },
+  sbIQ:    { fontWeight: 800, color: "#0F62FE" },
+  sbRole:  { fontSize: 9, fontWeight: 600, color: "#9EA3AE", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 },
   sbNav:   { flex: 1, padding: "10px 8px", overflowY: "auto", display: "flex", flexDirection: "column" },
-  sbSec:   { fontSize: 9, fontWeight: 600, color: "#C7C2F7", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
-  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#5C5852", fontSize: 12, textDecoration: "none", marginBottom: 1 },
-  sbItemActive: { background: "#EEEDFB", color: "#5B4FE8", fontWeight: 500 },
-  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #F2F1EE" },
+  sbSec:   { fontSize: 9, fontWeight: 600, color: "#B5D4F4", textTransform: "uppercase", letterSpacing: "0.1em", padding: "10px 8px 4px" },
+  sbItem:  { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 7, cursor: "pointer", color: "#6B7280", fontSize: 12, textDecoration: "none", marginBottom: 1 },
+  sbItemActive: { background: "#E6F1FB", color: "#0F62FE", fontWeight: 500 },
+  sbFooter:{ padding: "10px 8px", borderTop: "0.5px solid #EEF2F8" },
   logoutBtn: { width: "100%", padding: "8px", borderRadius: 7, fontSize: 11, fontWeight: 500, cursor: "pointer", border: "0.5px solid #FCA5A5", background: "#FEF2F2", color: "#DC2626", fontFamily: "inherit" },
 
   main:    { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  topbar:  { background: "#fff", borderBottom: "0.5px solid #E5E3DD", padding: "0 20px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
-  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1814" },
-  topSub:  { fontSize: 11, color: "#9C9890", marginTop: 2 },
+  topbar:  { background: "#fff", borderBottom: "0.5px solid #E2E4E9", padding: "0 20px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
+  topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1D23" },
+  topSub:  { fontSize: 11, color: "#9EA3AE", marginTop: 2 },
 
   periodBar:      { display: "flex", gap: 4 },
-  periodBtn:      { fontSize: 11, fontWeight: 500, padding: "5px 12px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit" },
-  periodBtnActive:{ background: "#EEEDFB", color: "#5B4FE8", borderColor: "#C7C2F7", fontWeight: 600 },
+  periodBtn:      { fontSize: 11, fontWeight: 500, padding: "5px 12px", borderRadius: 7, cursor: "pointer", border: "0.5px solid #E2E4E9", background: "#fff", color: "#6B7280", fontFamily: "inherit" },
+  periodBtnActive:{ background: "#E6F1FB", color: "#0F62FE", borderColor: "#B5D4F4", fontWeight: 600 },
 
   content: { flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 },
 
   kpiGrid:  { display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 10 },
   kpi:      { borderRadius: 10, padding: "14px 14px 12px", position: "relative", overflow: "hidden", border: "0.5px solid rgba(0,0,0,0.06)" },
   kpiBar:   { position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "10px 10px 0 0" },
-  kpiLbl:   { fontSize: 9, fontWeight: 600, color: "#5C5852", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 },
+  kpiLbl:   { fontSize: 9, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 },
   kpiVal:   { fontSize: 15, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 4 },
-  kpiSub:   { fontSize: 9, color: "#9C9890" },
+  kpiSub:   { fontSize: 9, color: "#9EA3AE" },
 
-  flowCard:     { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 16 },
+  flowCard:     { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: 16 },
   flowRow:      { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 12 },
-  flowArrow:    { fontSize: 16, color: "#9C9890", flexShrink: 0 },
-  flowBox:      { background: "#F8F7FE", border: "0.5px solid #EEEDFB", borderRadius: 8, padding: "10px 12px", textAlign: "center", minWidth: 88 },
+  flowArrow:    { fontSize: 16, color: "#9EA3AE", flexShrink: 0 },
+  flowBox:      { background: "#F8FBFF", border: "0.5px solid #E6F1FB", borderRadius: 8, padding: "10px 12px", textAlign: "center", minWidth: 88 },
   flowIcon:     { fontSize: 16, marginBottom: 4 },
   flowVal:      { fontSize: 11, fontWeight: 700, letterSpacing: "-0.01em" },
-  flowLbl:      { fontSize: 9, color: "#9C9890", marginTop: 3 },
+  flowLbl:      { fontSize: 9, color: "#9EA3AE", marginTop: 3 },
   recoveryTrack:{ height: 8, background: "#F3F4F6", borderRadius: 4, overflow: "hidden", position: "relative" },
   recoveryFill: { position: "absolute", left: 0, top: 0, height: "100%", background: "#16A34A", borderRadius: 4, transition: "width 0.5s" },
   recoveryLost: { position: "absolute", top: 0, height: "100%", background: "#DC2626", borderRadius: 4 },
 
   twoCol:   { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 },
-  card:     { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 16 },
-  cardTitle:{ fontSize: 12, fontWeight: 600, color: "#1A1814", marginBottom: 12 },
+  card:     { background: "#fff", border: "0.5px solid #E2E4E9", borderRadius: 10, padding: 16 },
+  cardTitle:{ fontSize: 12, fontWeight: 600, color: "#1A1D23", marginBottom: 12 },
 
   chartArea:  { display: "flex", gap: 8, alignItems: "flex-end", height: 110 },
   barGroup:   { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 },
   barTrack:   { width: "100%", height: 80, background: "#F3F4F6", borderRadius: 4, position: "relative", overflow: "hidden" },
-  barTotal:   { position: "absolute", bottom: 0, left: 0, right: 0, background: "#EEEDFB", borderRadius: "4px 4px 0 0" },
+  barTotal:   { position: "absolute", bottom: 0, left: 0, right: 0, background: "#E6F1FB", borderRadius: "4px 4px 0 0" },
   barApproved:{ position: "absolute", bottom: 0, left: 0, right: 0, background: "#16A34A", opacity: 0.85, borderRadius: "4px 4px 0 0" },
-  barLabel:   { fontSize: 9, color: "#9C9890", textAlign: "center", whiteSpace: "nowrap" },
-  barAmt:     { fontSize: 9, fontWeight: 600, color: "#5C5852" },
-  empty:      { fontSize: 12, color: "#9C9890", textAlign: "center", padding: "20px 0" },
+  barLabel:   { fontSize: 9, color: "#9EA3AE", textAlign: "center", whiteSpace: "nowrap" },
+  barAmt:     { fontSize: 9, fontWeight: 600, color: "#6B7280" },
+  empty:      { fontSize: 12, color: "#9EA3AE", textAlign: "center", padding: "20px 0" },
 
   table:     { width: "100%", borderCollapse: "collapse", fontSize: 12 },
-  th:        { textAlign: "left", padding: "6px 10px", fontSize: 9, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #F2F1EE" },
-  tr:        { borderBottom: "0.5px solid #F5F4F1" },
+  th:        { textAlign: "left", padding: "6px 10px", fontSize: 9, fontWeight: 600, color: "#9EA3AE", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #EEF2F8" },
+  tr:        { borderBottom: "0.5px solid #F5F7FA" },
   td:        { padding: "9px 10px", verticalAlign: "middle" },
   payerBadge:{ display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20 },
 
-  causeCard:  { background: "#F8F7FE", border: "0.5px solid #EEEDFB", borderRadius: 8, padding: "12px 14px" },
+  causeCard:  { background: "#F8FBFF", border: "0.5px solid #E6F1FB", borderRadius: 8, padding: "12px 14px" },
   causeRank:  { fontSize: 18, fontWeight: 800, color: "#DBEAFE", marginBottom: 6 },
-  causeReason:{ fontSize: 11, fontWeight: 600, color: "#1A1814", marginBottom: 8, lineHeight: 1.4 },
+  causeReason:{ fontSize: 11, fontWeight: 600, color: "#1A1D23", marginBottom: 8, lineHeight: 1.4 },
   causeStats: { display: "flex", flexDirection: "column", gap: 2, fontSize: 11 },
 };

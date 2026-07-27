@@ -1,24 +1,29 @@
 from pydantic import BaseModel
-from datetime import datetime, date
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
+
 class PatientCreate(BaseModel):
-    full_name: str
-    cin: Optional[str] = None
-    date_of_birth: Optional[date] = None
-    phone: Optional[str] = None
-    insurance_type: Optional[str] = None
-    insurance_number: Optional[str] = None
+    ne_number: str                          # Numéro d'Entrée — remplace le nom
+    cin: Optional[str] = None               # entré en clair, haché puis jeté (jamais stocké)
+    immatriculation: Optional[str] = None   # idem — haché en immat_hash
+    age_bucket: Optional[str] = None        # '0-17','18-40','41-60','60+'
+    payer_type: Optional[str] = None        # CNOPS, CNSS, FAR, AMO, AMO-Tadamon
+    is_ald: Optional[bool] = False
+    is_ayant_droit: Optional[bool] = False
+
 
 class PatientResponse(BaseModel):
     id: UUID
     tenant_id: UUID
-    full_name: str
-    cin: Optional[str] = None
-    phone: Optional[str] = None
-    insurance_type: Optional[str] = None
-    insurance_number: Optional[str] = None
+    ne_number: str
+    cin_hash: Optional[str] = None
+    immat_hash: Optional[str] = None
+    age_bucket: Optional[str] = None
+    payer_type: Optional[str] = None
+    is_ald: bool
+    is_ayant_droit: bool
     is_active: bool
     created_at: datetime
 

@@ -15,9 +15,11 @@ class Claim(Base):
     # Claim details
     claim_number = Column(String, unique=True, nullable=False)
     amount = Column(Float, nullable=False)
-    insurance_type = Column(String, nullable=False)  # AMO, CNOPS, CNSS, RAMED
+    insurance_type = Column(String, nullable=False)  # AMO, CNOPS, CNSS, AMO-TADAMON
     service_type = Column(String, nullable=False)
     service_date = Column(DateTime, nullable=False)
+    duree_sejour = Column(Integer, nullable=True)      # jours — connu à la sortie
+    part_organisme = Column(Float, nullable=True)      # 0.0 à 1.0
 
     # Status tracking
     status = Column(String, default="pending")       # pending, submitted, approved, rejected

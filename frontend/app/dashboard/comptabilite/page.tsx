@@ -205,7 +205,6 @@ export default function ComptabilitePage() {
   if (error) return (
     <div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center", background: "#F2F1EE" }}>
       <div style={{ background: "#fff", borderRadius: 12, padding: 32, maxWidth: 400, textAlign: "center", border: "0.5px solid #E5E3DD" }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
         <div style={{ fontSize: 14, fontWeight: 600, color: "#1A1814", marginBottom: 8 }}>Accès restreint</div>
         <div style={{ fontSize: 13, color: "#5C5852", lineHeight: 1.6, marginBottom: 20 }}>{error}</div>
         <a href="/dashboard" style={{ fontSize: 13, color: "#5B4FE8", textDecoration: "none" }}>← Retour au tableau de bord</a>
@@ -241,19 +240,19 @@ export default function ComptabilitePage() {
         </div>
         <nav style={s.sbNav}>
           <div style={s.sbSec}>Principal</div>
-          <Link href="/dashboard"             style={s.sbItem}>📊 Tableau de bord</Link>
-          <Link href="/dashboard/dossiers"    style={s.sbItem}>📋 Dossiers BAF</Link>
-          <Link href="/dashboard/patients"    style={s.sbItem}>👥 Patients</Link>
-          <Link href="/dashboard/prediction"  style={s.sbItem}>🧠 Prédiction IA</Link>
+          <Link href="/dashboard"             style={s.sbItem}> Tableau de bord</Link>
+          <Link href="/dashboard/dossiers"    style={s.sbItem}> Dossiers BAF</Link>
+          <Link href="/dashboard/patients"    style={s.sbItem}> Patients</Link>
+          <Link href="/dashboard/prediction"  style={s.sbItem}> Prédiction IA</Link>
           <div style={s.sbSec}>Analyse</div>
-          <Link href="/dashboard/performance" style={s.sbItem}>📈 Performance</Link>
-          <Link href="/dashboard/forclusion"  style={s.sbItem}>⚠️ Forclusion</Link>
-          <Link href="/dashboard/encours"     style={s.sbItem}>💰 Encours A/R</Link>
-          <Link href="/dashboard/financier"   style={s.sbItem}>🏦 Activité financière</Link>
-          <div style={{ ...s.sbItem, ...s.sbItemActive }}>📒 Comptabilité DAF</div>
+          <Link href="/dashboard/performance" style={s.sbItem}> Performance</Link>
+          <Link href="/dashboard/forclusion"  style={s.sbItem}> Forclusion</Link>
+          <Link href="/dashboard/encours"     style={s.sbItem}> Encours A/R</Link>
+          <Link href="/dashboard/financier"   style={s.sbItem}> Activité financière</Link>
+          <div style={{ ...s.sbItem, ...s.sbItemActive }}> Comptabilité DAF</div>
           <div style={s.sbSec}>Système</div>
-          <Link href="/dashboard/audit"    style={s.sbItem}>📜 Journal d&apos;audit</Link>
-          <Link href="/dashboard/settings" style={s.sbItem}>⚙️ Paramètres</Link>
+          <Link href="/dashboard/audit"    style={s.sbItem}> Journal d&apos;audit</Link>
+          <Link href="/dashboard/settings" style={s.sbItem}> Paramètres</Link>
         </nav>
         <div style={s.sbFooter}>
           <button style={s.logoutBtn} onClick={() => { localStorage.clear(); window.location.href = "/auth/login"; }}>
@@ -295,10 +294,10 @@ export default function ComptabilitePage() {
             {/* SECTION TABS */}
             <div style={s.sectionTabs}>
               {[
-                { key: "rentabilite", lbl: "📈 Rentabilité & CPC" },
-                { key: "tresorerie",  lbl: "💧 Trésorerie & BFR" },
-                { key: "activite",    lbl: "🏥 Activité & Lits" },
-                { key: "budget",      lbl: "🎯 Budget vs Réalisé" },
+                { key: "rentabilite", lbl: " Rentabilité & CPC" },
+                { key: "tresorerie",  lbl: " Trésorerie & BFR" },
+                { key: "activite",    lbl: " Activité & Lits" },
+                { key: "budget",      lbl: " Budget vs Réalisé" },
               ].map(tab => (
                 <button
                   key={tab.key}
@@ -347,7 +346,7 @@ export default function ComptabilitePage() {
                       ))}
                     </div>
                     <div style={{ marginTop: 16, padding: "10px 12px", background: "#F8F7FE", borderRadius: 8, fontSize: 11, color: "#4A3FD4" }}>
-                      📌 Ratio masse salariale : {k ? ((k.charges_personnel / k.ca_total) * 100).toFixed(1) : 0}% du CA · Benchmark sectoriel : 45–55%
+                       Ratio masse salariale : {k ? ((k.charges_personnel / k.ca_total) * 100).toFixed(1) : 0}% du CA · Benchmark sectoriel : 45–55%
                     </div>
                   </div>
 
@@ -501,7 +500,7 @@ export default function ComptabilitePage() {
                     </tbody>
                   </table>
                   <div style={{ marginTop: 14, padding: "10px 12px", background: "#F8F7FE", borderRadius: 8, fontSize: 11, color: "#4A3FD4" }}>
-                    📌 Taux global : {k?.taux_occupation || 0}% · Cible optimale rentabilité : 65–75% (couverture charges fixes)
+                     Taux global : {k?.taux_occupation || 0}% · Cible optimale rentabilité : 65–75% (couverture charges fixes)
                   </div>
                 </div>
               </>
@@ -565,7 +564,7 @@ export default function ComptabilitePage() {
                     </tbody>
                   </table>
                   <div style={{ marginTop: 14, padding: "10px 12px", background: "#FFF8F0", border: "0.5px solid #FED7AA", borderRadius: 8, fontSize: 11, color: "#9A3412" }}>
-                    📌 Référentiel CGNC · Les écarts {">"} 10% déclenchent un rapport d&apos;alerte à la direction
+                     Référentiel CGNC · Les écarts {">"} 10% déclenchent un rapport d&apos;alerte à la direction
                   </div>
                 </div>
               </>
@@ -588,9 +587,9 @@ export default function ComptabilitePage() {
             {/* Tabs */}
             <div style={s.modalTabs}>
               {([
-                { key: "charges",     lbl: "📊 Charges" },
-                { key: "tresorerie",  lbl: "💧 Trésorerie" },
-                { key: "admissions",  lbl: "🏥 Activité" },
+                { key: "charges",     lbl: " Charges" },
+                { key: "tresorerie",  lbl: " Trésorerie" },
+                { key: "admissions",  lbl: " Activité" },
               ] as const).map(t => (
                 <button key={t.key}
                   style={modalTab === t.key ? { ...s.modalTab, ...s.modalTabActive } : s.modalTab}

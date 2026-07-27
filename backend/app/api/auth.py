@@ -83,25 +83,24 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 @router.post("/register", response_model=LoginResponse)
 def register(request: RegisterRequest, db: Session = Depends(get_db)):
-    # Check email not already used
-    existing = db.query(User).filter(User.email == request.hospital_email).first()
+    email_norm = request.hospital_email.strip().lower()
+
+    existing = db.query(User).filter(User.email == email_norm).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email déjà utilisé")
 
-    # Create tenant (hospital)
     tenant = Tenant(
         id=uuid.uuid4(),
         name=request.hospital_name,
-        email=request.hospital_email
+        email=email_norm
     )
     db.add(tenant)
     db.flush()
 
-    # Create admin user
     user = User(
         id=uuid.uuid4(),
         tenant_id=tenant.id,
-        email=request.hospital_email,
+        email=email_norm,
         hashed_password=hash_password(request.password),
         full_name=request.full_name,
         role=request.role
@@ -124,7 +123,7 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=LoginResponse)
 def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == form.username).first()
+    user = db.query(User).filter(User.email == form.username.strip().lower()).first()
     if not user or not verify_password(form.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -162,10 +161,37 @@ class ResetPasswordRequest(BaseModel):
 
 @router.post("/forgot-password")
 def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == request.email).first()
+    email_norm = request.email.strip().lower()
+    user = db.query(User).filter(User.email == email_norm).first()
+
+    generic_response = {
+        "message": "Si cet email existe, un lien de réinitialisation a été envoyé."
+    }
+
     if not user:
-        # Don't reveal if email exists
-        return {"message": "Si cet email existe, un lien de réinitialisation a été envoyé."}
+        return generic_response
+
+    token = secrets.token_urlsafe(32)
+    reset_tokens[token] = {
+        "email": email_norm,
+        "expires": datetime.utcnow() + timedelta(minutes=30),
+    }
+
+    print(f"[RESET] token pour {email_norm} : {token}")
+
+    return generic_response
+
+    token = secrets.token_urlsafe(32)
+    reset_tokens[token] = {
+        "email": request.email,
+        "expires": datetime.utcnow() + timedelta(minutes=30),
+    }
+
+    # Le token n'est JAMAIS renvoyé au client.
+    # En attendant l'envoi d'email, il est loggé côté serveur uniquement.
+    print(f"[RESET] token pour {request.email} : {token}")
+
+    return generic_response
     
     token = secrets.token_urlsafe(32)
     reset_tokens[token] = {

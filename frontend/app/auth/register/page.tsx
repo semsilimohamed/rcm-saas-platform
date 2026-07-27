@@ -297,10 +297,6 @@ export default function RegisterPage() {
         <div className="vz-panel">
           <div className="vz-grid" aria-hidden="true" />
           <div style={s.rightInner}>
-            <div style={s.vzHeader}>
-              <span className="vz-live-dot" />
-              <span style={s.rightTitle}>Ce que vous obtenez</span>
-            </div>
             {[
               { icon: "🧠", title: "Prédiction IA des rejets", desc: "XGBoost analyse 17 critères de vos dossiers BAF avant soumission." },
               { icon: "📊", title: "Tableau de bord financier", desc: "Encours A/R, taux de rejet, vieillissement — en temps réel." },
@@ -315,9 +311,6 @@ export default function RegisterPage() {
                 </div>
               </div>
             ))}
-            <div style={s.trialNote}>
-              Essai gratuit · Sans carte bancaire · Résiliation à tout moment
-            </div>
           </div>
         </div>
       </div>

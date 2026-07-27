@@ -1,14 +1,16 @@
 "use client";
-import ScanReviewModal from "./ScanReviewModal";
+import ScanModal from "./ScanModal";
+import ManualClaimModal from "./ManualClaimModal";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import ImportCsvModal from "./ImportCsvModal";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 interface Claim {
   id: string;
   claim_number: string;
-  patient_name: string;
+  patient_ne: string;
   amount: number;
   insurance_type: string;
   service_type: string;
@@ -53,6 +55,7 @@ function payerStyle(payer: string) {
   if (payer === "CNOPS") return { bg: "#EEEDFB", color: "#1E40AF" };
   if (payer === "CNSS")  return { bg: "#F0FDF4", color: "#166534" };
   if (payer === "AMO")   return { bg: "#FFF7ED", color: "#9A3412" };
+  if (payer === "FAR")   return { bg: "#EFF6FF", color: "#1D4ED8" };
   return { bg: "#F5F3FF", color: "#6D28D9" };
 }
 
@@ -82,6 +85,9 @@ export default function DossiersPage() {
   const [selectedForBordereau, setSelectedForBordereau] = useState<string[]>([]);
   const [generatingBordereau, setGeneratingBordereau] = useState(false);
   const [showScanModal, setShowScanModal] = useState(false);
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showNewMenu, setShowNewMenu] = useState(false);
 
   async function reloadClaims() {
     const token = localStorage.getItem("sihaiq_token");
@@ -211,7 +217,7 @@ export default function DossiersPage() {
     const matchSearch =
       search === "" ||
       c.claim_number.toLowerCase().includes(search.toLowerCase()) ||
-      c.patient_name.toLowerCase().includes(search.toLowerCase());
+      (c.patient_ne || "").toLowerCase().includes(search.toLowerCase());
     const matchStatus =
       statusFilter === "Tous"        ? true :
       statusFilter === "En attente"  ? c.status === "pending" :
@@ -259,7 +265,7 @@ export default function DossiersPage() {
           <Link href="/dashboard/forclusion"  style={s.sbItem}> Forclusion</Link>
           <Link href="/dashboard/encours"     style={s.sbItem}> Encours A/R</Link>
           <Link href="/dashboard/financier" style={s.sbItem}> Activité financière</Link>
-          <Link href="/dashboard/comptabilite" style={s.sbItem}>📒 Comptabilité DAF</Link>
+          <Link href="/dashboard/comptabilite" style={s.sbItem}>Comptabilité DAF</Link>
           <div style={s.sbSec}>Système</div>
           <Link href="/dashboard/audit"    style={s.sbItem}> Journal d&apos;audit</Link>
           <Link href="/dashboard/settings" style={s.sbItem}> Paramètres</Link>
@@ -286,13 +292,32 @@ export default function DossiersPage() {
                 disabled={generatingBordereau}
                 onClick={generateBordereau}
               >
-                {generatingBordereau ? "Génération..." : `📄 Bordereau (${selectedForBordereau.length})`}
+                {generatingBordereau ? "Génération..." : `Bordereau (${selectedForBordereau.length})`}
               </button>
             )}
-            {/* ── CHANGED: button now opens the scan modal ── */}
-            <button style={s.topBtnPrimary} onClick={() => setShowScanModal(true)}>
-              + Nouveau dossier
-            </button>
+            <div style={{ position: "relative" }}>
+              <button style={s.topBtnPrimary} onClick={() => setShowNewMenu(v => !v)}>
+                + Nouveau dossier
+              </button>
+              {showNewMenu && (
+                <div style={s.newMenu}>
+                  <button
+                    style={s.newMenuItem}
+                    onClick={() => { setShowNewMenu(false); setShowManualModal(true); }}
+                  >
+                    Saisie manuelle
+                  </button>
+                  <button style={s.newMenuItem}
+                    onClick={() => { setShowNewMenu(false); setShowImportModal(true); }}>
+                    Importer un CSV
+                  </button>
+                  <button style={s.newMenuItem}
+                    onClick={() => { setShowNewMenu(false); setShowScanModal(true); }}>
+                    Scanner un dossier
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -359,7 +384,7 @@ export default function DossiersPage() {
                               />
                             </td>
                             <td style={s.td}><span style={s.claimNum}>{claim.claim_number}</span></td>
-                            <td style={s.td}><span style={s.patientName}>{claim.patient_name}</span></td>
+                            <td style={s.td}><span style={s.patientName}>NE {claim.patient_ne}</span></td>
                             <td style={s.td}><span style={{ ...s.badge, background: ps.bg, color: ps.color }}>{claim.insurance_type}</span></td>
                             <td style={s.td}>{formatMAD(claim.amount)}</td>
                             <td style={s.td}>
@@ -384,11 +409,11 @@ export default function DossiersPage() {
                 <div style={s.detailHdr}>
                   <div>
                     <div style={s.detailNum}>{selected.claim_number}</div>
-                    <div style={s.detailPatient}>{selected.patient_name}</div>
+                    <div style={s.detailPatient}>NE {selected.patient_ne}</div>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <button style={s.deleteBtn} onClick={() => openDeleteModal(selected.id, selected.claim_number)}>
-                      🗑 Supprimer
+                      Supprimer
                     </button>
                     <button style={s.closeBtn} onClick={() => setSelected(null)}>✕</button>
                   </div>
@@ -471,7 +496,7 @@ export default function DossiersPage() {
                     </div>
                     {!showContestInput ? (
                       <button style={{ ...s.actionBtn, background: "#FFF7ED", color: "#9A3412", border: "0.5px solid #FED7AA", width: "100%" }}
-                        onClick={() => setShowContestInput(true)}>✉ Contester ce rejet</button>
+                        onClick={() => setShowContestInput(true)}>Contester ce rejet</button>
                     ) : (
                       <div>
                         <input style={s.rejectInput} placeholder="Motif de contestation..." value={contestReason} onChange={e => setContestReason(e.target.value)} />
@@ -515,7 +540,7 @@ export default function DossiersPage() {
                   <div style={{ ...s.detailSection, borderBottom: "none" }}>
                     <div style={s.detailSectionTitle}>Feedback IA</div>
                     <div style={{ fontSize: 11, color: "#5C5852", background: "#F2F1EE", borderRadius: 6, padding: "8px 10px" }}>
-                      ✅ Résultat enregistré — le modèle XGBoost apprendra de ce dossier lors du prochain cycle d&apos;entraînement.
+                      Résultat enregistré — le modèle XGBoost apprendra de ce dossier lors du prochain cycle d&apos;entraînement.
                     </div>
                   </div>
                 )}
@@ -525,12 +550,31 @@ export default function DossiersPage() {
         </div>
       </div>
 
-      {/* ── CHANGED: Scan modal ── */}
       {showScanModal && (
-        <ScanReviewModal
+        <ScanModal
           onClose={() => setShowScanModal(false)}
           onConfirm={() => {
             setShowScanModal(false);
+            reloadClaims();
+          }}
+        />
+      )}
+
+      {/* MANUAL CLAIM MODAL (B2) */}
+      {showManualModal && (
+        <ManualClaimModal
+          onClose={() => setShowManualModal(false)}
+          onConfirm={() => {
+            setShowManualModal(false);
+            reloadClaims();
+          }}
+        />
+      )}
+      {showImportModal && (
+        <ImportCsvModal
+          onClose={() => setShowImportModal(false)}
+          onConfirm={() => {
+            setShowImportModal(false);
             reloadClaims();
           }}
         />
@@ -547,7 +591,7 @@ export default function DossiersPage() {
             <div style={s.deleteModalBody}>
               <div style={s.deleteModalClaim}>{claimToDelete.number}</div>
               <div style={s.deleteModalWarn}>
-                ⚠️ Cette action est irréversible. Le dossier sera définitivement supprimé.
+                Cette action est irréversible. Le dossier sera définitivement supprimé.
               </div>
               <label style={s.deleteModalLabel}>Raison de suppression *</label>
               <input
@@ -596,6 +640,9 @@ const s: Record<string, React.CSSProperties> = {
   topTitle:{ fontSize: 14, fontWeight: 600, color: "#1A1814" },
   topDate: { fontSize: 11, color: "#9C9890", marginTop: 2 },
   topBtnPrimary: { fontSize: 11, fontWeight: 600, padding: "6px 14px", borderRadius: 7, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit" },
+  newMenu: { position: "absolute", right: 0, top: 40, background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", zIndex: 50, minWidth: 190 },
+  newMenuItem: { display: "block", width: "100%", textAlign: "left", padding: "10px 14px", fontSize: 12, border: "none", background: "none", cursor: "pointer", color: "#1A1814", fontFamily: "inherit" },
+  newMenuItemDisabled: { display: "block", width: "100%", textAlign: "left", padding: "10px 14px", fontSize: 12, border: "none", borderTop: "0.5px solid #F2F1EE", background: "none", cursor: "not-allowed", color: "#9C9890", fontFamily: "inherit" },
   content:     { flex: 1, overflowY: "auto", padding: "16px 20px" },
   filterBar:   { display: "flex", alignItems: "center", gap: 12, marginBottom: 14, flexWrap: "wrap" },
   searchInput: { padding: "8px 14px", border: "0.5px solid #D1D5DB", borderRadius: 8, fontSize: 12, color: "#1A1814", outline: "none", fontFamily: "inherit", background: "#fff", width: 240 },
@@ -613,7 +660,7 @@ const s: Record<string, React.CSSProperties> = {
   trSelected:  { background: "#EEF4FF" },
   td:          { padding: "10px 14px", verticalAlign: "middle" },
   claimNum:    { fontFamily: "monospace", fontSize: 11, color: "#1A1814", fontWeight: 500 },
-  patientName: { fontSize: 12, fontWeight: 500, color: "#1A1814" },
+  patientName: { fontSize: 12, fontWeight: 600, color: "#5B4FE8", fontFamily: "monospace" },
   badge:       { display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20 },
   dash:        { fontSize: 11, color: "#9C9890" },
   detailPanel:        { width: 300, flexShrink: 0, background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 16, overflowY: "auto" },

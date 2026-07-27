@@ -31,12 +31,15 @@ class ClaimActResponse(BaseModel):
 
 
 class ClaimCreate(BaseModel):
-    patient_id: UUID
+    ne_number: Optional[str] = None          # NE — crée le patient à la volée si absent
+    patient_id: Optional[UUID] = None        # compatibilité (ancien flux)
     claim_number: str
     amount: float
     insurance_type: str
     service_type: str
     service_date: datetime
+    duree_sejour: Optional[int] = None       # jours — connu à la sortie
+    part_organisme: Optional[float] = None   # 0.0 à 1.0
     acts: Optional[list[ClaimActCreate]] = None
 
 
@@ -49,6 +52,8 @@ class ClaimResponse(BaseModel):
     insurance_type: str
     service_type: str
     service_date: datetime
+    duree_sejour: Optional[int] = None
+    part_organisme: Optional[float] = None
     status: str
 
     # AI prediction

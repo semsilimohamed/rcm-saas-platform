@@ -5,86 +5,53 @@ import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
+interface TopFactor {
+  feature: string;
+  impact: number;
+  direction: string;
+}
+
 interface PredictionResult {
   risk_score: number;
-  risk_label: string;
+  risk_level: string;
   risk_percentage: string;
-  top_factors: { feature: string; impact: number; direction: string }[];
-  recommended_actions: string[];
+  zone: "danger" | "sure";
+  seuil: number;
+  top_factors: TopFactor[];
+  recommended_action: string | null;
   model_used: string;
 }
 
-interface BatchRow {
-  index: number;
-  payer: string;
-  service_type: string;
-  patient_name?: string;
-  risk_score?: number;
-  risk_label?: string;
-  risk_percentage?: string;
-  top_factor?: string;
-  status: "pending" | "done" | "error";
-  feedback?: "approved" | "rejected";
-}
-
 const FEATURE_LABELS: Record<string, string> = {
-  payer: "Caisse", service_type: "Type de soin", ngap_code: "Code NGAP",
-  num_acts: "Nombre d'actes", patient_age: "Âge du patient", is_ald: "ALD",
-  is_ayant_droit: "Ayant droit", inpe_present: "INPE présent",
-  immatriculation_valid: "Immatriculation valide", cin_valid: "CIN valide",
-  ngap_coding_valid: "Codage NGAP valide", prescription_legible: "Prescription lisible",
-  droits_active: "Droits actifs", docs_completeness_ratio: "Complétude dossier",
-  days_since_service: "Jours depuis le soin", pec_required: "PEC requise", pec_obtained: "PEC obtenue",
+  duree_sejour: "Durée de séjour",
+  part_organisme: "Part organisme",
+  montant_total: "Montant total",
+  mois: "Mois du service",
+  "org_CNOPS": "Régime CNOPS",
+  "org_CNSS": "Régime CNSS",
+  "org_FAR": "Régime FAR",
+  "org_AMO": "Régime AMO",
+  "org_AMO-Tadamon": "Régime AMO-Tadamon",
 };
 
-function parseCSV(text: string): Record<string, string>[] {
-  const lines = text.trim().split("\n");
-  if (lines.length < 2) return [];
-  const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/\r/g, ""));
-  return lines.slice(1).map(line => {
-    const values = line.split(",").map(v => v.trim().replace(/\r/g, ""));
-    const row: Record<string, string> = {};
-    headers.forEach((h, i) => { row[h] = values[i] ?? ""; });
-    return row;
-  }).filter(row => Object.values(row).some(v => v !== ""));
-}
-
-function buildPayload(row: Record<string, string>) {
-  return {
-    payer:                  row["payer"] || row["caisse"] || "CNOPS",
-    service_type:           row["service_type"] || row["type_service"] || "consultation",
-    ngap_code:              row["ngap_code"] || row["code_ngap"] || "C",
-    num_acts:               parseInt(row["num_acts"] || row["nombre_actes"] || "1") || 1,
-    patient_age:            parseInt(row["patient_age"] || row["age"] || "35") || 35,
-    is_ald:                 parseInt(row["is_ald"] || "0") || 0,
-    is_ayant_droit:         parseInt(row["is_ayant_droit"] || "0") || 0,
-    inpe_present:           parseInt(row["inpe_present"] || "1") || 1,
-    immatriculation_valid:  parseInt(row["immatriculation_valid"] || "1") || 1,
-    cin_valid:              parseInt(row["cin_valid"] || "1") || 1,
-    ngap_coding_valid:      parseInt(row["ngap_coding_valid"] || "1") || 1,
-    prescription_legible:   parseInt(row["prescription_legible"] || "1") || 1,
-    droits_active:          parseInt(row["droits_active"] || "1") || 1,
-    docs_completeness_ratio:parseFloat(row["docs_completeness_ratio"] || row["completude"] || "1.0") || 1.0,
-    days_since_service:     parseInt(row["days_since_service"] || row["jours"] || "0") || 0,
-    pec_required:           parseInt(row["pec_required"] || "0") || 0,
-    pec_obtained:           parseInt(row["pec_obtained"] || "0") || 0,
-  };
-}
+const MOIS_LABELS = [
+  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+];
 
 export default function PredictionPage() {
   const [activeTab, setActiveTab] = useState<"single" | "batch">("single");
 
-  // ── Single prediction ────────────────────────────────────────────────────
   const [form, setForm] = useState({
-    payer: "CNOPS", service_type: "consultation", ngap_code: "C",
-    num_acts: 1, patient_age: 35, is_ald: 0, is_ayant_droit: 0,
-    inpe_present: 1, immatriculation_valid: 1, cin_valid: 1,
-    ngap_coding_valid: 1, prescription_legible: 1, droits_active: 1,
-    docs_completeness_ratio: 1.0, days_since_service: 0, pec_required: 0, pec_obtained: 0,
+    organisme: "CNOPS",
+    duree_sejour: 3,
+    part_organisme: 0.8,
+    montant_total: 5000,
+    mois: new Date().getMonth() + 1,
   });
-  const [result, setResult]     = useState<PredictionResult | null>(null);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState("");
+  const [result, setResult]   = useState<PredictionResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
 
   function update(key: string, val: string | number) {
     setForm(f => ({ ...f, [key]: val }));
@@ -94,9 +61,16 @@ export default function PredictionPage() {
     setLoading(true); setError(""); setResult(null);
     try {
       const token = localStorage.getItem("sihaiq_token");
-      const res = await fetch(`${API_URL}/predict/`, {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(form),
+      const res = await fetch(`${API_URL}/claims/predict`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          organisme: form.organisme,
+          duree_sejour: Number(form.duree_sejour),
+          part_organisme: Number(form.part_organisme),
+          montant_total: Number(form.montant_total),
+          mois: Number(form.mois),
+        }),
       });
       if (!res.ok) { setError("Erreur lors de la prédiction."); return; }
       setResult(await res.json());
@@ -104,102 +78,11 @@ export default function PredictionPage() {
     finally { setLoading(false); }
   }
 
-  // ── Batch prediction ─────────────────────────────────────────────────────
-  const [batchFile, setBatchFile]         = useState<File | null>(null);
-  const [batchRows, setBatchRows]         = useState<BatchRow[]>([]);
-  const [rawRows, setRawRows]             = useState<Record<string, string>[]>([]);
-  const [batchProgress, setBatchProgress] = useState(0);
-  const [batchRunning, setBatchRunning]   = useState(false);
-  const [batchDone, setBatchDone]         = useState(false);
-  const [batchFilter, setBatchFilter]     = useState<"all" | "ÉLEVÉ" | "MODÉRÉ" | "FAIBLE">("all");
-
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setBatchFile(file);
-    setBatchDone(false);
-    setBatchRows([]);
-    setBatchProgress(0);
-    const text = await file.text();
-    const parsed = parseCSV(text);
-    setRawRows(parsed);
-    setBatchRows(parsed.map((row, i) => ({
-      index: i + 1,
-      payer: row["payer"] || row["caisse"] || "CNOPS",
-      service_type: row["service_type"] || row["type_service"] || "consultation",
-      patient_name: row["patient_name"] || row["patient"] || `Ligne ${i + 1}`,
-      status: "pending",
-    })));
-  }
-
-  async function runBatch() {
-    if (!rawRows.length) return;
-    setBatchRunning(true);
-    setBatchProgress(0);
-    setBatchDone(false);
-    const token = localStorage.getItem("sihaiq_token");
-    const results: BatchRow[] = [...batchRows];
-    for (let i = 0; i < rawRows.length; i++) {
-      try {
-        const payload = buildPayload(rawRows[i]);
-        const res = await fetch(`${API_URL}/predict/`, {
-          method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify(payload),
-        });
-        if (res.ok) {
-          const data: PredictionResult = await res.json();
-          results[i] = {
-            ...results[i],
-            risk_score:      data.risk_score,
-            risk_label:      data.risk_label,
-            risk_percentage: data.risk_percentage,
-            top_factor:      data.recommended_actions?.[0] || data.top_factors?.[0]?.feature || "—",
-            status:          "done",
-          };
-        } else {
-          results[i] = { ...results[i], status: "error" };
-        }
-      } catch {
-        results[i] = { ...results[i], status: "error" };
-      }
-      setBatchProgress(i + 1);
-      setBatchRows([...results]);
-    }
-    setBatchRunning(false);
-    setBatchDone(true);
-  }
-
-  function setFeedback(index: number, feedback: "approved" | "rejected") {
-    setBatchRows(prev => prev.map(r => r.index === index ? { ...r, feedback } : r));
-  }
-
-  function downloadResults() {
-    const header = "Ligne,Patient,Caisse,Type soin,Score risque,Niveau,Top facteur,Feedback";
-    const rows = batchRows.filter(r => r.status === "done").map(r =>
-      `${r.index},"${r.patient_name}",${r.payer},${r.service_type},${r.risk_score?.toFixed(4)},${r.risk_label},"${r.top_factor}",${r.feedback || ""}`
-    );
-    const csv = [header, ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href = url; a.download = "sihaiq_batch_resultats.csv"; a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  function riskColor(label?: string) {
-    if (label === "ÉLEVÉ")  return { bg: "#FEE2E2", color: "#991B1B", bar: "#DC2626" };
-    if (label === "MODÉRÉ") return { bg: "#FEF9C3", color: "#854D0E", bar: "#F59E0B" };
-    return { bg: "#DCFCE7", color: "#166534", bar: "#16A34A" };
-  }
-
   const userName = typeof window !== "undefined"
     ? JSON.parse(localStorage.getItem("sihaiq_user") || "{}").name || "Utilisateur"
     : "Utilisateur";
 
-  const doneRows    = batchRows.filter(r => r.status === "done");
-  const highRisk    = doneRows.filter(r => r.risk_label === "ÉLEVÉ").length;
-  const avgScore    = doneRows.length ? doneRows.reduce((s, r) => s + (r.risk_score || 0), 0) / doneRows.length : 0;
-  const filteredBatch = batchFilter === "all" ? batchRows : batchRows.filter(r => r.risk_label === batchFilter);
+  const isDanger = result?.zone === "danger";
 
   return (
     <div style={s.shell}>
@@ -237,8 +120,8 @@ export default function PredictionPage() {
           <Link href="/dashboard/performance" style={s.sbItem}> Performance</Link>
           <Link href="/dashboard/forclusion"  style={s.sbItem}> Forclusion</Link>
           <Link href="/dashboard/encours"     style={s.sbItem}> Encours A/R</Link>
-          <a href="/dashboard/financier" style={s.sbItem}> Activité financière</a>
-          <a href="/dashboard/comptabilite" style={s.sbItem}>📒 Comptabilité DAF</a>
+          <Link href="/dashboard/financier" style={s.sbItem}> Activité financière</Link>
+          <Link href="/dashboard/comptabilite" style={s.sbItem}>Comptabilité DAF</Link>
           <div style={s.sbSec}>Système</div>
           <Link href="/dashboard/audit"    style={s.sbItem}> Journal d&apos;audit</Link>
           <Link href="/dashboard/settings" style={s.sbItem}> Paramètres</Link>
@@ -257,110 +140,85 @@ export default function PredictionPage() {
             <div style={s.topTitle}>Prédiction IA</div>
             <div style={s.topDate}>Moteur XGBoost · {userName}</div>
           </div>
-          {/* TAB BAR */}
           <div style={s.tabBar}>
             <button
               style={activeTab === "single" ? { ...s.tab, ...s.tabActive } : s.tab}
               onClick={() => setActiveTab("single")}
             >
-              🧠 Analyse individuelle
+              Analyse individuelle
             </button>
             <button
               style={activeTab === "batch" ? { ...s.tab, ...s.tabActive } : s.tab}
               onClick={() => setActiveTab("batch")}
             >
-              📊 Analyse par lot (CSV)
+              Analyse par lot (bientôt)
             </button>
           </div>
         </div>
 
         <div style={s.content}>
 
-          {/* ── SINGLE PREDICTION ── */}
           {activeTab === "single" && (
             <div style={s.layout}>
               {/* FORM */}
               <div style={s.formPanel}>
                 <div style={s.panelTitle}>Critères du dossier</div>
-                <div style={s.panelSub}>Renseignez les informations du dossier pour obtenir un score de risque de rejet.</div>
+                <div style={s.panelSub}>
+                  Simulez un dossier pour obtenir son score de risque de rejet. Aucun dossier n&apos;est créé.
+                </div>
+
+                <div style={s.privacyNote}>
+                  Le modèle s&apos;appuie sur 5 variables réelles, validées sur les données BAF. Aucune donnée patient n&apos;est requise.
+                </div>
 
                 <div style={s.section}>
-                  <div style={s.sectionTitle}>Identification</div>
+                  <div style={s.sectionTitle}>Variables du modèle</div>
                   <div style={s.fieldGrid}>
                     <div style={s.field}>
-                      <label style={s.label}>Caisse</label>
-                      <select style={s.input} value={form.payer} onChange={e => update("payer", e.target.value)}>
+                      <label style={s.label}>Caisse (organisme)</label>
+                      <select style={s.input} value={form.organisme} onChange={e => update("organisme", e.target.value)}>
                         <option value="CNOPS">CNOPS</option>
                         <option value="CNSS">CNSS</option>
+                        <option value="FAR">FAR</option>
                         <option value="AMO">AMO</option>
                         <option value="AMO-Tadamon">AMO-Tadamon</option>
                       </select>
                     </div>
+
                     <div style={s.field}>
-                      <label style={s.label}>Type de soin</label>
-                      <select style={s.input} value={form.service_type} onChange={e => update("service_type", e.target.value)}>
-                        {["consultation","hospitalisation","chirurgie","radiologie","laboratoire","kinesitherapie"].map(v => (
-                          <option key={v} value={v}>{v.charAt(0).toUpperCase()+v.slice(1)}</option>
+                      <label style={s.label}>Mois du service</label>
+                      <select style={s.input} value={form.mois} onChange={e => update("mois", parseInt(e.target.value))}>
+                        {MOIS_LABELS.map((m, i) => (
+                          <option key={m} value={i + 1}>{m}</option>
                         ))}
                       </select>
                     </div>
-                    <div style={s.field}>
-                      <label style={s.label}>Code NGAP</label>
-                      <select style={s.input} value={form.ngap_code} onChange={e => update("ngap_code", e.target.value)}>
-                        {["C","K","Z","B","AMI","AIS","SPE"].map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                    </div>
-                    <div style={s.field}>
-                      <label style={s.label}>Âge patient</label>
-                      <input style={s.input} type="number" min={0} max={120} value={form.patient_age}
-                        onChange={e => update("patient_age", parseInt(e.target.value))} />
-                    </div>
-                    <div style={s.field}>
-                      <label style={s.label}>Nombre d&apos;actes</label>
-                      <input style={s.input} type="number" min={1} value={form.num_acts}
-                        onChange={e => update("num_acts", parseInt(e.target.value))} />
-                    </div>
-                    <div style={s.field}>
-                      <label style={s.label}>Jours depuis soin</label>
-                      <input style={s.input} type="number" min={0} value={form.days_since_service}
-                        onChange={e => update("days_since_service", parseInt(e.target.value))} />
-                    </div>
                   </div>
                 </div>
 
                 <div style={s.section}>
-                  <div style={s.sectionTitle}>Validation du dossier</div>
-                  <div style={s.toggleGrid}>
-                    {[
-                      { key: "inpe_present",         label: "INPE présent" },
-                      { key: "immatriculation_valid", label: "Immatriculation valide" },
-                      { key: "cin_valid",             label: "CIN valide" },
-                      { key: "ngap_coding_valid",     label: "Codage NGAP valide" },
-                      { key: "prescription_legible",  label: "Prescription lisible" },
-                      { key: "droits_active",         label: "Droits actifs" },
-                      { key: "is_ald",                label: "ALD" },
-                      { key: "is_ayant_droit",        label: "Ayant droit" },
-                      { key: "pec_required",          label: "PEC requise" },
-                      { key: "pec_obtained",          label: "PEC obtenue" },
-                    ].map(f => (
-                      <div key={f.key} style={s.toggleItem}
-                        onClick={() => update(f.key, form[f.key as keyof typeof form] === 1 ? 0 : 1)}>
-                        <div style={{ ...s.toggle, background: form[f.key as keyof typeof form] === 1 ? "#5B4FE8" : "#E5E7EB" }}>
-                          <div style={{ ...s.toggleThumb, transform: form[f.key as keyof typeof form] === 1 ? "translateX(16px)" : "translateX(0)" }} />
-                        </div>
-                        <span style={s.toggleLabel}>{f.label}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <div style={s.sectionTitle}>Durée de séjour : {form.duree_sejour} jour{form.duree_sejour > 1 ? "s" : ""}</div>
+                  <input style={s.range} type="range" min={1} max={30} step={1}
+                    value={form.duree_sejour}
+                    onChange={e => update("duree_sejour", parseInt(e.target.value))} />
+                  <div style={s.rangeHint}>Connue à la sortie du patient · variable la plus prédictive</div>
                 </div>
 
                 <div style={s.section}>
-                  <div style={s.sectionTitle}>Complétude du dossier</div>
+                  <div style={s.sectionTitle}>Part organisme : {Math.round(form.part_organisme * 100)}%</div>
+                  <input style={s.range} type="range" min={0.5} max={1} step={0.01}
+                    value={form.part_organisme}
+                    onChange={e => update("part_organisme", parseFloat(e.target.value))} />
+                  <div style={s.rangeHint}>Part prise en charge par la caisse</div>
+                </div>
+
+                <div style={s.section}>
+                  <div style={s.sectionTitle}>Montant total</div>
                   <div style={s.field}>
-                    <label style={s.label}>Ratio de complétude : {Math.round(form.docs_completeness_ratio * 100)}%</label>
-                    <input style={s.range} type="range" min={0} max={1} step={0.1}
-                      value={form.docs_completeness_ratio}
-                      onChange={e => update("docs_completeness_ratio", parseFloat(e.target.value))} />
+                    <input style={s.input} type="number" min={0} step={100}
+                      value={form.montant_total}
+                      onChange={e => update("montant_total", parseFloat(e.target.value) || 0)} />
+                    <div style={s.rangeHint}>Montant réclamé en MAD</div>
                   </div>
                 </div>
 
@@ -370,224 +228,110 @@ export default function PredictionPage() {
                   style={loading ? { ...s.predictBtn, opacity: 0.7 } : s.predictBtn}
                   onClick={handlePredict} disabled={loading}
                 >
-                  {loading ? "Analyse en cours..." : "🧠 Analyser le dossier"}
+                  {loading ? "Analyse en cours..." : "Analyser le dossier"}
                 </button>
               </div>
 
               {/* RESULT */}
               <div style={s.resultPanel}>
                 <div style={s.panelTitle}>Résultat de l&apos;analyse</div>
+
                 {!result && !loading && (
                   <div style={s.emptyResult}>
-                    <div style={s.emptyIcon}>🧠</div>
-                    <div style={s.emptyText}>Renseignez les critères du dossier et cliquez sur Analyser pour obtenir un score de risque.</div>
+                    <div style={s.emptyText}>
+                      Renseignez les critères du dossier et cliquez sur Analyser pour obtenir un score de risque.
+                    </div>
                   </div>
                 )}
+
                 {loading && (
                   <div style={s.emptyResult}>
-                    <div style={s.emptyIcon}>⏳</div>
                     <div style={s.emptyText}>Analyse en cours...</div>
                   </div>
                 )}
-                {result && (() => {
-                  const rc = riskColor(result.risk_label);
-                  return (
-                    <>
-                      <div style={{ ...s.scoreCard, background: rc.bg, border: `1px solid ${rc.bar}` }}>
-                        <div style={s.scoreLabel}>Score de risque de rejet</div>
-                        <div style={{ ...s.scoreVal, color: rc.color }}>{result.risk_percentage}</div>
-                        <div style={s.scoreBar}>
-                          <div style={{ ...s.scoreBarFill, width: result.risk_percentage, background: rc.bar }} />
-                        </div>
-                        <div style={{ ...s.scoreBadge, background: rc.bar, color: "#fff" }}>{result.risk_label}</div>
-                        <div style={s.scoreModel}>Modèle : {result.model_used}</div>
+
+                {result && (
+                  <>
+                    <div style={{
+                      ...s.zoneCard,
+                      background: isDanger ? "#FEF2F2" : "#F0FDF4",
+                      border: `1px solid ${isDanger ? "#FCA5A5" : "#86EFAC"}`,
+                    }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: isDanger ? "#991B1B" : "#166534", letterSpacing: "0.06em" }}>
+                        {isDanger ? "ZONE DANGER" : "ZONE SÛRE"}
                       </div>
-                      <div style={s.factorsCard}>
-                        <div style={s.factorsTitle}>Top 3 facteurs déterminants</div>
-                        {result.top_factors.map((f, i) => (
-                          <div key={i} style={s.factorRow}>
-                            <div style={s.factorLeft}>
-                              <span style={s.factorRank}>{i + 1}</span>
-                              <span style={s.factorName}>{FEATURE_LABELS[f.feature] || f.feature}</span>
-                            </div>
-                            <div style={s.factorRight}>
-                              <span style={{ ...s.factorDir, color: f.impact > 0 ? "#DC2626" : "#16A34A" }}>{f.direction}</span>
-                              <span style={s.factorImpact}>{Math.abs(f.impact).toFixed(3)}</span>
-                            </div>
+                      <div style={{ fontSize: 40, fontWeight: 800, color: isDanger ? "#DC2626" : "#16A34A", margin: "8px 0", letterSpacing: "-0.02em" }}>
+                        {result.risk_percentage}
+                      </div>
+                      <div style={s.scoreBar}>
+                        <div style={{ ...s.scoreBarFill, width: result.risk_percentage, background: isDanger ? "#DC2626" : "#16A34A" }} />
+                      </div>
+                      <div style={{ fontSize: 12, color: "#5C5852", marginTop: 10 }}>
+                        Risque de rejet · {result.risk_level}
+                      </div>
+                      <div style={s.seuilNote}>
+                        Seuil d&apos;alerte : {Math.round(result.seuil * 100)}% (priorité au rappel)
+                      </div>
+                    </div>
+
+                    {isDanger && result.recommended_action && (
+                      <div style={s.actionsCard}>
+                        <div style={s.actionsTitle}>Action recommandée</div>
+                        <div style={s.actionText}>{result.recommended_action}</div>
+                        <div style={s.actionSub}>
+                          Vérifiez le dossier acte par acte avant envoi à l&apos;organisme.
+                        </div>
+                      </div>
+                    )}
+
+                    {!isDanger && (
+                      <div style={s.safeCard}>
+                        <div style={s.safeTitle}>Dossier conforme</div>
+                        <div style={s.safeText}>
+                          Aucun facteur de risque majeur détecté. Le dossier peut être envoyé à l&apos;organisme.
+                        </div>
+                      </div>
+                    )}
+
+                    <div style={s.factorsCard}>
+                      <div style={s.factorsTitle}>Facteurs déterminants (SHAP)</div>
+                      {result.top_factors.map((f, i) => (
+                        <div key={i} style={s.factorRow}>
+                          <div style={s.factorLeft}>
+                            <span style={s.factorRank}>{i + 1}</span>
+                            <span style={s.factorName}>{FEATURE_LABELS[f.feature] || f.feature}</span>
                           </div>
-                        ))}
-                      </div>
-                      {result.recommended_actions.length > 0 && (
-                        <div style={s.actionsCard}>
-                          <div style={s.actionsTitle}>Actions recommandées</div>
-                          {result.recommended_actions.map((a, i) => (
-                            <div key={i} style={s.actionRow}>
-                              <span style={s.actionIcon}>→</span>
-                              <span style={s.actionText}>{a}</span>
-                            </div>
-                          ))}
+                          <div style={s.factorRight}>
+                            <span style={{ ...s.factorDir, color: f.impact > 0 ? "#DC2626" : "#16A34A" }}>
+                              {f.direction}
+                            </span>
+                            <span style={s.factorImpact}>{Math.abs(f.impact).toFixed(3)}</span>
+                          </div>
                         </div>
-                      )}
-                    </>
-                  );
-                })()}
+                      ))}
+                    </div>
+
+                    <div style={s.modelNote}>{result.model_used}</div>
+                  </>
+                )}
               </div>
             </div>
           )}
 
-          {/* ── BATCH PREDICTION ── */}
           {activeTab === "batch" && (
-            <div>
-              {/* Upload + controls */}
-              <div style={s.batchHeader}>
-                <div style={s.batchUploadCard}>
-                  <div style={s.batchUploadTitle}>📂 Importer un fichier CSV</div>
-                  <div style={s.batchUploadSub}>
-                    Colonnes attendues : <span style={s.batchCode}>payer, service_type, ngap_code, patient_name</span> + critères optionnels.
-                    Les colonnes manquantes utilisent les valeurs par défaut.
-                  </div>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 14, flexWrap: "wrap" }}>
-                    <label style={s.uploadLabel}>
-                      <input type="file" accept=".csv,.xlsx" style={{ display: "none" }} onChange={handleFileChange} />
-                      📁 Choisir un fichier
-                    </label>
-                    {batchFile && (
-                      <span style={s.fileName}>
-                        {batchFile.name} · {batchRows.length} ligne{batchRows.length > 1 ? "s" : ""} détectée{batchRows.length > 1 ? "s" : ""}
-                      </span>
-                    )}
-                    {batchRows.length > 0 && !batchRunning && (
-                      <button style={s.runBtn} onClick={runBatch}>
-                        🚀 Lancer l&apos;analyse XGBoost
-                      </button>
-                    )}
-                    {batchDone && (
-                      <button style={s.downloadBtn} onClick={downloadResults}>
-                        ⬇ Télécharger les résultats
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Progress bar */}
-                  {batchRunning && (
-                    <div style={{ marginTop: 16 }}>
-                      <div style={{ fontSize: 12, color: "#4A3FD4", marginBottom: 6 }}>
-                        Analyse en cours... {batchProgress} / {batchRows.length}
-                      </div>
-                      <div style={s.progressTrack}>
-                        <div style={{ ...s.progressFill, width: `${(batchProgress / batchRows.length) * 100}%` }} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* KPI summary */}
-                {batchDone && (
-                  <div style={s.batchKpis}>
-                    {[
-                      { lbl: "Analysés",    val: String(doneRows.length),       color: "#5B4FE8" },
-                      { lbl: "Risque élevé",val: String(highRisk),              color: "#DC2626" },
-                      { lbl: "Score moyen", val: `${Math.round(avgScore * 100)}%`, color: "#F59E0B" },
-                      { lbl: "Feedbacks",   val: String(batchRows.filter(r => r.feedback).length), color: "#16A34A" },
-                    ].map(k => (
-                      <div key={k.lbl} style={s.batchKpi}>
-                        <div style={{ fontSize: 10, color: "#9C9890", marginBottom: 4 }}>{k.lbl}</div>
-                        <div style={{ fontSize: 22, fontWeight: 700, color: k.color, letterSpacing: "-0.02em" }}>{k.val}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            <div style={s.batchEmpty}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "#1A1814", marginBottom: 8 }}>
+                Analyse par lot — bientôt disponible
               </div>
-
-              {/* Filter chips */}
-              {batchDone && (
-                <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-                  {(["all","ÉLEVÉ","MODÉRÉ","FAIBLE"] as const).map(f => (
-                    <button key={f}
-                      style={batchFilter === f ? { ...s.chip, ...s.chipActive } : s.chip}
-                      onClick={() => setBatchFilter(f)}
-                    >
-                      {f === "all" ? "Tous" : f}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Results table */}
-              {batchRows.length > 0 && (
-                <div style={s.batchTable}>
-                  <table style={s.table}>
-                    <thead>
-                      <tr>
-                        {["#","Patient","Caisse","Type soin","Score IA","Niveau","Recommandation","Feedback"].map(h => (
-                          <th key={h} style={s.th}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredBatch.map(row => {
-                        const rc = riskColor(row.risk_label);
-                        return (
-                          <tr key={row.index} style={s.tr}>
-                            <td style={s.td}><span style={s.rowNum}>{row.index}</span></td>
-                            <td style={s.td}><span style={s.patName}>{row.patient_name}</span></td>
-                            <td style={s.td}>
-                              <span style={{ ...s.payerBadge, background: row.payer === "CNOPS" ? "#EEEDFB" : row.payer === "CNSS" ? "#F0FDF4" : "#FFF7ED", color: row.payer === "CNOPS" ? "#1E40AF" : row.payer === "CNSS" ? "#166534" : "#9A3412" }}>
-                                {row.payer}
-                              </span>
-                            </td>
-                            <td style={s.td}><span style={s.serviceType}>{row.service_type}</span></td>
-                            <td style={s.td}>
-                              {row.status === "pending" && <span style={s.pendingDot}>En attente</span>}
-                              {row.status === "error"   && <span style={{ fontSize: 11, color: "#DC2626" }}>Erreur</span>}
-                              {row.status === "done"    && (
-                                <div>
-                                  <div style={{ ...s.scoreSmall, color: rc.color }}>{row.risk_percentage}</div>
-                                  <div style={s.scoreBarSmall}>
-                                    <div style={{ ...s.scoreBarSmallFill, width: row.risk_percentage || "0%", background: rc.bar }} />
-                                  </div>
-                                </div>
-                              )}
-                            </td>
-                            <td style={s.td}>
-                              {row.risk_label && (
-                                <span style={{ ...s.riskBadge, background: rc.bg, color: rc.color }}>{row.risk_label}</span>
-                              )}
-                            </td>
-                            <td style={{ ...s.td, maxWidth: 220 }}>
-                              <span style={s.topFactor}>{row.top_factor || "—"}</span>
-                            </td>
-                            <td style={s.td}>
-                              {row.status === "done" && (
-                                <div style={{ display: "flex", gap: 5 }}>
-                                  <button
-                                    style={{ ...s.fbBtn, background: row.feedback === "approved" ? "#DCFCE7" : "#F3F4F6", color: row.feedback === "approved" ? "#166534" : "#5C5852", border: row.feedback === "approved" ? "0.5px solid #86EFAC" : "0.5px solid #E5E3DD" }}
-                                    onClick={() => setFeedback(row.index, "approved")}
-                                  >✓</button>
-                                  <button
-                                    style={{ ...s.fbBtn, background: row.feedback === "rejected" ? "#FEE2E2" : "#F3F4F6", color: row.feedback === "rejected" ? "#991B1B" : "#5C5852", border: row.feedback === "rejected" ? "0.5px solid #FCA5A5" : "0.5px solid #E5E3DD" }}
-                                    onClick={() => setFeedback(row.index, "rejected")}
-                                  >✗</button>
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {batchRows.length === 0 && (
-                <div style={s.batchEmpty}>
-                  <div style={{ fontSize: 36, marginBottom: 12 }}>📊</div>
-                  <div style={{ fontSize: 14, color: "#9C9890", marginBottom: 6 }}>Aucun fichier chargé</div>
-                  <div style={{ fontSize: 12, color: "#C4C4C4" }}>
-                    Importez un CSV avec les colonnes : payer, service_type, ngap_code, patient_name
-                  </div>
-                </div>
-              )}
+              <div style={{ fontSize: 13, color: "#9C9890", lineHeight: 1.6, maxWidth: 460, margin: "0 auto" }}>
+                L&apos;import CSV en masse sera aligné sur les 5 variables du modèle
+                (organisme, durée de séjour, part organisme, montant, mois).
+                En attendant, utilisez l&apos;analyse individuelle.
+              </div>
+              <button style={{ ...s.predictBtn, width: "auto", marginTop: 20, padding: "9px 20px" }}
+                onClick={() => setActiveTab("single")}>
+                Aller à l&apos;analyse individuelle
+              </button>
             </div>
           )}
 
@@ -628,80 +372,48 @@ const s: Record<string, React.CSSProperties> = {
   formPanel:   { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 20, overflowY: "auto" },
   resultPanel: { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 20, overflowY: "auto" },
   panelTitle:  { fontSize: 13, fontWeight: 600, color: "#1A1814", marginBottom: 4 },
-  panelSub:    { fontSize: 12, color: "#9C9890", marginBottom: 16, lineHeight: 1.5 },
+  panelSub:    { fontSize: 12, color: "#9C9890", marginBottom: 14, lineHeight: 1.5 },
+  privacyNote: { fontSize: 11, color: "#6D28D9", background: "#F5F3FF", border: "0.5px solid #DDD6FE", borderRadius: 7, padding: "8px 10px", marginBottom: 16, lineHeight: 1.5 },
 
   section:      { marginBottom: 18, paddingBottom: 18, borderBottom: "0.5px solid #F2F1EE" },
-  sectionTitle: { fontSize: 10, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 },
-  fieldGrid:    { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 },
+  sectionTitle: { fontSize: 11, fontWeight: 600, color: "#1A1814", marginBottom: 10 },
+  fieldGrid:    { display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 },
   field:        { display: "flex", flexDirection: "column", gap: 5 },
   label:        { fontSize: 10, fontWeight: 500, color: "#374151", textTransform: "uppercase", letterSpacing: "0.06em" },
-  input:        { padding: "7px 10px", border: "0.5px solid #D1D5DB", borderRadius: 7, fontSize: 12, color: "#1A1814", outline: "none", fontFamily: "inherit", background: "#FAFAFA" },
-  range:        { width: "100%", marginTop: 4 },
-  toggleGrid:   { display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8 },
-  toggleItem:   { display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "4px 0" },
-  toggle:       { width: 32, height: 18, borderRadius: 9, position: "relative", flexShrink: 0, transition: "background 0.2s" },
-  toggleThumb:  { position: "absolute", top: 2, left: 2, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "transform 0.2s" },
-  toggleLabel:  { fontSize: 11, color: "#4B5060" },
+  input:        { padding: "8px 10px", border: "0.5px solid #D1D5DB", borderRadius: 7, fontSize: 12, color: "#1A1814", outline: "none", fontFamily: "inherit", background: "#FAFAFA" },
+  range:        { width: "100%", marginTop: 4, accentColor: "#5B4FE8" },
+  rangeHint:    { fontSize: 10, color: "#9C9890", marginTop: 6 },
   predictBtn:   { width: "100%", padding: "11px", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit", marginTop: 4 },
   errorBox:     { background: "#FEE2E2", border: "0.5px solid #FCA5A5", borderRadius: 7, padding: "8px 12px", fontSize: 12, color: "#991B1B", marginBottom: 10 },
 
-  emptyResult:  { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 300, gap: 12 },
-  emptyIcon:    { fontSize: 40 },
+  emptyResult:  { display: "flex", alignItems: "center", justifyContent: "center", height: 300 },
   emptyText:    { fontSize: 13, color: "#9C9890", textAlign: "center", lineHeight: 1.6, maxWidth: 280 },
-  scoreCard:    { borderRadius: 10, padding: 16, marginBottom: 12 },
-  scoreLabel:   { fontSize: 10, fontWeight: 600, color: "#5C5852", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 },
-  scoreVal:     { fontSize: 36, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 8 },
-  scoreBar:     { height: 6, background: "rgba(0,0,0,0.1)", borderRadius: 3, overflow: "hidden", marginBottom: 10 },
+
+  zoneCard:     { borderRadius: 10, padding: "18px 16px", marginBottom: 12, textAlign: "center" },
+  scoreBar:     { height: 6, background: "rgba(0,0,0,0.08)", borderRadius: 3, overflow: "hidden", marginTop: 4 },
   scoreBarFill: { height: "100%", borderRadius: 3, transition: "width 0.5s" },
-  scoreBadge:   { display: "inline-block", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, marginBottom: 8 },
-  scoreModel:   { fontSize: 10, color: "#9C9890" },
+  seuilNote:    { fontSize: 10, color: "#9C9890", marginTop: 8 },
+
+  actionsCard:  { background: "#FFF8F0", border: "0.5px solid #FED7AA", borderRadius: 10, padding: 14, marginBottom: 12 },
+  actionsTitle: { fontSize: 11, fontWeight: 600, color: "#9A3412", marginBottom: 8 },
+  actionText:   { fontSize: 12, color: "#9A3412", lineHeight: 1.5, marginBottom: 8 },
+  actionSub:    { fontSize: 11, color: "#C2410C", lineHeight: 1.5, fontStyle: "italic" },
+
+  safeCard:     { background: "#F0FDF4", border: "0.5px solid #86EFAC", borderRadius: 10, padding: 14, marginBottom: 12 },
+  safeTitle:    { fontSize: 11, fontWeight: 600, color: "#166534", marginBottom: 6 },
+  safeText:     { fontSize: 12, color: "#166534", lineHeight: 1.5 },
+
   factorsCard:  { background: "#F8F7FE", border: "0.5px solid #EEEDFB", borderRadius: 10, padding: 14, marginBottom: 12 },
   factorsTitle: { fontSize: 11, fontWeight: 600, color: "#1A1814", marginBottom: 10 },
-  factorRow:    { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "0.5px solid #F2F1EE" },
+  factorRow:    { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "0.5px solid #F2F1EE" },
   factorLeft:   { display: "flex", alignItems: "center", gap: 8 },
-  factorRank:   { width: 18, height: 18, borderRadius: "50%", background: "#EEEDFB", color: "#5B4FE8", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" },
+  factorRank:   { width: 18, height: 18, borderRadius: "50%", background: "#EEEDFB", color: "#5B4FE8", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
   factorName:   { fontSize: 12, color: "#1A1814" },
   factorRight:  { display: "flex", alignItems: "center", gap: 8 },
   factorDir:    { fontSize: 10, fontWeight: 500 },
   factorImpact: { fontSize: 11, fontWeight: 600, color: "#5C5852", fontFamily: "monospace" },
-  actionsCard:  { background: "#FFF8F0", border: "0.5px solid #FED7AA", borderRadius: 10, padding: 14 },
-  actionsTitle: { fontSize: 11, fontWeight: 600, color: "#9A3412", marginBottom: 10 },
-  actionRow:    { display: "flex", gap: 8, marginBottom: 8, alignItems: "flex-start" },
-  actionIcon:   { color: "#EA580C", fontWeight: 700, flexShrink: 0, marginTop: 1 },
-  actionText:   { fontSize: 12, color: "#9A3412", lineHeight: 1.5 },
 
-  // Batch styles
-  batchHeader:     { display: "flex", gap: 14, marginBottom: 14, flexWrap: "wrap" },
-  batchUploadCard: { flex: 1, background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, padding: 18 },
-  batchUploadTitle:{ fontSize: 13, fontWeight: 600, color: "#1A1814", marginBottom: 6 },
-  batchUploadSub:  { fontSize: 12, color: "#9C9890", lineHeight: 1.5 },
-  batchCode:       { fontFamily: "monospace", fontSize: 11, color: "#4A3FD4", background: "#EEEDFB", padding: "1px 5px", borderRadius: 4 },
-  uploadLabel:     { fontSize: 12, fontWeight: 600, padding: "7px 14px", borderRadius: 8, cursor: "pointer", border: "0.5px solid #C7C2F7", background: "#EEEDFB", color: "#4A3FD4", fontFamily: "inherit" },
-  fileName:        { fontSize: 12, color: "#5C5852", background: "#F3F4F6", padding: "6px 10px", borderRadius: 6 },
-  runBtn:          { fontSize: 12, fontWeight: 600, padding: "7px 16px", borderRadius: 8, cursor: "pointer", border: "none", background: "#5B4FE8", color: "#fff", fontFamily: "inherit" },
-  downloadBtn:     { fontSize: 12, fontWeight: 600, padding: "7px 16px", borderRadius: 8, cursor: "pointer", border: "0.5px solid #86EFAC", background: "#DCFCE7", color: "#166534", fontFamily: "inherit" },
-  progressTrack:   { height: 6, background: "#EEEDFB", borderRadius: 3, overflow: "hidden" },
-  progressFill:    { height: "100%", background: "#5B4FE8", borderRadius: 3, transition: "width 0.2s" },
-  batchKpis:       { display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, width: 220 },
-  batchKpi:        { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 8, padding: "10px 12px" },
-  chip:            { fontSize: 10, fontWeight: 500, padding: "4px 10px", borderRadius: 20, cursor: "pointer", border: "0.5px solid #E5E3DD", background: "#fff", color: "#5C5852", fontFamily: "inherit" },
-  chipActive:      { background: "#EEEDFB", color: "#5B4FE8", borderColor: "#C7C2F7" },
+  modelNote:    { fontSize: 10, color: "#9C9890", textAlign: "center", marginTop: 4 },
 
-  batchTable:      { background: "#fff", border: "0.5px solid #E5E3DD", borderRadius: 10, overflow: "auto" },
-  table:           { width: "100%", borderCollapse: "collapse", fontSize: 12 },
-  th:              { textAlign: "left", padding: "8px 12px", fontSize: 9, fontWeight: 600, color: "#9C9890", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "0.5px solid #F2F1EE", background: "#FAFAF7", whiteSpace: "nowrap" },
-  tr:              { borderBottom: "0.5px solid #F5F4F1" },
-  td:              { padding: "10px 12px", verticalAlign: "middle" },
-  rowNum:          { fontFamily: "monospace", fontSize: 10, color: "#9C9890" },
-  patName:         { fontSize: 12, fontWeight: 500, color: "#1A1814" },
-  payerBadge:      { display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20 },
-  serviceType:     { fontSize: 11, color: "#5C5852" },
-  pendingDot:      { fontSize: 10, color: "#9C9890" },
-  scoreSmall:      { fontSize: 14, fontWeight: 700, letterSpacing: "-0.01em" },
-  scoreBarSmall:   { height: 3, background: "#F2F1EE", borderRadius: 2, overflow: "hidden", marginTop: 3, width: 60 },
-  scoreBarSmallFill:{ height: "100%", borderRadius: 2 },
-  riskBadge:       { display: "inline-flex", fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20 },
-  topFactor:       { fontSize: 11, color: "#9A3412", lineHeight: 1.4 },
-  fbBtn:           { fontSize: 11, fontWeight: 700, width: 26, height: 26, borderRadius: 6, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center" },
-  batchEmpty:      { textAlign: "center", padding: "60px 20px", background: "#fff", borderRadius: 10, border: "0.5px solid #E5E3DD" },
+  batchEmpty:   { textAlign: "center", padding: "70px 20px", background: "#fff", borderRadius: 10, border: "0.5px solid #E5E3DD" },
 };
