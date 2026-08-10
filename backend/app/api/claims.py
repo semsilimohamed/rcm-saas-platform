@@ -18,17 +18,37 @@ import uuid
 import joblib
 import shap
 import json
+import logging
+import numpy as np
 from pathlib import Path
 from app.models.claim_act import ClaimAct
 
 router = APIRouter(prefix="/claims", tags=["Claims"], dependencies=[Depends(get_current_user)])
 
 # ── Load model once at startup ─────────────────────────────────────────────
-from xgboost import XGBClassifier
-MODEL_PATH = Path(__file__).parent.parent / "ml" / "models" / "sihaiq_xgb_v2.json"
-model = XGBClassifier()
-model.load_model(str(MODEL_PATH))
+# SihaIQ v3 : Random Forest (scikit-learn) entraîné sur 3 organismes réels.
+MODEL_PATH = Path(__file__).parent.parent / "ml" / "models" / "sihaiq_rf_v3.joblib"
+model = joblib.load(MODEL_PATH)
 explainer = shap.TreeExplainer(model)
+
+# ── Seuils SihaIQ v3 ───────────────────────────────────────────────────────
+# Deux familles de seuils VOLONTAIREMENT INDÉPENDANTES : ne pas les fusionner
+# même si elles portent aujourd'hui la même valeur (0.40).
+#
+# 1) Seuil de DÉCISION — déclenche l'alerte danger / sûr pour l'agent BAF.
+#    Orienté recall (mieux vaut une fausse alerte qu'un rejet non anticipé) :
+#    il peut être abaissé sans que les zones d'affichage bougent.
+SEUIL_DECISION = 0.40
+
+# 2) Seuils d'AFFICHAGE des zones (ÉLEVÉ / MODÉRÉ / FAIBLE) — vocation visuelle :
+#    répartir les dossiers en 3 groupes lisibles. Calés sur les quantiles p40/p75
+#    de la distribution des scores du RF v3 sur les plages réalistes
+#    (séjour 0-14 j, montant 300-40 000 MAD, part 0.60-1.00) : p40=0.39, p75=0.68,
+#    arrondis à 0.40 / 0.70 -> répartition ÉLEVÉ 23% / MODÉRÉ 35% / FAIBLE 42%.
+#    À recalibrer sur les risk_score réellement observés quand le volume de
+#    dossiers le permettra (voir app/ml/calibration_percentiles.sql).
+ZONE_MODERE = 0.40
+ZONE_ELEVE = 0.70
 
 SHAP_MESSAGES = {
     "duree_sejour":   "Durée de séjour élevée : facteur de risque majeur de rejet.",
@@ -38,8 +58,6 @@ SHAP_MESSAGES = {
     "org_CNOPS":      "Régime CNOPS : profil de rejet spécifique à vérifier.",
     "org_CNSS":       "Régime CNSS : profil de rejet spécifique à vérifier.",
     "org_FAR":        "Régime FAR : profil de rejet spécifique à vérifier.",
-    "org_AMO":        "Régime AMO : profil de rejet spécifique à vérifier.",
-    "org_AMO-Tadamon":"Régime AMO-Tadamon : profil de rejet spécifique à vérifier.",
 }
 def write_audit_log(db: Session, tenant_id: str, user_email: str, action: str, resource_type: str, resource_id: str, details: str):
     try:
@@ -63,23 +81,50 @@ class StatusUpdate(BaseModel):
     contestation_reason: Optional[str] = None
 
 # ── ML helper ─────────────────────────────────────────────────────────────
+logger = logging.getLogger(__name__)
+
+
+def _shap_row_classe_1(shap_values) -> np.ndarray:
+    """
+    Extrait le vecteur SHAP de la classe 1 (rejet) pour la ligne unique passée au modèle.
+
+    TreeExplainer renvoie selon le modèle et la version de shap :
+      - une liste [classe_0, classe_1] de tableaux (n_lignes, n_features)
+      - un tableau (n_lignes, n_features, n_classes)   <- cas RandomForest
+      - un tableau (n_lignes, n_features)
+    """
+    if isinstance(shap_values, list):
+        arr = shap_values[1] if len(shap_values) > 1 else shap_values[0]
+        return np.asarray(arr)[0]
+
+    row = np.asarray(shap_values)[0]
+    if row.ndim == 2:            # (n_features, n_classes) -> colonne de la classe 1
+        return row[:, -1]
+    return row
+
+
 def run_prediction(claim_data: dict) -> dict:
+    """
+    Score de risque de rejet + explication SHAP pour un dossier.
+
+    Limite connue du RF v3 : le score n'est pas monotone sur duree_sejour au-delà
+    de 30 jours (30 j -> 0.76 mais 60 j -> 0.73). Trop peu de séjours longs dans
+    le jeu d'entraînement pour que les feuilles extrapolent correctement. Impact
+    pratique faible (peu de séjours réels > 30 j), non corrigé volontairement.
+    """
     try:
         X = encode_features(claim_data)
         risk_score = float(model.predict_proba(X)[0][1])
 
-        if risk_score >= 0.70:
+        # Zones d'AFFICHAGE (ZONE_*), distinctes du seuil de décision.
+        if risk_score >= ZONE_ELEVE:
             risk_label = "ÉLEVÉ"
-        elif risk_score >= 0.40:
+        elif risk_score >= ZONE_MODERE:
             risk_label = "MODÉRÉ"
         else:
             risk_label = "FAIBLE"
 
-        shap_values = explainer.shap_values(X, approximate=True)
-        if isinstance(shap_values, list):
-            shap_vals = shap_values[1][0]
-        else:
-            shap_vals = shap_values[0]
+        shap_vals = _shap_row_classe_1(explainer.shap_values(X))
 
         from app.ml.features import FEATURE_NAMES
         feature_impacts = list(zip(FEATURE_NAMES, shap_vals))
@@ -97,7 +142,11 @@ def run_prediction(claim_data: dict) -> dict:
             "ml_top_factors": json.dumps(top_factors),
             "rejection_cause_predicted": top_action
         }
-    except Exception:
+    except Exception as e:
+        # Comportement inchangé (dossier créé sans score), mais l'erreur est tracée :
+        # sans ça une régression du modèle passerait totalement inaperçue.
+        logger.exception("run_prediction a échoué : %s", e)
+        print(f"[SihaIQ] run_prediction ERROR: {type(e).__name__}: {e}")
         return {}
 
 # ── Routes ─────────────────────────────────────────────────────────────────
@@ -129,8 +178,9 @@ def predict_only(
         "risk_score": risk_score,
         "risk_level": prediction["risk_level"],
         "risk_percentage": f"{round(risk_score * 100)}%",
-        "zone": "danger" if risk_score >= 0.20 else "sure",
-        "seuil": 0.20,
+        # Alerte opérationnelle : seuil de DÉCISION (pas les zones d'affichage).
+        "zone": "danger" if risk_score >= SEUIL_DECISION else "sure",
+        "seuil": SEUIL_DECISION,
         "top_factors": [
             {
                 "feature": f["feature"],
@@ -140,7 +190,7 @@ def predict_only(
             for f in factors
         ],
         "recommended_action": prediction.get("rejection_cause_predicted"),
-        "model_used": "XGBoost v2 (5 features réelles)",
+        "model_used": "Random Forest v3 (3 organismes réels)",
     }
 
 # ── Import CSV (Phase D) ───────────────────────────────────────────────────

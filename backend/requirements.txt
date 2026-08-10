@@ -6,8 +6,8 @@ pydantic==2.13.3
 pydantic_core==2.46.3
 python-dotenv==1.2.2
 python-multipart==0.0.27
-xgboost==2.0.3
-scikit-learn==1.4.0
+xgboost==2.0.3          # plus utilisé par le code actif depuis SihaIQ v3 (Random Forest)
+scikit-learn==1.6.1     # version d'entraînement de sihaiq_rf_v3.joblib — ne pas désaligner
 shap==0.45.0
 numpy==1.26.4
 pandas==2.1.4
