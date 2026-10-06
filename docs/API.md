@@ -112,25 +112,25 @@ Request `{"token": "...", "new_password": "..."}`. Response `{"message": "Mot de
 ### POST /claims/predict
 
 ```json
-{ "organisme": "CNSS", "duree_sejour": 4, "part_organisme": 0.8,
+{ "organisme": "CNSS", "duree_sejour": 12, "part_organisme": 0.8,
   "montant_total": 12500, "mois": 6 }
 ```
 
 `organisme` accepts CNOPS, CNSS, FAR; AMO and AMO-Tadamon are mapped to CNSS, and any other value falls back to CNSS.
 
-Response:
+Response (actual output of the v3 model for this input):
 
 ```json
 {
-  "risk_score": 0.5132,
+  "risk_score": 0.6564,
   "risk_level": "MODÉRÉ",
-  "risk_percentage": "51%",
+  "risk_percentage": "66%",
   "zone": "danger",
   "seuil": 0.4,
   "top_factors": [
-    { "feature": "duree_sejour", "impact": 0.0811, "direction": "augmente le risque" },
-    { "feature": "montant_total", "impact": 0.0423, "direction": "augmente le risque" },
-    { "feature": "org_CNSS", "impact": -0.0120, "direction": "réduit le risque" }
+    { "feature": "duree_sejour", "impact": 0.1524, "direction": "augmente le risque" },
+    { "feature": "montant_total", "impact": -0.0197, "direction": "réduit le risque" },
+    { "feature": "part_organisme", "impact": 0.0163, "direction": "augmente le risque" }
   ],
   "recommended_action": "Durée de séjour élevée : facteur de risque majeur de rejet.",
   "model_used": "Random Forest v3 (3 organismes réels)"
@@ -209,7 +209,7 @@ When fields are missing, `prediction` is `null`, `needs_review` is `true` and `m
   "id": "uuid", "claim_number": "CLM-2026-0042", "patient_ne": "NE-2026-00042",
   "amount": 12500, "insurance_type": "CNSS", "service_type": "hospitalisation",
   "service_date": "2026-06-10T00:00:00", "status": "pending", "rejection_reason": null,
-  "risk_score": 0.5132, "risk_level": "MODÉRÉ",
+  "risk_score": 0.6564, "risk_level": "MODÉRÉ",
   "rejection_cause_predicted": "Durée de séjour élevée : ...",
   "forclusion_deadline": "2026-08-09", "created_at": "2026-06-10T09:12:00"
 }]
