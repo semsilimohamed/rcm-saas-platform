@@ -43,10 +43,8 @@ def _ocr_text(file_path: str) -> str:
 
 _PAYERS = {
     "CNOPS": ["cnops"],
-    "CNSS": ["cnss"],
+    "CNSS": ["cnss", "amo", "amo tadamon"],
     "FAR": ["far", "forces armees", "forces armees"],
-    "AMO": ["amo"],
-    "AMO-Tadamon": ["tadamon", "amo-tadamon"],
 }
 
 _DATE_PATTERNS = [

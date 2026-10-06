@@ -41,7 +41,7 @@ const ROLE_STYLES: Record<string, { bg: string; color: string }> = {
   director: { bg: "#F5F3FF", color: "#6D28D9" },
 };
 
-const ALL_PAYERS = ["CNOPS", "CNSS", "AMO", "AMO-Tadamon"];
+const ALL_PAYERS = ["CNOPS", "CNSS", "FAR"];
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab]   = useState("profil");

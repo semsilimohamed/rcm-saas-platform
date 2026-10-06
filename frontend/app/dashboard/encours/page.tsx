@@ -27,7 +27,7 @@ function formatMAD(n: number) {
 function payerStyle(p: string) {
   if (p === "CNOPS") return { bg: "#E6F1FB", color: "#1E40AF" };
   if (p === "CNSS")  return { bg: "#F0FDF4", color: "#166534" };
-  if (p === "AMO")   return { bg: "#FFF7ED", color: "#9A3412" };
+  if (p === "FAR")   return { bg: "#FFF7ED", color: "#9A3412" };
   return { bg: "#F5F3FF", color: "#6D28D9" };
 }
 
@@ -185,7 +185,7 @@ export default function EncoursPage() {
             <div style={s.topSub}>Dossiers en attente de règlement · délai forclusion 60 jours</div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            {["Tous", "CNOPS", "CNSS", "AMO", "AMO-Tadamon"].map(p => (
+            {["Tous", "CNOPS", "CNSS", "FAR"].map(p => (
               <button
                 key={p}
                 style={payerFilter === p ? { ...s.chip, ...s.chipActive } : s.chip}

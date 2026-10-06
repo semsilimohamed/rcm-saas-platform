@@ -19,10 +19,10 @@ export default function OnboardingPage() {
       const patients = [
         { full_name: "Youssef Benali",    cin: "BE123456", insurance_type: "CNOPS" },
         { full_name: "Fatima Zahra Idrissi", cin: "BK234567", insurance_type: "CNSS" },
-        { full_name: "Ahmed Khalil",      cin: "BH345678", insurance_type: "AMO" },
+        { full_name: "Ahmed Khalil",      cin: "BH345678", insurance_type: "FAR" },
         { full_name: "Khadija Alaoui",    cin: "BJ456789", insurance_type: "CNSS" },
         { full_name: "Omar Bennani",      cin: "BL567890", insurance_type: "CNOPS" },
-        { full_name: "Nadia Tazi",        cin: "BM678901", insurance_type: "AMO-Tadamon" },
+        { full_name: "Nadia Tazi",        cin: "BM678901", insurance_type: "FAR" },
       ];
 
       const patientIds: string[] = [];

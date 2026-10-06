@@ -11,7 +11,7 @@ interface PredictionResult {
   claim_number: string;
 }
 
-const SEUIL = 0.20; // recall-first : >= 0.20 => zone danger
+const SEUIL = 0.40; // recall-first : >= 0.40 => zone danger
 
 export default function ManualClaimModal({
   onClose,
@@ -146,8 +146,6 @@ export default function ManualClaimModal({
                   <option value="CNOPS">CNOPS</option>
                   <option value="CNSS">CNSS</option>
                   <option value="FAR">FAR</option>
-                  <option value="AMO">AMO</option>
-                  <option value="AMO-Tadamon">AMO-Tadamon</option>
                 </select>
               </div>
 

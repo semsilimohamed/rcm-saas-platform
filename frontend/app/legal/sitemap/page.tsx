@@ -25,7 +25,7 @@ export default function SitemapPage() {
         { label: "Vue d'ensemble", href: "/dashboard", desc: "KPIs, dossiers récents, alertes" },
         { label: "Dossiers BAF", href: "/dashboard/dossiers", desc: "Gestion des dossiers de remboursement" },
         { label: "Patients", href: "/dashboard/patients", desc: "Registre des patients" },
-        { label: "Prédiction IA", href: "/dashboard/prediction", desc: "Analyse XGBoost d'un dossier" },
+        { label: "Prédiction IA", href: "/dashboard/prediction", desc: "Analyse SihaIQ d'un dossier" },
         { label: "Performance", href: "/dashboard/performance", desc: "Analytics par caisse et service" },
         { label: "Forclusion", href: "/dashboard/forclusion", desc: "Alertes délai légal 60 jours" },
         { label: "Encours A/R", href: "/dashboard/encours", desc: "Vieillissement des créances" },

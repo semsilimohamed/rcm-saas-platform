@@ -49,7 +49,6 @@ function formatDate(iso: string) {
 function payerStyle(payer: string) {
   if (payer === "CNOPS") return { bg: "#EEEDFB", color: "#1E40AF" };
   if (payer === "CNSS")  return { bg: "#F0FDF4", color: "#166534" };
-  if (payer === "AMO")   return { bg: "#FFF7ED", color: "#9A3412" };
   if (payer === "FAR")   return { bg: "#EFF6FF", color: "#1D4ED8" };
   return { bg: "#F5F3FF", color: "#6D28D9" };
 }

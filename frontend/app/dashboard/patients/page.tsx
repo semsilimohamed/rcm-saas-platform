@@ -20,9 +20,7 @@ interface Patient {
 function payerStyle(payer: string | null) {
   if (payer === "CNOPS") return { bg: "#EEEDFB", color: "#1E40AF" };
   if (payer === "CNSS")  return { bg: "#F0FDF4", color: "#166534" };
-  if (payer === "AMO")   return { bg: "#FFF7ED", color: "#9A3412" };
   if (payer === "FAR")   return { bg: "#EFF6FF", color: "#1D4ED8" };
-  if (payer === "AMO-Tadamon") return { bg: "#F5F3FF", color: "#6D28D9" };
   return { bg: "#F3F4F6", color: "#5C5852" };
 }
 
@@ -224,8 +222,6 @@ export default function PatientsPage() {
                     <option value="CNOPS">CNOPS</option>
                     <option value="CNSS">CNSS</option>
                     <option value="FAR">FAR</option>
-                    <option value="AMO">AMO</option>
-                    <option value="AMO-Tadamon">AMO-Tadamon</option>
                   </select>
                 </div>
                 <div style={s.fieldCheckboxes}>

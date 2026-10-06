@@ -64,7 +64,7 @@ export default function PerformancePage() {
   }, []);
 
   // Payer breakdown
-  const payers = ["CNOPS", "CNSS", "AMO", "AMO-Tadamon"];
+  const payers = ["CNOPS", "CNSS", "FAR"];
   const payerData = payers.map(p => {
     const pClaims = claims.filter(c => c.insurance_type === p);
     const rejected = pClaims.filter(c => c.status === "rejected").length;
@@ -290,7 +290,7 @@ export default function PerformancePage() {
 function payerBadge(payer: string) {
   if (payer === "CNOPS") return { background: "#EEEDFB", color: "#1E40AF" };
   if (payer === "CNSS")  return { background: "#F0FDF4", color: "#166534" };
-  if (payer === "AMO")   return { background: "#FFF7ED", color: "#9A3412" };
+  if (payer === "FAR")   return { background: "#EFF6FF", color: "#1D4ED8" };
   return { background: "#F5F3FF", color: "#6D28D9" };
 }
 

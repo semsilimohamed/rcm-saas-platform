@@ -298,7 +298,7 @@ export default function RegisterPage() {
           <div className="vz-grid" aria-hidden="true" />
           <div style={s.rightInner}>
             {[
-              { icon: "🧠", title: "Prédiction IA des rejets", desc: "XGBoost analyse 17 critères de vos dossiers BAF avant soumission." },
+              { icon: "🧠", title: "Prédiction IA des rejets", desc: "SihaIQ analyse 7 critères de vos dossiers BAF avant soumission." },
               { icon: "📊", title: "Tableau de bord financier", desc: "Encours A/R, taux de rejet, vieillissement — en temps réel." },
               { icon: "⚠️", title: "Alertes forclusion", desc: "Notifications automatiques J-15, J-7, J-1 avant le délai légal." },
               { icon: "🔒", title: "Conforme CNDP Loi 09-08", desc: "Aucune donnée patient réelle. Architecture souveraine." },

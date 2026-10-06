@@ -76,7 +76,7 @@ function statusLabel(status: string) {
 function payerStyle(payer: string) {
   if (payer === "CNOPS") return { bg: "#EEEDFB", color: "#1E40AF" };
   if (payer === "CNSS")  return { bg: "#F0FDF4", color: "#166534" };
-  if (payer === "AMO")   return { bg: "#FFF7ED", color: "#9A3412" };
+  if (payer === "FAR")   return { bg: "#FFF7ED", color: "#9A3412" };
   return { bg: "#F5F3FF", color: "#6D28D9" };
 }
 
@@ -217,7 +217,7 @@ export default function DashboardPage() {
       }
       const patient = await pRes.json();
 
-      // 2. Create claim (XGBoost score calculated automatically by backend)
+      // 2. Create claim (SihaIQ score calculated automatically by backend)
       const cRes = await fetch(`${API_URL}/claims`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -366,12 +366,6 @@ export default function DashboardPage() {
               {userName} · {new Date().toLocaleDateString("fr-MA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </div>
           </div>
-          <div style={s.topBtns}>
-            <button className="db-btn-ghost" style={s.topBtn}>Exporter</button>
-            <button className="db-btn-primary" style={s.topBtnPrimary} onClick={openModal}>
-              + Nouveau dossier
-            </button>
-          </div>
         </div>
 
         {/* CONTENT */}
@@ -417,7 +411,7 @@ export default function DashboardPage() {
                 <span style={s.cardTitle}>Répartition par caisse</span>
                 <a href="/dashboard/performance" className="db-link" style={s.cardAction}>Voir détail →</a>
               </div>
-              {["CNOPS", "CNSS", "AMO", "AMO-Tadamon"].map((payer, i) => {
+              {["CNOPS", "CNSS", "FAR"].map((payer, i) => {
                 const count = claims.filter(c => c.insurance_type === payer).length;
                 const pct   = claims.length ? Math.round((count / claims.length) * 100) : 0;
                 const colors = ["#5B4FE8", "#1D9E75", "#F2711C", "#9CA3AF"];
@@ -435,7 +429,7 @@ export default function DashboardPage() {
               <div style={s.aiCard}>
                 <div style={s.aiLbl}>Score de risque IA moyen</div>
                 <div style={s.aiVal}>{avgRisk}%</div>
-                <div style={s.aiSub}>Moteur XGBoost · portefeuille actuel</div>
+                <div style={s.aiSub}>Moteur SihaIQ · portefeuille actuel</div>
               </div>
             </div>
 
@@ -657,7 +651,7 @@ export default function DashboardPage() {
 
                 <div style={s.infoBox}>
                   <strong>Format attendu des colonnes :</strong><br />
-                  patient_name · cin · insurance_type (CNOPS / CNSS / AMO / AMO-Tadamon)<br />
+                  patient_name · cin · insurance_type (CNOPS / CNSS / FAR)<br />
                   service_type · service_date (YYYY-MM-DD) · amount
                 </div>
 
@@ -797,7 +791,7 @@ export default function DashboardPage() {
                       value={manualForm.insurance_type}
                       onChange={e => setManualForm({ ...manualForm, insurance_type: e.target.value })}
                     >
-                      {["CNOPS", "CNSS", "AMO", "AMO-Tadamon"].map(p => (
+                      {["CNOPS", "CNSS", "FAR"].map(p => (
                         <option key={p}>{p}</option>
                       ))}
                     </select>
@@ -836,7 +830,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div style={s.aiHint}>
-                  🧠 Le score de risque IA sera calculé automatiquement par XGBoost à la création.
+                  🧠 Le score de risque IA sera calculé automatiquement par SihaIQ à la création.
                 </div>
 
                 <button

@@ -20,7 +20,7 @@ export default function ConditionsPage() {
           },
           {
             title: "2. Description du service",
-            body: `SihaIQ est une plateforme SaaS (Software as a Service) de gestion du cycle de revenus (Revenue Cycle Management) destinée aux établissements de santé privés marocains. La Plateforme permet la prédiction IA des rejets de remboursement CNOPS/CNSS/AMO, la gestion des dossiers BAF, le suivi des délais de forclusion, et l'analyse financière du portefeuille de créances.`
+            body: `SihaIQ est une plateforme SaaS (Software as a Service) de gestion du cycle de revenus (Revenue Cycle Management) destinée aux établissements de santé privés marocains. La Plateforme permet la prédiction IA des rejets de remboursement CNOPS/CNSS/FAR, la gestion des dossiers BAF, le suivi des délais de forclusion, et l'analyse financière du portefeuille de créances.`
           },
           {
             title: "3. Propriété intellectuelle",

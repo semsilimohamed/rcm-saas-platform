@@ -193,7 +193,7 @@ export default function LandingPage() {
       });
       mk("chart-payer", {
         type: "doughnut",
-        data: { labels: ["CNOPS","CNSS","AMO","AMO-Tadamon"], datasets: [{ data: [48,27,18,7], backgroundColor: ["#534AB7","#1D9E75","#BA7517","#D3D1C7"], borderWidth: 2, borderColor: "#FAFAF7" }] },
+        data: { labels: ["CNOPS","CNSS","FAR"], datasets: [{ data: [48,27,25], backgroundColor: ["#534AB7","#1D9E75","#BA7517"], borderWidth: 2, borderColor: "#FAFAF7" }] },
         options: { ...baseAnim, responsive: true, maintainAspectRatio: false, cutout: "62%", plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c: { label: string; raw: number }) => c.label + ": " + c.raw + "%" } } } },
       });
       const seed = (n: number) => { let s = n; return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; };
@@ -576,12 +576,12 @@ export default function LandingPage() {
                 ))}
               </div>
               <div className="hv-bars">
-                {[48, 27, 18, 7].map((w, i) => (
+                {[48, 27, 25].map((w, i) => (
                   <div key={i} className="hv-bar-row">
                     <div className="hv-bar-track">
-                      <div className="hv-bar-fill" style={{ width: `${w}%`, background: ["#5B4FE8","#1D9E75","#F2711C","#9CA3AF"][i] }}/>
+                      <div className="hv-bar-fill" style={{ width: `${w}%`, background: ["#5B4FE8","#1D9E75","#F2711C"][i] }}/>
                     </div>
-                    <span className="hv-bar-lbl">{["CNOPS","CNSS","AMO","AMO-T"][i]} {w}%</span>
+                    <span className="hv-bar-lbl">{["CNOPS","CNSS","FAR"][i]} {w}%</span>
                   </div>
                 ))}
               </div>
@@ -607,16 +607,16 @@ export default function LandingPage() {
               </div>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#3C3489" }}>Score IA moyen</div>
-                <div style={{ fontSize: 10, color: "#7F77DD" }}>XGBoost · actuel</div>
+                <div style={{ fontSize: 10, color: "#7F77DD" }}>SihaIQ · actuel</div>
               </div>
             </div>
 
             <div className="hv-badge hv-shap" id="hv-shap">
               <div style={{ fontSize: 9, fontWeight: 700, color: "#5B4FE8", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 6 }}>Top facteurs de rejet</div>
               {[
-                { lbl: "Immat. invalide", w: 82, color: "#E24B4A" },
-                { lbl: "NGAP incorrect", w: 64, color: "#F2711C" },
-                { lbl: "PEC absente", w: 48, color: "#BA7517" },
+                { lbl: "Montant élevé ", w:  82, color: "#E24B4A" },
+                { lbl: "	Durée de séjour élevée ", w:  64, color: "#F2711C" },
+                { lbl: "Part organisme atypique ", w:  48, color: "#BA7517" },
               ].map(f => (
                 <div key={f.lbl} style={{ marginBottom: 5 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#5C5852", marginBottom: 2 }}>
@@ -670,12 +670,12 @@ export default function LandingPage() {
               <div className="module-icon baf">🏥</div>
               <div className="module-name">Gestion BAF & RCM</div>
               <div className="module-desc">
-                Contrôlez vos recettes. Prédisez les rejets CNOPS · CNSS · AMO avant soumission.
+                Contrôlez vos recettes. Prédisez les rejets CNOPS · CNSS · FAR avant soumission.
                 Récupérez chaque dirham avant forclusion.
               </div>
               <div className="module-features">
                 {[
-                  "Prédiction IA des rejets XGBoost (AUC 0.87)",
+                  "Prédiction IA des rejets SihaIQ (AUC 0.768)",
                   "Explicabilité SHAP en français — zéro boîte noire",
                   "File de travail K-Means priorisée",
                   "Forclusion engine — alertes J-15 à J-1",
@@ -736,7 +736,7 @@ export default function LandingPage() {
             {[
               { lbl: "Dossiers analysés", val: "3 000", sub: "dataset BAF synthétique", color: "#534AB7", count: "3000", fmt: "thousands" },
               { lbl: "Taux de rejet", val: "36.5%", sub: "1 095 dossiers rejetés", color: "#E24B4A", count: "36.5", fmt: "pct1" },
-              { lbl: "Précision XGBoost", val: "AUC 0.87", sub: "17 features NGAP", color: "#1D9E75", count: "0.87", fmt: "auc" },
+              { lbl: "Précision SihaIQ", val: "AUC 0.768", sub: "7 features NGAP", color: "#1D9E75", count: "0.768", fmt: "auc" },
               { lbl: "Délai forclusion", val: "60 jours", sub: "délai légal Maroc", color: "#BA7517", count: "60", fmt: "jours" },
             ].map(k => (
               <div key={k.lbl} style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 12, padding: "20px 16px", position: "relative", overflow: "hidden" }}>
@@ -749,10 +749,10 @@ export default function LandingPage() {
           </div>
           <div style={{ display: "flex", gap: 0, marginTop: 16 }}>
             {[
-              { lbl: "PEC", sub: "Autorisation caisse", note: "CNOPS · CNSS · AMO", highlight: false },
+              { lbl: "PEC", sub: "Autorisation caisse", note: "CNOPS · CNSS · FAR", highlight: false },
               { lbl: "Droits", sub: "Vérification immat.", note: "CIN · éligibilité", highlight: false },
               { lbl: "BAF", sub: "Création dossier", note: "NGAP · documents", highlight: false },
-              { lbl: "IA", sub: "Prédiction XGBoost", note: "score · SHAP", highlight: true },
+              { lbl: "IA", sub: "Prédiction SihaIQ", note: "score · SHAP", highlight: true },
               { lbl: "Envoi", sub: "Soumission bordereau", note: "PDF · caisse", highlight: false },
               { lbl: "Rejet?", sub: "Contestation", note: "J-60 deadline", highlight: false },
               { lbl: "Recouvr.", sub: "Remboursement", note: "trésorerie", highlight: false },
@@ -781,23 +781,22 @@ export default function LandingPage() {
               <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 10, marginBottom: 12, fontSize: 11, color: "var(--text2)" }}>
                 <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#534AB7", marginRight: 4, verticalAlign: "middle" }}></span>CNOPS 48%</span>
                 <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#1D9E75", marginRight: 4, verticalAlign: "middle" }}></span>CNSS 27%</span>
-                <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#BA7517", marginRight: 4, verticalAlign: "middle" }}></span>AMO 18%</span>
-                <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#D3D1C7", marginRight: 4, verticalAlign: "middle" }}></span>AMO-Tadamon 7%</span>
+                <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#BA7517", marginRight: 4, verticalAlign: "middle" }}></span>FAR 25%</span>
               </div>
               <div style={{ position: "relative", width: "100%", height: 180 }}>
-                <canvas id="chart-payer" role="img" aria-label="Répartition des rejets par caisse">CNOPS 48%, CNSS 27%, AMO 18%, AMO-Tadamon 7%.</canvas>
+                <canvas id="chart-payer" role="img" aria-label="Répartition des rejets par caisse">CNOPS 48%, CNSS 27%, FAR 25%.</canvas>
               </div>
             </div>
           </div>
           <div style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 12, padding: 20, marginTop: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>Modèle XGBoost — score de risque par dossier</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>Modèle SihaIQ — score de risque par dossier</div>
             <div style={{ display: "flex", gap: 16, marginBottom: 10, fontSize: 11, color: "var(--text2)" }}>
               <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#E24B4A", marginRight: 4, verticalAlign: "middle" }}></span>Risque ÉLEVÉ (&gt;0.65)</span>
               <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#BA7517", marginRight: 4, verticalAlign: "middle" }}></span>Risque MODÉRÉ (0.35–0.65)</span>
               <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#1D9E75", marginRight: 4, verticalAlign: "middle" }}></span>Risque FAIBLE (&lt;0.35)</span>
             </div>
             <div style={{ position: "relative", width: "100%", height: 120 }}>
-              <canvas id="chart-scatter" role="img" aria-label="Scatter plot des scores XGBoost sur 60 dossiers">Scores de risque distribués sur 60 dossiers.</canvas>
+              <canvas id="chart-scatter" role="img" aria-label="Scatter plot des scores SihaIQ sur 60 dossiers">Scores de risque distribués sur 60 dossiers.</canvas>
             </div>
           </div>
         </div>
@@ -817,7 +816,7 @@ export default function LandingPage() {
           {activeModule === "baf" ? (
             <div className="features-grid">
               {[
-                { icon: "🧠", cls: "feat-icon-v", title: "Prédiction XGBoost", desc: "17 features NGAP analysées en temps réel. AUC 0.87. Score ÉLEVÉ / MODÉRÉ / FAIBLE par dossier." },
+                { icon: "🧠", cls: "feat-icon-v", title: "Prédiction SihaIQ", desc: "7 features NGAP analysées en temps réel. AUC 0.768. Score ÉLEVÉ / MODÉRÉ / FAIBLE par dossier." },
                 { icon: "💡", cls: "feat-icon-o", title: "SHAP Explicabilité", desc: "Top 3 facteurs de rejet en français avec recommandations d'action concrètes. Zéro boîte noire." },
                 { icon: "📋", cls: "feat-icon-v", title: "File de travail K-Means", desc: "4 clusters priorisés : risque × valeur × forclusion. Chaque agent sait quoi faire." },
                 { icon: "⏰", cls: "feat-icon-o", title: "Forclusion Engine", desc: "Buckets 0–60j. Alertes J-15, J-7, J-3, J-1. Zéro perte légale évitable." },
@@ -942,7 +941,7 @@ export default function LandingPage() {
               <div className="footer-brand-name">SihaIQ</div>
               <div className="footer-brand-desc">
                 Intelligence financière pour les hôpitaux privés marocains.
-                Gestion BAF · Comptabilité · CNOPS · CNSS · AMO.
+                Gestion BAF · Comptabilité · CNOPS · CNSS · FAR.
               </div>
             </div>
             <div className="footer-cols">

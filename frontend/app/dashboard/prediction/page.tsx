@@ -30,8 +30,6 @@ const FEATURE_LABELS: Record<string, string> = {
   "org_CNOPS": "Régime CNOPS",
   "org_CNSS": "Régime CNSS",
   "org_FAR": "Régime FAR",
-  "org_AMO": "Régime AMO",
-  "org_AMO-Tadamon": "Régime AMO-Tadamon",
 };
 
 const MOIS_LABELS = [
@@ -138,7 +136,7 @@ export default function PredictionPage() {
         <div style={s.topbar}>
           <div>
             <div style={s.topTitle}>Prédiction IA</div>
-            <div style={s.topDate}>Moteur XGBoost · {userName}</div>
+            <div style={s.topDate}>Moteur SihaIQ · {userName}</div>
           </div>
           <div style={s.tabBar}>
             <button
@@ -180,8 +178,6 @@ export default function PredictionPage() {
                         <option value="CNOPS">CNOPS</option>
                         <option value="CNSS">CNSS</option>
                         <option value="FAR">FAR</option>
-                        <option value="AMO">AMO</option>
-                        <option value="AMO-Tadamon">AMO-Tadamon</option>
                       </select>
                     </div>
 

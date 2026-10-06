@@ -27,7 +27,7 @@ const DOSSIERS = [
     ],
   },
   {
-    id: "BAF-2026-0203", caisse: "AMO-Tadamon", montant: "7 120 MAD", acte: "B40",
+    id: "BAF-2026-0203", caisse: "FAR", montant: "7 120 MAD", acte: "B40",
     score: 0.57, niveau: "RISQUE MODÉRÉ", color: "#E8A33D", verdict: "Vérifier codage NGAP", jours: 17,
     shap: [
       { lbl: "Codage NGAP incertain", w: 66 },
@@ -209,7 +209,7 @@ export default function LoginPage() {
       },
     }));
 
-    /* ---------- Main pipeline loop: dossier → XGBoost → SHAP → verdict ---------- */
+    /* ---------- Main pipeline loop: dossier → SihaIQ → SHAP → verdict ---------- */
     const scoreState = { v: 0 };
     const joursState = { v: 60 };
     const masterTl = gsap.timeline({ repeat: -1, delay: 0.5 });
@@ -225,7 +225,7 @@ export default function LoginPage() {
         .call(() => { applyDossier(d); setRing(0); })
         /* 1 — dossier enters */
         .fromTo(elDossierCard, { x: -28, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.out" })
-        /* 2 — flow to XGBoost, score ring fills */
+        /* 2 — flow to SihaIQ, score ring fills */
         .to(lines[0], { scaleX: 1, duration: 0.35, ease: "power1.inOut" }, "+=0.15")
         .to(scoreState, {
           v: d.score, duration: 0.9, ease: "power2.out",
@@ -419,7 +419,7 @@ export default function LoginPage() {
               {/* Connector 1 */}
               <div style={s.vzLineTrack}><div className="vz-line-fill" style={{ ...s.vzLineFill, background: "#5B4FE8" }} /></div>
 
-              {/* Stage 2 — XGBoost score */}
+              {/* Stage 2 — SihaIQ score */}
               <div style={s.vzStageRow}>
                 <svg width="64" height="64" viewBox="0 0 64 64" style={{ flexShrink: 0 }}>
                   <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
@@ -431,9 +431,9 @@ export default function LoginPage() {
                   <span className="vz-score" style={s.vzScore}>0%</span>
                 </div>
                 <div style={{ marginLeft: 24 }}>
-                  <div style={s.vzStageTitle}>Score XGBoost</div>
+                  <div style={s.vzStageTitle}>Score SihaIQ</div>
                   <div className="vz-niveau" style={s.vzNiveau}>RISQUE ÉLEVÉ</div>
-                  <div style={s.vzStageSub}>17 features · AUC 0.87</div>
+                  <div style={s.vzStageSub}>7 features · AUC 0.768</div>
                 </div>
               </div>
 

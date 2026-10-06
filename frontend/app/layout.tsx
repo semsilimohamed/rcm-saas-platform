@@ -25,7 +25,7 @@ const dmMono = DM_Mono({
 
 export const metadata: Metadata = {
   title: "SihaIQ RCM — Intelligence artificielle pour les hôpitaux marocains",
-  description: "Prédiction IA des rejets CNOPS/CNSS/AMO, tableau de bord financier temps réel, file de travail intelligente. Plateforme RCM souveraine et conforme CNDP.",
+  description: "Prédiction IA des rejets CNOPS/CNSS/FAR, tableau de bord financier temps réel, file de travail intelligente. Plateforme RCM souveraine et conforme CNDP.",
 };
 
 export default function RootLayout({

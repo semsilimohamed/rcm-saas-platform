@@ -54,7 +54,6 @@ function statusLabel(status: string) {
 function payerStyle(payer: string) {
   if (payer === "CNOPS") return { bg: "#EEEDFB", color: "#1E40AF" };
   if (payer === "CNSS")  return { bg: "#F0FDF4", color: "#166534" };
-  if (payer === "AMO")   return { bg: "#FFF7ED", color: "#9A3412" };
   if (payer === "FAR")   return { bg: "#EFF6FF", color: "#1D4ED8" };
   return { bg: "#F5F3FF", color: "#6D28D9" };
 }
@@ -540,7 +539,7 @@ export default function DossiersPage() {
                   <div style={{ ...s.detailSection, borderBottom: "none" }}>
                     <div style={s.detailSectionTitle}>Feedback IA</div>
                     <div style={{ fontSize: 11, color: "#5C5852", background: "#F2F1EE", borderRadius: 6, padding: "8px 10px" }}>
-                      Résultat enregistré — le modèle XGBoost apprendra de ce dossier lors du prochain cycle d&apos;entraînement.
+                      Résultat enregistré — le modèle SihaIQ apprendra de ce dossier lors du prochain cycle d&apos;entraînement.
                     </div>
                   </div>
                 )}

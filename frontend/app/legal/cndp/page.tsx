@@ -37,7 +37,7 @@ export default function CNDPPage() {
 
         <div style={s.section}>
           <h2 style={s.h2}>Adaptation à la Loi 54-23 (fusion CNOPS → CNSS)</h2>
-          <p style={s.body}>La Loi 54-23 portant réforme de l&apos;Assurance Maladie Obligatoire entraîne la migration progressive de CNOPS vers CNSS. SihaIQ intègre un mécanisme de détection automatique de dérive du modèle lors de cette transition réglementaire. Le modèle XGBoost sera automatiquement réentraîné sur les nouvelles règles de remboursement CNSS dès qu&apos;un volume suffisant de données labellisées sera disponible.</p>
+          <p style={s.body}>La Loi 54-23 portant réforme de l&apos;Assurance Maladie Obligatoire entraîne la migration progressive de CNOPS vers CNSS. SihaIQ intègre un mécanisme de détection automatique de dérive du modèle lors de cette transition réglementaire. Le modèle SihaIQ sera automatiquement réentraîné sur les nouvelles règles de remboursement CNSS dès qu&apos;un volume suffisant de données labellisées sera disponible.</p>
         </div>
 
         <div style={s.section}>

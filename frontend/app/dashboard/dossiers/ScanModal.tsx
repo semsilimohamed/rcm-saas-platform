@@ -15,7 +15,7 @@ interface Extracted {
   mois: number | null;
 }
 
-const SEUIL = 0.20;
+const SEUIL = 0.40;
 
 export default function ScanModal({
   onClose,
@@ -189,8 +189,6 @@ export default function ScanModal({
                     <option value="CNOPS">CNOPS</option>
                     <option value="CNSS">CNSS</option>
                     <option value="FAR">FAR</option>
-                    <option value="AMO">AMO</option>
-                    <option value="AMO-Tadamon">AMO-Tadamon</option>
                   </select>
                 </div>
                 <div style={s.field}>

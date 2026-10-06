@@ -66,10 +66,9 @@ function formatMonth(m: string) {
 }
 
 const PAYER_COLORS: Record<string, { bg: string; color: string }> = {
-  "CNOPS":       { bg: "#E6F1FB", color: "#1E40AF" },
-  "CNSS":        { bg: "#F0FDF4", color: "#166534" },
-  "AMO":         { bg: "#FFF7ED", color: "#9A3412" },
-  "AMO-Tadamon": { bg: "#F5F3FF", color: "#6D28D9" },
+  "CNOPS": { bg: "#E6F1FB", color: "#1E40AF" },
+  "CNSS":  { bg: "#F0FDF4", color: "#166534" },
+  "FAR":   { bg: "#EFF6FF", color: "#1D4ED8" },
 };
 
 export default function FinancierPage() {
