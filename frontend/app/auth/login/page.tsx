@@ -440,7 +440,7 @@ export default function LoginPage() {
                 <div style={{ marginLeft: 24 }}>
                   <div style={s.vzStageTitle}>Score SihaIQ</div>
                   <div className="vz-niveau" style={s.vzNiveau}>RISQUE ÉLEVÉ</div>
-                  <div style={s.vzStageSub}>7 features · AUC 0.768</div>
+                  <div style={s.vzStageSub}>5 variables · Random Forest</div>
                 </div>
               </div>
 

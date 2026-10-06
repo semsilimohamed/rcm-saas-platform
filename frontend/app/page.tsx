@@ -681,9 +681,9 @@ export default function LandingPage() {
               </div>
               <div className="module-features">
                 {[
-                  "Prédiction IA des rejets SihaIQ (AUC 0.768)",
+                  "Prédiction IA des rejets SihaIQ (Random Forest)",
                   "Explicabilité SHAP en français — zéro boîte noire",
-                  "File de travail K-Means priorisée",
+                  "Saisie unifiée : formulaire, import CSV, scan OCR",
                   "Forclusion engine — alertes J-15 à J-1",
                   "Bordereau PDF de soumission automatique",
                   "Disposition codes : contestation → recouvrement",
@@ -740,9 +740,9 @@ export default function LandingPage() {
           </p>
           <div className="problem-kpis" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginTop: 40 }}>
             {[
-              { lbl: "Dossiers analysés", val: "3 000", sub: "dataset BAF synthétique", color: "#534AB7", count: "3000", fmt: "thousands" },
+              { lbl: "Jeu de données synthétique", val: "3 000", sub: "dossiers BAF simulés", color: "#534AB7", count: "3000", fmt: "thousands" },
               { lbl: "Taux de rejet", val: "36.5%", sub: "1 095 dossiers rejetés", color: "#E24B4A", count: "36.5", fmt: "pct1" },
-              { lbl: "Précision SihaIQ", val: "AUC 0.768", sub: "7 features NGAP", color: "#1D9E75", count: "0.768", fmt: "auc" },
+              { lbl: "Variables du modèle", val: "5", sub: "séjour · montant · part · mois · organisme", color: "#1D9E75", count: "5", fmt: "int" },
               { lbl: "Délai forclusion", val: "60 jours", sub: "délai légal Maroc", color: "#BA7517", count: "60", fmt: "jours" },
             ].map(k => (
               <div key={k.lbl} style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 12, padding: "20px 16px", position: "relative", overflow: "hidden" }}>
@@ -822,9 +822,9 @@ export default function LandingPage() {
           {activeModule === "baf" ? (
             <div className="features-grid">
               {[
-                { icon: "🧠", cls: "feat-icon-v", title: "Prédiction SihaIQ", desc: "7 features NGAP analysées en temps réel. AUC 0.768. Score ÉLEVÉ / MODÉRÉ / FAIBLE par dossier." },
+                { icon: "🧠", cls: "feat-icon-v", title: "Prédiction SihaIQ", desc: "Durée de séjour, montant, part organisme, mois et organisme analysés à la saisie. Score ÉLEVÉ / MODÉRÉ / FAIBLE par dossier." },
                 { icon: "💡", cls: "feat-icon-o", title: "SHAP Explicabilité", desc: "Top 3 facteurs de rejet en français avec recommandations d'action concrètes. Zéro boîte noire." },
-                { icon: "📋", cls: "feat-icon-v", title: "File de travail K-Means", desc: "4 clusters priorisés : risque × valeur × forclusion. Chaque agent sait quoi faire." },
+                { icon: "📋", cls: "feat-icon-v", title: "Saisie unifiée", desc: "Formulaire, import CSV ou scan OCR : un seul dossier, identifié par le Numéro d’Entrée." },
                 { icon: "⏰", cls: "feat-icon-o", title: "Forclusion Engine", desc: "Buckets 0–60j. Alertes J-15, J-7, J-3, J-1. Zéro perte légale évitable." },
                 { icon: "🔄", cls: "feat-icon-v", title: "Feedback Loop ML", desc: "Chaque résultat alimente training_feedback. FLAML réentraîne à 500 labels." },
                 { icon: "🔒", cls: "feat-icon-o", title: "CNDP Loi 09-08", desc: "Données synthétiques certifiées. Audit immuable. RLS PostgreSQL multi-tenant." },
