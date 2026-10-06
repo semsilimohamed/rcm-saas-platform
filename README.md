@@ -30,14 +30,6 @@ The billing office (*BAF, Bureau d'Admission et de Facturation*) usually tracks 
 
 **Work in progress:** password reset by email, batch (CSV) prediction on the *Prédiction IA* page, demo-data seeding during onboarding. See the [roadmap](#roadmap).
 
-## Screenshots
-
-| Dashboard | Claims (dossiers) | AI prediction |
-|---|---|---|
-| ![Dashboard](docs/img/dashboard.png) | ![Dossiers](docs/img/dossiers.png) | ![Prediction](docs/img/prediction.png) |
-
-*Placeholders: see [docs/img/README.md](docs/img/README.md).*
-
 ## Architecture
 
 ```mermaid
