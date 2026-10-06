@@ -1,4 +1,7 @@
 "use client";
+
+// Landing page (/): marketing site with hero, problem section, Chart.js visuals (loaded from CDN),
+// RCM cycle image, module overview and footer links. GSAP drives the animations. No API calls.
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import NextImage from "next/image";
@@ -16,6 +19,9 @@ const HERO_FLOATS: { top: string; left: string; kind: "dot" | "plus" | "ring" | 
   { top: "90%", left: "88%", kind: "ring",    color: "#F2711C", size: 14 },
 ];
 
+/**
+ * Public landing page. Adds a Dashboard link in the nav when a token is in localStorage.
+ */
 export default function LandingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [scrolled, setScrolled] = useState(false);

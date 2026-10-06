@@ -1,5 +1,10 @@
+// Legal page: accessibility statement. Static.
+
 import Link from "next/link";
 
+/**
+ * Accessibility statement.
+ */
 export default function AccessibilitePage() {
   return (
     <div style={s.page}>

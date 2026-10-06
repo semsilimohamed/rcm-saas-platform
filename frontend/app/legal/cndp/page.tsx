@@ -1,5 +1,10 @@
+// Legal page: personal-data protection notice (CNDP, Loi 09-08). Static.
+
 import Link from "next/link";
 
+/**
+ * CNDP / Loi 09-08 notice.
+ */
 export default function CNDPPage() {
   return (
     <div style={s.page}>

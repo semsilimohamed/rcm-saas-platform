@@ -1,5 +1,8 @@
 "use client";
 
+// Encours page (/dashboard/encours): accounts-receivable aging in 5 buckets (0-30, 31-45, 46-55,
+// 56-60 days, forclos) with a bar chart and clickable bucket filter. Data: GET /claims/with-patients.
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -67,6 +70,9 @@ function getBucket(daysInAR: number): Bucket {
   return BUCKETS[4];
 }
 
+/**
+ * A/R aging view.
+ */
 export default function EncoursPage() {
   const [claims, setClaims]         = useState<Claim[]>([]);
   const [loading, setLoading]       = useState(true);

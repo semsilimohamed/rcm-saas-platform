@@ -1,5 +1,10 @@
+// Sitemap page listing public and dashboard routes. Static.
+
 import Link from "next/link";
 
+/**
+ * Site map.
+ */
 export default function SitemapPage() {
   const sections = [
     {

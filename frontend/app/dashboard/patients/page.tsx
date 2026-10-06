@@ -1,5 +1,9 @@
 "use client";
 
+// Patients page (/dashboard/patients): searchable list of pseudonymous patients (NE number, payer,
+// age bucket, flags), detail panel, add form (POST /patients/) and role-restricted delete
+// (DELETE /patients/{id}).
+
 import { useEffect, useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -28,6 +32,9 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("fr-MA", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+/**
+ * Patient registry keyed on NE number.
+ */
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading]   = useState(true);

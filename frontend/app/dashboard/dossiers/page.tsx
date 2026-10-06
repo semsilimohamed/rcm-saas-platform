@@ -1,4 +1,9 @@
 "use client";
+
+// Dossiers page (/dashboard/dossiers): claims table with risk score, filters and detail panel.
+// Opens the manual / CSV / scan intake modals, records outcomes (PATCH /claims/{id}/status,
+// incl. contestation), deletes claims with a reason, and generates bordereau PDFs
+// (POST /bordereau/generate) for selected claims.
 import ScanModal from "./ScanModal";
 import ManualClaimModal from "./ManualClaimModal";
 import { useEffect, useState } from "react";
@@ -66,6 +71,9 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("fr-MA", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+/**
+ * Claims work queue for billing (BAF) agents.
+ */
 export default function DossiersPage() {
   const [claims, setClaims]               = useState<Claim[]>([]);
   const [loading, setLoading]             = useState(true);

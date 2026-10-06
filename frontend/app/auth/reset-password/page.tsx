@@ -1,4 +1,7 @@
 "use client";
+
+// Reset-password page (/auth/reset-password?token=...): posts the token and new password to
+// POST /auth/reset-password. WIP: depends on the email flow, not implemented yet.
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -74,6 +77,9 @@ function ResetForm() {
   );
 }
 
+/**
+ * New-password form for a reset token (WIP).
+ */
 export default function ResetPasswordPage() {
   return <Suspense><ResetForm /></Suspense>;
 }

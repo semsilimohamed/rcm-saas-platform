@@ -1,5 +1,8 @@
 "use client";
 
+// Register page (/auth/register): creates a hospital tenant and its admin user via POST /auth/register,
+// stores the session in localStorage and continues to /onboarding.
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -25,6 +28,9 @@ function LogoMark({ size = 36 }: { size?: number }) {
   );
 }
 
+/**
+ * Hospital sign-up form.
+ */
 export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({

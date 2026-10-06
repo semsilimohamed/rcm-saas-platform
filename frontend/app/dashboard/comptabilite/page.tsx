@@ -1,5 +1,9 @@
 "use client";
 
+// Comptabilite page (/dashboard/comptabilite), admin/director only: DAF view with profitability,
+// cash / BFR, activity and budget sections for a month (GET /comptabilite/summary) and a data-entry
+// modal for charges, cash position and admissions (POST /comptabilite/*).
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -84,6 +88,9 @@ const PERIODS = [
   { key: "2026-04", lbl: "Avr 2026" },
 ];
 
+/**
+ * Hospital accounting (DAF) module.
+ */
 export default function ComptabilitePage() {
   const [data, setData]       = useState<ComptaData | null>(null);
   const [loading, setLoading] = useState(true);

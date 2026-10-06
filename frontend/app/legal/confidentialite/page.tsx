@@ -1,5 +1,10 @@
+// Legal page: privacy policy. Static.
+
 import Link from "next/link";
 
+/**
+ * Privacy policy.
+ */
 export default function ConfidentialitePage() {
   return (
     <div style={s.page}>
