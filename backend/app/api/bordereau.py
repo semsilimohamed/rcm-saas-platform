@@ -1,3 +1,5 @@
+"""Bordereau router (``/bordereau``): PDF transmission slip for a set of claims sent to one payer (fpdf2)."""
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -14,6 +16,7 @@ import io
 router = APIRouter(prefix="/bordereau", tags=["Bordereau"], dependencies=[Depends(get_current_user)])
 
 class BordereauRequest(BaseModel):
+    """Claims to include, target payer and hospital header details."""
     claim_ids: List[UUID]
     payer: str
     hospital_name: Optional[str] = "Etablissement de sante"
@@ -27,6 +30,19 @@ def generate_bordereau(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Generate a bordereau PDF for the selected claims of the caller's tenant.
+
+    Args:
+        req: Claim ids, payer and hospital details.
+        current_user: Injected authenticated user.
+        db: Database session.
+
+    Returns:
+        StreamingResponse: ``application/pdf`` attachment named ``BRD-<timestamp>.pdf``.
+
+    Raises:
+        HTTPException: 400 if no claim is selected, 404 if none belongs to the tenant.
+    """
     if not req.claim_ids:
         raise HTTPException(status_code=400, detail="Aucun dossier selectionne.")
     stmt = text("""

@@ -1,3 +1,5 @@
+"""Financial dashboard router (``/financier``), restricted to admin / director: revenue-cycle KPIs from claims."""
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -14,6 +16,14 @@ router = APIRouter(
 )
 
 def get_period_filter(period: str):
+    """Build the SQL date filter for a reporting period.
+
+    Args:
+        period: ``month``, ``quarter``, ``year``; anything else means all time.
+
+    Returns:
+        str: An ``AND c.created_at >= ...`` clause computed server-side, or an empty string.
+    """
     now = datetime.utcnow()
     if period == "month":
         start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -32,6 +42,17 @@ def get_financier_summary(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Return financial KPIs for the period.
+
+    Args:
+        period: ``all`` (default), ``month``, ``quarter`` or ``year``.
+        current_user: Injected authenticated user (admin / director).
+        db: Database session.
+
+    Returns:
+        dict: kpis (amounts and counts by status, recovery and rejection rates,
+        amount at risk incl. forclos), payer_breakdown, monthly_trend (6 months), top_causes.
+    """
     tenant_id = current_user.tenant_id
     period_filter = get_period_filter(period)
 

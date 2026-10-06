@@ -1,3 +1,9 @@
+"""Hospital accounting router (``/comptabilite``), restricted to admin / director.
+
+Monthly DAF data (charges, cash position, admissions) entered manually and
+combined with claims into KPIs. Reads ``acc_*`` tables through raw SQL.
+"""
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -22,6 +28,17 @@ def get_summary(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Return accounting KPIs for one month.
+
+    Args:
+        periode: Month as ``YYYY-MM``.
+        current_user: Injected authenticated user (admin / director).
+        db: Database session.
+
+    Returns:
+        dict: kpis (revenue, charges, EBE/EBIT, cash, BFR, liquidity, DSO, occupancy,
+        collection ratio, cost per day, budget variance), charges_detail, monthly_trend, lits_detail.
+    """
     tid = str(current_user.tenant_id)
 
     # 1. Charges par catégorie
@@ -193,6 +210,7 @@ def get_summary(
 
 # ── SAISIE CHARGES ─────────────────────────────────────────────────────────
 class ChargeCreate(BaseModel):
+    """One expense line for ``acc_charges``."""
     periode: str
     categorie: str
     sous_categorie: Optional[str] = None
@@ -205,6 +223,11 @@ def add_charge(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Insert an expense line for the caller's tenant.
+
+    Returns:
+        dict: Confirmation message.
+    """
     db.execute(text("""
         INSERT INTO acc_charges (tenant_id, periode, categorie, sous_categorie, montant, description)
         VALUES (:tid, :periode, :cat, :sous_cat, :montant, :desc)
@@ -218,6 +241,7 @@ def add_charge(
 
 # ── SAISIE TRÉSORERIE ──────────────────────────────────────────────────────
 class TresorerieUpdate(BaseModel):
+    """Cash position for one month."""
     periode: str
     tresorerie_actif: float
     tresorerie_passif: float
@@ -230,6 +254,11 @@ def update_tresorerie(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Insert or update the month's cash position for the caller's tenant.
+
+    Returns:
+        dict: Confirmation message.
+    """
     tid = str(current_user.tenant_id)
     existing = db.execute(text("""
         SELECT id FROM acc_tresorerie WHERE tenant_id = :tid AND periode = :periode
@@ -255,6 +284,7 @@ def update_tresorerie(
 
 # ── SAISIE ADMISSIONS ──────────────────────────────────────────────────────
 class AdmissionsUpdate(BaseModel):
+    """Activity figures for one month."""
     periode: str
     nb_admissions: int
     nb_journees: int
@@ -266,6 +296,11 @@ def update_admissions(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Insert or update the month's admissions / revenue for the caller's tenant.
+
+    Returns:
+        dict: Confirmation message.
+    """
     tid = str(current_user.tenant_id)
     existing = db.execute(text("""
         SELECT id FROM acc_admissions WHERE tenant_id = :tid AND periode = :periode

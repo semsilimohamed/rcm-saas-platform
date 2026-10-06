@@ -1,3 +1,22 @@
+"""Claims router (``/claims``): intake, ML scoring, outcomes.
+
+Loads the Random Forest v3 model (``ml/models/sihaiq_rf_v3.joblib``) and a SHAP
+``TreeExplainer`` once at import. ``run_prediction`` is shared by manual
+creation, CSV import, OCR scan and the ``/claims/predict`` simulator.
+
+Endpoints:
+    POST   /claims/predict          Score a hypothetical claim (nothing saved).
+    POST   /claims/import-csv       Bulk-create scored claims from a CSV (identity columns refused).
+    POST   /claims/                 Create a claim (patient resolved/created by NE) and score it.
+    GET    /claims/stats/summary    Counts, total amount, rejection rate.
+    GET    /claims/with-patients    Flat claim list with patient NE.
+    GET    /claims/                 Full claim list.
+    GET    /claims/{claim_id}       One claim.
+    PATCH  /claims/{claim_id}/status  Record the outcome; writes training_feedback + audit log.
+    POST   /claims/scan             OCR a scanned document and pre-fill the 5 model fields.
+    DELETE /claims/{claim_id}       Delete a claim (reason required); writes the audit log.
+"""
+
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 import tempfile
 import os
@@ -60,6 +79,17 @@ SHAP_MESSAGES = {
     "org_FAR":        "Régime FAR : profil de rejet spécifique à vérifier.",
 }
 def write_audit_log(db: Session, tenant_id: str, user_email: str, action: str, resource_type: str, resource_id: str, details: str):
+    """Insert one row into ``audit_logs``; errors are printed, never raised.
+
+    Args:
+        db: Database session (the caller commits).
+        tenant_id: Tenant of the event.
+        user_email: Acting user.
+        action: Event code, e.g. ``DOSSIER_REJETÉ``.
+        resource_type: ``claim`` or ``patient``.
+        resource_id: Business identifier (claim number / NE).
+        details: Free-text details.
+    """
     try:
         db.execute(text("""
             INSERT INTO audit_logs (id, tenant_id, user_email, action, resource_type, resource_id, details)
@@ -76,6 +106,7 @@ def write_audit_log(db: Session, tenant_id: str, user_email: str, action: str, r
         print(f"Audit log error: {e}")
 # ── Pydantic schemas ───────────────────────────────────────────────────────
 class StatusUpdate(BaseModel):
+    """Payload of ``PATCH /claims/{claim_id}/status``."""
     status: str
     rejection_reason: Optional[str] = None
     contestation_reason: Optional[str] = None
@@ -151,6 +182,7 @@ def run_prediction(claim_data: dict) -> dict:
 
 # ── Routes ─────────────────────────────────────────────────────────────────
 class PredictInput(BaseModel):
+    """Payload of ``POST /claims/predict``: the 5 model fields."""
     organisme: str
     duree_sejour: int
     part_organisme: float
@@ -209,6 +241,23 @@ async def import_csv(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Create scored claims from an uploaded CSV, one per row.
+
+    Required columns: ne_number, organisme, date_entree, date_sortie, montant_total.
+    Optional: part_patient, claim_number, service_type. Unknown NEs create a
+    patient. Files containing name/CIN columns are refused (CNDP).
+
+    Args:
+        file: UTF-8 CSV upload.
+        current_user: Injected authenticated user.
+        db: Database session.
+
+    Returns:
+        dict: created count, per-line errors, number of estimated payer shares, message.
+
+    Raises:
+        HTTPException: 400 for forbidden or missing columns.
+    """
     content = (await file.read()).decode("utf-8-sig")
     reader = csv.DictReader(io.StringIO(content))
     cols = [c.strip().lower() for c in (reader.fieldnames or [])]
@@ -321,6 +370,19 @@ def create_claim(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Create a claim, resolving (or creating) the patient by NE, and score it.
+
+    Args:
+        claim: Claim payload.
+        current_user: Injected authenticated user.
+        db: Database session.
+
+    Returns:
+        Claim: The stored claim, serialised as ``ClaimResponse``.
+
+    Raises:
+        HTTPException: 400 if no NE / patient can be resolved.
+    """
     service_date = claim.service_date.date() if hasattr(claim.service_date, 'date') else claim.service_date
 
     # Résoudre le patient par NE (crée à la volée si absent — cohérent avec l'import CSV
@@ -385,6 +447,11 @@ def create_claim(
 
 @router.get("/stats/summary")
 def get_stats(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Return claim counts by status, total amount and rejection rate for the tenant.
+
+    Returns:
+        dict: total_claims, pending, approved, rejected, total_amount_mad, rejection_rate (%).
+    """
     tenant_id = current_user.tenant_id
     total = db.query(func.count(Claim.id)).filter(Claim.tenant_id == tenant_id).scalar()
     pending = db.query(func.count(Claim.id)).filter(Claim.tenant_id == tenant_id, Claim.status == "pending").scalar()
@@ -405,6 +472,11 @@ def get_stats(current_user: User = Depends(get_current_user), db: Session = Depe
 
 @router.get("/with-patients")
 def get_claims_with_patients(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """List the tenant's claims with the patient NE, flattened for dashboards.
+
+    Returns:
+        list[dict]: One entry per claim (amount, payer, status, risk fields, forclusion deadline...).
+    """
     results = (
         db.query(Claim, Patient.ne_number)
         .join(Patient, Claim.patient_id == Patient.id)
@@ -434,11 +506,21 @@ def get_claims_with_patients(current_user: User = Depends(get_current_user), db:
 
 @router.get("/", response_model=List[ClaimResponse])
 def get_claims(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """List all claims of the tenant.
+
+    Returns:
+        list[Claim]: Serialised as ``ClaimResponse``.
+    """
     return db.query(Claim).filter(Claim.tenant_id == current_user.tenant_id).all()
 
 
 @router.get("/{claim_id}", response_model=ClaimResponse)
 def get_claim(claim_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Return one claim of the tenant.
+
+    Raises:
+        HTTPException: 404 if the claim does not exist in the tenant.
+    """
     claim = db.query(Claim).filter(
         Claim.id == claim_id,
         Claim.tenant_id == current_user.tenant_id,
@@ -455,6 +537,24 @@ def update_claim_status(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    """Record the payer outcome of a claim.
+
+    Sets the status (approved, rejected, contested, settled, closed, abandoned),
+    inserts a labelled row into ``training_feedback`` (actual_outcome = 1 if
+    rejected) and writes an audit log entry.
+
+    Args:
+        claim_id: Claim to update.
+        update: New status and optional rejection / contestation reasons.
+        current_user: Injected authenticated user.
+        db: Database session.
+
+    Returns:
+        dict: Message, claim id, new status, resolved_at, training_feedback_saved.
+
+    Raises:
+        HTTPException: 404 if not found, 400 for an invalid status.
+    """
     claim = db.query(Claim).filter(
         Claim.id == claim_id,
         Claim.tenant_id == current_user.tenant_id,
@@ -555,6 +655,7 @@ def update_claim_status(
         "training_feedback_saved": True
     }
 class DeleteClaimRequest(BaseModel):
+    """Payload of ``DELETE /claims/{claim_id}``: mandatory reason."""
     reason: str
 
 @router.post("/scan")
@@ -563,6 +664,23 @@ async def scan_fse(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """OCR a scanned hospitalisation document and pre-fill the 5 model fields.
+
+    The upload is written to a temp file and deleted right after OCR. The claim is
+    not created here: the agent reviews the fields and saves through ``POST /claims/``.
+    A prediction is returned only when all 5 fields were found.
+
+    Args:
+        file: PDF / JPG / PNG / TIFF upload.
+        current_user: Injected authenticated user.
+        db: Database session.
+
+    Returns:
+        dict: extracted fields, optional prediction, missing fields, needs_review, message.
+
+    Raises:
+        HTTPException: 400 for unsupported formats, 422 if the document cannot be read.
+    """
     allowed_extensions = (".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".tif")
     if not file.filename.lower().endswith(allowed_extensions):
         raise HTTPException(status_code=400, detail="Format non supporté (PDF, JPG, PNG, TIFF).")
@@ -619,6 +737,20 @@ def delete_claim(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Delete a claim and its training_feedback rows, and log the deletion.
+
+    Args:
+        claim_id: Claim to delete.
+        request: Mandatory reason.
+        current_user: Injected authenticated user.
+        db: Database session.
+
+    Returns:
+        dict: Confirmation message.
+
+    Raises:
+        HTTPException: 404 if the claim does not exist in the tenant.
+    """
     claim = db.query(Claim).filter(
         Claim.id == claim_id,
         Claim.tenant_id == current_user.tenant_id,

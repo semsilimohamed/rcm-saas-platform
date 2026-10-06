@@ -1,3 +1,10 @@
+"""ORM model for ``patients``: pseudonymous patients (Loi 09-08).
+
+No name is stored. A patient is identified only by the hospital's
+Numéro d'Entrée (NE), unique per tenant; CIN and insurance numbers are
+kept only as salted hashes.
+"""
+
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
@@ -5,6 +12,7 @@ from datetime import datetime
 import uuid
 
 class Patient(Base):
+    """A pseudonymous patient of a tenant, keyed on ``(tenant_id, ne_number)``."""
     __tablename__ = 'patients'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # patient_uid

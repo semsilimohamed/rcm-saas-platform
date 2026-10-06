@@ -1,3 +1,11 @@
+"""Authentication router (``/auth``) and shared auth dependencies.
+
+Provides registration (tenant + first user), OAuth2 password login issuing a
+JWT (``sub`` = user id, ``tenant_id``), ``/me``, and a password-reset flow that
+is still WIP (no email is sent). Also exports ``get_current_user`` and
+``require_role``, used by every other router.
+"""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -23,6 +31,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 # ---------- Schemas ----------
 
 class RegisterRequest(BaseModel):
+    """Payload of ``POST /auth/register``."""
     hospital_name: str
     hospital_email: str
     full_name: str
@@ -30,6 +39,7 @@ class RegisterRequest(BaseModel):
     role: str = "admin"
 
 class LoginResponse(BaseModel):
+    """Token and user summary returned by register and login."""
     access_token: str
     token_type: str
     user_id: str
@@ -39,6 +49,7 @@ class LoginResponse(BaseModel):
     created_at: Optional[str] = None
 
 class UserResponse(BaseModel):
+    """Current user as returned by ``GET /auth/me``."""
     id: UUID
     tenant_id: UUID
     email: str
@@ -49,18 +60,56 @@ class UserResponse(BaseModel):
 # ---------- Helpers ----------
 
 def hash_password(password: str) -> str:
+    """Hash a plain password with bcrypt.
+
+    Args:
+        password: Plain-text password.
+
+    Returns:
+        str: The bcrypt hash.
+    """
     return pwd_context.hash(password)
 
 def verify_password(plain: str, hashed: str) -> bool:
+    """Check a plain password against a bcrypt hash.
+
+    Args:
+        plain: Plain-text password.
+        hashed: Stored bcrypt hash.
+
+    Returns:
+        bool: True if they match.
+    """
     return pwd_context.verify(plain, hashed)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    """Create a signed JWT.
+
+    Args:
+        data: Claims to encode (``sub`` and ``tenant_id``).
+        expires_delta: Optional lifetime; defaults to ``ACCESS_TOKEN_EXPIRE_MINUTES``.
+
+    Returns:
+        str: The encoded token.
+    """
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=settings.access_token_expire_minutes))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+    """FastAPI dependency resolving the authenticated user from the bearer token.
+
+    Args:
+        token: Bearer token extracted by ``OAuth2PasswordBearer``.
+        db: Database session.
+
+    Returns:
+        User: The active user the token belongs to.
+
+    Raises:
+        HTTPException: 401 if the token is invalid, expired, or the user is missing or inactive.
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Token invalide ou expiré",
@@ -80,7 +129,16 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     return user
 
 def require_role(allowed_roles: list[str]):
+    """Build a dependency that only lets the given roles through.
+
+    Args:
+        allowed_roles: Role names allowed to call the route.
+
+    Returns:
+        Callable: A dependency returning the current user, or raising 403.
+    """
     def role_checker(current_user: User = Depends(get_current_user)) -> User:
+        """Return the current user if their role is allowed, else raise 403."""
         if current_user.role not in allowed_roles:
             raise HTTPException(status_code=403, detail="Accès non autorisé pour ce rôle")
         return current_user
@@ -90,6 +148,18 @@ def require_role(allowed_roles: list[str]):
 
 @router.post("/register", response_model=LoginResponse)
 def register(request: RegisterRequest, db: Session = Depends(get_db)):
+    """Create a tenant and its first user, then return a token.
+
+    Args:
+        request: Hospital name/email, user full name, password and role.
+        db: Database session.
+
+    Returns:
+        LoginResponse: Token and user summary.
+
+    Raises:
+        HTTPException: 400 if the email is already used.
+    """
     email_norm = request.hospital_email.strip().lower()
 
     existing = db.query(User).filter(User.email == email_norm).first()
@@ -130,6 +200,18 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=LoginResponse)
 def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    """Authenticate with email + password (OAuth2 password form).
+
+    Args:
+        form: ``username`` (email) and ``password``.
+        db: Database session.
+
+    Returns:
+        LoginResponse: Token and user summary.
+
+    Raises:
+        HTTPException: 401 on bad credentials, 400 if the account is inactive.
+    """
     user = db.query(User).filter(User.email == form.username.strip().lower()).first()
     if not user or not verify_password(form.password, user.hashed_password):
         raise HTTPException(
@@ -152,6 +234,14 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
 
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
+    """Return the authenticated user.
+
+    Args:
+        current_user: Injected by ``get_current_user``.
+
+    Returns:
+        User: Serialised as ``UserResponse``.
+    """
     return current_user
 import secrets
 from datetime import datetime, timedelta
@@ -160,14 +250,27 @@ from datetime import datetime, timedelta
 reset_tokens = {}
 
 class ForgotPasswordRequest(BaseModel):
+    """Payload of ``POST /auth/forgot-password``."""
     email: str
 
 class ResetPasswordRequest(BaseModel):
+    """Payload of ``POST /auth/reset-password``."""
     token: str
     new_password: str
 
 @router.post("/forgot-password")
 def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Start a password reset (WIP: no email is sent yet).
+
+    Always returns the same generic message so that account existence is not revealed.
+
+    Args:
+        request: The account email.
+        db: Database session.
+
+    Returns:
+        dict: Generic confirmation message.
+    """
     email_norm = request.email.strip().lower()
     user = db.query(User).filter(User.email == email_norm).first()
 
@@ -190,6 +293,18 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
 
 @router.post("/reset-password")
 def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Set a new password from a reset token (WIP).
+
+    Args:
+        request: Reset token and new password.
+        db: Database session.
+
+    Returns:
+        dict: Confirmation message.
+
+    Raises:
+        HTTPException: 400 if the token is invalid or expired, 404 if the user no longer exists.
+    """
     token_data = reset_tokens.get(request.token)
     if not token_data:
         raise HTTPException(status_code=400, detail="Token invalide ou expiré")

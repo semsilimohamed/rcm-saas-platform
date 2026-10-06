@@ -1,3 +1,5 @@
+"""ORM model for ``claim_acts``: optional line items (actes NGAP) of a claim. No endpoint writes it yet."""
+
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Float, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base

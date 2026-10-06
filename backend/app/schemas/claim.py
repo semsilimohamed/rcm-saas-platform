@@ -1,3 +1,5 @@
+"""Pydantic request/response schemas for claims and claim acts."""
+
 from pydantic import BaseModel
 from datetime import datetime, date
 from typing import Optional
@@ -5,6 +7,7 @@ from uuid import UUID
 
 
 class ClaimActCreate(BaseModel):
+    """One act (NGAP line item) in a claim creation request."""
     ngap_code: str
     service_type: str
     quantity: int = 1
@@ -16,6 +19,7 @@ class ClaimActCreate(BaseModel):
 
 
 class ClaimActResponse(BaseModel):
+    """An act as returned inside ``ClaimResponse``."""
     id: UUID
     ngap_code: str
     service_type: str
@@ -31,6 +35,11 @@ class ClaimActResponse(BaseModel):
 
 
 class ClaimCreate(BaseModel):
+    """Payload of ``POST /claims/``.
+
+    ``ne_number`` is the preferred patient key (the patient is created if
+    missing); ``patient_id`` is kept for backward compatibility.
+    """
     ne_number: Optional[str] = None          # NE — crée le patient à la volée si absent
     patient_id: Optional[UUID] = None        # compatibilité (ancien flux)
     claim_number: str
@@ -44,6 +53,7 @@ class ClaimCreate(BaseModel):
 
 
 class ClaimResponse(BaseModel):
+    """A claim as returned by the API, including ML and forclusion fields."""
     id: UUID
     tenant_id: UUID
     patient_id: UUID

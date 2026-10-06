@@ -1,3 +1,9 @@
+"""Tenants router (``/tenants``): hospital profile, users/agents, password change.
+
+Every route with a ``tenant_id`` in the path checks it against the caller's
+tenant; user management requires the admin or director role.
+"""
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -36,6 +42,7 @@ def ensure_admin(current_user: User):
 # ── Schemas ────────────────────────────────────────────────────────────────
 
 class TenantUpdate(BaseModel):
+    """Partial update of the hospital profile and preferences."""
     name: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
@@ -45,17 +52,20 @@ class TenantUpdate(BaseModel):
     active_payers: Optional[str] = None
 
 class PasswordChange(BaseModel):
+    """Payload of ``POST /tenants/change-password``."""
     user_id: str
     current_password: str
     new_password: str
 
 class NewAgent(BaseModel):
+    """Payload for creating a user in the tenant."""
     full_name: str
     email: str
     password: str
     role: str = "biller"
 
 class UpdateAgent(BaseModel):
+    """Partial update of a user's role or active flag."""
     role: Optional[str] = None
     is_active: Optional[bool] = None
 
@@ -64,6 +74,11 @@ class UpdateAgent(BaseModel):
 
 @router.post("/", response_model=TenantResponse)
 def create_tenant(tenant: TenantCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Create a tenant record (admin / director only).
+
+    Returns:
+        Tenant: Serialised as ``TenantResponse``.
+    """
     ensure_admin(current_user)
     new_tenant = Tenant(
         id=uuid.uuid4(),
@@ -78,12 +93,22 @@ def create_tenant(tenant: TenantCreate, current_user: User = Depends(get_current
 
 @router.get("/", response_model=List[TenantResponse])
 def get_tenants(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Return the caller's own tenant only (never the full list).
+
+    Returns:
+        list[Tenant]: A single-element list.
+    """
     # Only return the caller's own tenant — never the full list of hospitals.
     return db.query(Tenant).filter(Tenant.id == current_user.tenant_id).all()
 
 
 @router.get("/{tenant_id}")
 def get_tenant(tenant_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Return the profile and preferences of the caller's tenant.
+
+    Raises:
+        HTTPException: 403 for another tenant, 404 if not found.
+    """
     ensure_same_tenant(tenant_id, current_user)
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
     if not tenant:
@@ -104,6 +129,13 @@ def get_tenant(tenant_id: UUID, current_user: User = Depends(get_current_user), 
 
 @router.patch("/{tenant_id}")
 def update_tenant(tenant_id: UUID, update: TenantUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Update the profile / preferences of the caller's tenant.
+
+    Only the fields present in the payload are changed.
+
+    Returns:
+        dict: Confirmation message.
+    """
     ensure_same_tenant(tenant_id, current_user)
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
     if not tenant:
@@ -132,6 +164,11 @@ def update_tenant(tenant_id: UUID, update: TenantUpdate, current_user: User = De
 
 @router.get("/{tenant_id}/users")
 def get_users(tenant_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """List the users of the caller's tenant.
+
+    Returns:
+        list[dict]: id, full_name, email, role, is_active, created_at.
+    """
     ensure_same_tenant(tenant_id, current_user)
     users = db.query(User).filter(User.tenant_id == tenant_id).all()
     return [
@@ -149,6 +186,11 @@ def get_users(tenant_id: UUID, current_user: User = Depends(get_current_user), d
 
 @router.post("/{tenant_id}/users")
 def create_agent(tenant_id: UUID, agent: NewAgent, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Create a user in the caller's tenant (admin / director only).
+
+    Raises:
+        HTTPException: 400 if the email already exists.
+    """
     ensure_same_tenant(tenant_id, current_user)
     ensure_admin(current_user)                          # ← AJOUT
 
@@ -173,6 +215,11 @@ def create_agent(tenant_id: UUID, agent: NewAgent, current_user: User = Depends(
 
 @router.patch("/{tenant_id}/users/{user_id}")
 def update_agent(tenant_id: UUID, user_id: UUID, update: UpdateAgent, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Change a user's role or active flag (admin / director only, not on yourself).
+
+    Raises:
+        HTTPException: 403 on self-modification, 404 if not found, 400 for an invalid role.
+    """
     ensure_same_tenant(tenant_id, current_user)
     ensure_admin(current_user)
 
@@ -201,6 +248,11 @@ def update_agent(tenant_id: UUID, user_id: UUID, update: UpdateAgent, current_us
 
 @router.delete("/{tenant_id}/users/{user_id}")
 def delete_agent(tenant_id: UUID, user_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Delete a user of the tenant (admin / director only, not yourself).
+
+    Raises:
+        HTTPException: 403 on self-deletion, 404 if not found.
+    """
     ensure_same_tenant(tenant_id, current_user)
     ensure_admin(current_user)
 
@@ -219,6 +271,11 @@ def delete_agent(tenant_id: UUID, user_id: UUID, current_user: User = Depends(ge
 
 @router.post("/change-password")
 def change_password(req: PasswordChange, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Change the caller's own password after checking the current one.
+
+    Raises:
+        HTTPException: 403 for another user, 400 if the current password is wrong.
+    """
     # Un utilisateur ne peut changer QUE son propre mot de passe.
     if str(req.user_id) != str(current_user.id):
         raise HTTPException(status_code=403, detail="Vous ne pouvez modifier que votre propre mot de passe.")
