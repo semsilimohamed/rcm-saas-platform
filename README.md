@@ -185,8 +185,13 @@ docs/                    Architecture, API, ML, data model, changelog, research 
 
 ## Author
 
-**Mohamed** — design and development. <!-- TODO: add LinkedIn / GitHub links -->
+**Mohamed Semsili** — Data Scientist (health specialty), Casablanca.
+
+- GitHub: [semsilimohamed](https://github.com/semsilimohamed)
+- LinkedIn: TODO
 
 ## License
 
-Private — SihaIQ © 2026. All rights reserved. <!-- TODO: confirm license before making the repo public -->
+SihaIQ © 2026 Mohamed Semsili. All rights reserved.
+
+This is a commercial project. The source is visible for portfolio purposes only; no licence is granted to use, copy, modify or distribute it.
