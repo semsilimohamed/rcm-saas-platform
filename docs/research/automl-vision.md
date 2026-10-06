@@ -1,3 +1,6 @@
+> **Research/vision document — not implemented.**
+> This is an exploratory design note (per-tenant AutoML, FLAML, PR-AUC-driven retraining). None of it is in the current codebase; the production model is the Random Forest v3 described in [../ML.md](../ML.md).
+
 Architecture and Implementation of an AutoML Prediction Engine for B2B Healthcare Revenue Cycle Management
 1. Introduction and Macro-Environmental Context
 The digitization of the Moroccan healthcare sector, particularly within the operational domain of Revenue Cycle Management (RCM), presents a highly specialized convergence of systemic regulatory reform, complex billing nomenclatures, and stringent data privacy mandates. Private hospitals and clinics in Morocco experience significant financial bottlenecks due to the rejection of medical claims—formally known as bordereaux de soins—by national insurance funds. Historically, these funds have been divided primarily between the Caisse Nationale de Sécurité Sociale (CNSS) for the private sector and the Caisse Nationale des Organismes de Prévoyance Sociale (CNOPS) for the public sector. Predicting and mitigating these claim rejections before the physical or digital submission of a dossier requires a highly robust, tenant-isolated Machine Learning (ML) architecture capable of navigating shifting regulatory sands.   
