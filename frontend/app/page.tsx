@@ -735,13 +735,12 @@ export default function LandingPage() {
           <div className="eyebrow" style={{ color: "var(--orange)" }}>Le problème</div>
           <h2 className="section-h2" style={{ marginTop: 10 }}>48 millions de MAD rejetés<br/>chaque jour au Maroc</h2>
           <p className="section-sub" style={{ marginTop: 12, margin: "12px 0 0" }}>
-            34 à 38% des dossiers BAF sont rejetés. 90% de ces rejets sont évitables.
             SihaIQ prédit, explique, et récupère.
           </p>
           <div className="problem-kpis" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginTop: 40 }}>
             {[
               { lbl: "Jeu de données synthétique", val: "3 000", sub: "dossiers BAF simulés", color: "#534AB7", count: "3000", fmt: "thousands" },
-              { lbl: "Taux de rejet", val: "36.5%", sub: "1 095 dossiers rejetés", color: "#E24B4A", count: "36.5", fmt: "pct1" },
+              { lbl: "Taux de rejet (démo)", val: "36.5%", sub: "36,5 % de rejets sur le jeu synthétique de démonstration (3 000 dossiers)", color: "#E24B4A", count: "36.5", fmt: "pct1" },
               { lbl: "Variables du modèle", val: "5", sub: "séjour · montant · part · mois · organisme", color: "#1D9E75", count: "5", fmt: "int" },
               { lbl: "Délai forclusion", val: "60 jours", sub: "délai légal Maroc", color: "#BA7517", count: "60", fmt: "jours" },
             ].map(k => (
@@ -826,8 +825,8 @@ export default function LandingPage() {
                 { icon: "💡", cls: "feat-icon-o", title: "SHAP Explicabilité", desc: "Top 3 facteurs de rejet en français avec recommandations d'action concrètes. Zéro boîte noire." },
                 { icon: "📋", cls: "feat-icon-v", title: "Saisie unifiée", desc: "Formulaire, import CSV ou scan OCR : un seul dossier, identifié par le Numéro d’Entrée." },
                 { icon: "⏰", cls: "feat-icon-o", title: "Forclusion Engine", desc: "Buckets 0–60j. Alertes J-15, J-7, J-3, J-1. Zéro perte légale évitable." },
-                { icon: "🔄", cls: "feat-icon-v", title: "Feedback Loop ML", desc: "Chaque résultat alimente training_feedback. FLAML réentraîne à 500 labels." },
-                { icon: "🔒", cls: "feat-icon-o", title: "CNDP Loi 09-08", desc: "Données synthétiques certifiées. Audit immuable. RLS PostgreSQL multi-tenant." },
+                { icon: "🔄", cls: "feat-icon-v", title: "Feedback Loop ML", desc: "Boucle de feedback : chaque décision BAF devient un label." },
+                { icon: "🔒", cls: "feat-icon-o", title: "CNDP Loi 09-08", desc: "Données synthétiques, conformité Loi 09-08. Audit immuable. Isolation multi-tenant (tenant_id issu du JWT)." },
               ].map(f => (
                 <div key={f.title} className="feat">
                   <div className={`feat-icon ${f.cls}`}>{f.icon}</div>
