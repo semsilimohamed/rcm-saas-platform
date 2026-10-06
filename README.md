@@ -188,7 +188,7 @@ docs/                    Architecture, API, ML, data model, changelog, research 
 **Mohamed Semsili** — Data Scientist (health specialty), Casablanca.
 
 - GitHub: [semsilimohamed](https://github.com/semsilimohamed)
-- LinkedIn: TODO
+- LinkedIn: www.linkedin.com/in/semsili-mohamed-a35a96285
 
 ## License
 
