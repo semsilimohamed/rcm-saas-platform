@@ -1,5 +1,8 @@
 "use client";
 
+// Manual claim entry modal: NE number + the 5 model fields, posted to POST /claims/
+// (the backend scores the claim). Shows the 0.40 decision threshold.
+
 import { useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -13,6 +16,11 @@ interface PredictionResult {
 
 const SEUIL = 0.40; // recall-first : >= 0.40 => zone danger
 
+/**
+ * Modal form to create one claim by hand.
+ * @param props.onClose - Close without saving.
+ * @param props.onConfirm - Called after a claim was created (parent refreshes its list).
+ */
 export default function ManualClaimModal({
   onClose,
   onConfirm,

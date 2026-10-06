@@ -1,5 +1,8 @@
 "use client";
 
+// Audit page (/dashboard/audit): latest 200 audit events of the tenant (GET /audit/logs) with
+// summary counters and action labels.
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -53,6 +56,9 @@ function getLast7Days(logs: AuditLog[]) {
   }
   return days;
 }
+/**
+ * Read-only audit trail.
+ */
 export default function AuditPage() {
   const [logs, setLogs]           = useState<AuditLog[]>([]);
   const [loading, setLoading]     = useState(true);

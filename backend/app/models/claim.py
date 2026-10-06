@@ -1,3 +1,5 @@
+"""ORM model for ``claims``: one billing dossier sent to a payer, with its ML score and forclusion deadline."""
+
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Float, Text, Date, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -6,6 +8,14 @@ from datetime import datetime
 import uuid
 
 class Claim(Base):
+    """A billing dossier.
+
+    Holds the billing data used by the model (amount, payer, stay length, payer
+    share, service date), the workflow status, the stored prediction
+    (``risk_score``, ``risk_level``, ``ml_top_factors``, ``rejection_cause_predicted``)
+    and ``forclusion_deadline`` (service date + 60 days). ``acts`` lists the
+    optional ``ClaimAct`` line items.
+    """
     __tablename__ = "claims"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

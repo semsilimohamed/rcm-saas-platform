@@ -1,5 +1,10 @@
 "use client";
 
+// Dashboard home (/dashboard): KPI cards (total, pending, approved, rejected, rejection rate,
+// outstanding amount), recent claims, per-payer and AI risk overview.
+// Note: the claim-entry modal in this file (openModal) is not reachable from the UI (legacy).
+// Data: GET /claims/stats/summary, /claims/with-patients, /patients.
+
 import { useEffect, useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -100,6 +105,9 @@ function parseCSV(text: string): Record<string, string>[] {
   }).filter(row => Object.values(row).some(v => v !== ""));
 }
 // ── Main component ─────────────────────────────────────────────────────────
+/**
+ * Main dashboard overview. Redirects to /auth/login without a token.
+ */
 export default function DashboardPage() {
   const [claims, setClaims]       = useState<Claim[]>([]);
   const [stats, setStats]         = useState<Stats | null>(null);

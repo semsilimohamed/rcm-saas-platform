@@ -1,3 +1,5 @@
+// Root layout: global fonts, metadata (title, description) and globals.css for every route.
+
 import type { Metadata } from "next";
 import { Syne, Outfit, DM_Mono } from "next/font/google";
 import "./globals.css";
@@ -28,6 +30,10 @@ export const metadata: Metadata = {
   description: "Prédiction IA des rejets CNOPS/CNSS/FAR, tableau de bord financier temps réel, file de travail intelligente. Plateforme RCM souveraine et conforme CNDP.",
 };
 
+/**
+ * Root HTML layout wrapping every page.
+ * @param props.children - The active route.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {

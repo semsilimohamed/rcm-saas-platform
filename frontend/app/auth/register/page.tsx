@@ -1,5 +1,8 @@
 "use client";
 
+// Register page (/auth/register): creates a hospital tenant and its admin user via POST /auth/register,
+// stores the session in localStorage and continues to /onboarding.
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -25,6 +28,9 @@ function LogoMark({ size = 36 }: { size?: number }) {
   );
 }
 
+/**
+ * Hospital sign-up form.
+ */
 export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -298,9 +304,9 @@ export default function RegisterPage() {
           <div className="vz-grid" aria-hidden="true" />
           <div style={s.rightInner}>
             {[
-              { icon: "🧠", title: "Prédiction IA des rejets", desc: "SihaIQ analyse 7 critères de vos dossiers BAF avant soumission." },
+              { icon: "🧠", title: "Prédiction IA des rejets", desc: "SihaIQ analyse durée de séjour, montant, part organisme, mois et organisme de vos dossiers BAF avant soumission." },
               { icon: "📊", title: "Tableau de bord financier", desc: "Encours A/R, taux de rejet, vieillissement — en temps réel." },
-              { icon: "⚠️", title: "Alertes forclusion", desc: "Notifications automatiques J-15, J-7, J-1 avant le délai légal." },
+              { icon: "⚠️", title: "Alertes forclusion", desc: "Suivi des échéances J-15…J-1 dans le tableau de bord avant le délai légal." },
               { icon: "🔒", title: "Conforme CNDP Loi 09-08", desc: "Aucune donnée patient réelle. Architecture souveraine." },
             ].map(f => (
               <div key={f.title} className="reg-feature" style={s.featureItem}>

@@ -1,5 +1,9 @@
 "use client";
 
+// Financial dashboard (/dashboard/financier), admin/director only (also enforced server-side):
+// revenue-cycle KPIs, status flow, monthly trend, payer breakdown and top rejection causes
+// for a selectable period. Data: GET /financier/summary.
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -71,6 +75,9 @@ const PAYER_COLORS: Record<string, { bg: string; color: string }> = {
   "FAR":   { bg: "#EFF6FF", color: "#1D4ED8" },
 };
 
+/**
+ * Financial KPIs for hospital management.
+ */
 export default function FinancierPage() {
   const [data, setData]       = useState<FinancierData | null>(null);
   const [loading, setLoading] = useState(true);

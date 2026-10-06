@@ -6,7 +6,7 @@ pydantic==2.13.3
 pydantic_core==2.46.3
 python-dotenv==1.2.2
 python-multipart==0.0.27
-xgboost==2.0.3          # plus utilisé par le code actif depuis SihaIQ v3 (Random Forest)
+xgboost==2.0.3          # only needed to load the archived v2 model in app/ml/_archive/ — not used by the active RF v3 code
 scikit-learn==1.6.1     # version d'entraînement de sihaiq_rf_v3.joblib — ne pas désaligner
 shap==0.45.0
 numpy==1.26.4
@@ -20,3 +20,10 @@ python-jose==3.5.0
 passlib==1.7.4
 bcrypt==4.0.1
 pydantic-settings==2.9.1
+
+# OCR pipeline (app/services/fse_parser.py) — also needs Tesseract (fra) and Poppler installed on the system
+pytesseract==0.3.13
+pdf2image==1.17.0
+Pillow==10.4.0
+# Bordereau PDF generation (app/api/bordereau.py)
+fpdf2==2.8.7

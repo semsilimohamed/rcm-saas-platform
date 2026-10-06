@@ -1,3 +1,5 @@
+"""ORM model for ``tenants``: one row per hospital / clinic (the SaaS customer)."""
+
 from sqlalchemy import Column, String, Boolean, DateTime, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
@@ -5,6 +7,11 @@ from datetime import datetime
 import uuid
 
 class Tenant(Base):
+    """A hospital or clinic using SihaIQ.
+
+    All business data is scoped by ``tenant_id``. ``forclusion_alert_days`` and
+    ``active_payers`` are editable from the settings page.
+    """
     __tablename__ = "tenants"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

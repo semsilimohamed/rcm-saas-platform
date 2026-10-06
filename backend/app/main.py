@@ -1,3 +1,12 @@
+"""FastAPI application entry point for the SihaIQ backend.
+
+Loads the environment, creates the ORM tables, configures CORS from
+``ALLOWED_ORIGINS`` and mounts every router (auth, claims, tenants, patients,
+audit, bordereau, financier, comptabilite).
+
+Run with: ``uvicorn app.main:app --reload``
+"""
+
 from dotenv import load_dotenv
 
 # Load environment variables before importing anything that reads them
@@ -44,6 +53,11 @@ app.include_router(comptabilite.router)
 
 @app.get("/")
 def root():
+    """Service banner.
+
+    Returns:
+        dict: Static status, platform name and API version.
+    """
     return {
         "status": "online",
         "platform": "RCM SaaS",
@@ -53,4 +67,9 @@ def root():
 
 @app.get("/health")
 def health():
+    """Liveness probe.
+
+    Returns:
+        dict: ``{"status": "healthy"}``.
+    """
     return {"status": "healthy"}

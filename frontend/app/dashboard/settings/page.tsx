@@ -1,5 +1,8 @@
 "use client";
 
+// Settings page (/dashboard/settings): hospital profile, agent management (create, change role,
+// activate, delete), forclusion alert and payer preferences, and password change (/tenants/*).
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -43,6 +46,9 @@ const ROLE_STYLES: Record<string, { bg: string; color: string }> = {
 
 const ALL_PAYERS = ["CNOPS", "CNSS", "FAR"];
 
+/**
+ * Tenant and account settings.
+ */
 export default function SettingsPage() {
   const [activeTab, setActiveTab]   = useState("profil");
   const [tenant, setTenant]         = useState<TenantProfile | null>(null);

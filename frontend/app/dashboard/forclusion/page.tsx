@@ -1,5 +1,8 @@
 "use client";
 
+// Forclusion page (/dashboard/forclusion): pending claims sorted by days left before the 60-day
+// deadline, with urgency levels and KPI cards. Computed client-side from GET /claims/with-patients.
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -53,6 +56,9 @@ function payerStyle(payer: string) {
   return { bg: "#F5F3FF", color: "#6D28D9" };
 }
 
+/**
+ * Forclusion deadline tracker.
+ */
 export default function ForclusionPage() {
   const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);

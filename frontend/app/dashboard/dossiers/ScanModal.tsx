@@ -1,5 +1,8 @@
 "use client";
 
+// Scan modal: uploads a scanned document to POST /claims/scan (OCR), lets the agent review and
+// complete the extracted fields, then creates the claim with POST /claims/.
+
 import { useState, useRef } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -17,6 +20,11 @@ interface Extracted {
 
 const SEUIL = 0.40;
 
+/**
+ * Modal for OCR-assisted claim entry (the OCR proposes, the agent validates).
+ * @param props.onClose - Close without saving.
+ * @param props.onConfirm - Called after the reviewed claim was created.
+ */
 export default function ScanModal({
   onClose,
   onConfirm,

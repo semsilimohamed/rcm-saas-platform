@@ -1,9 +1,15 @@
 "use client";
+
+// Onboarding page (/onboarding): first screen after sign-up. Offers to start empty or to seed demo
+// data (patients, claims, comptabilite figures). WIP: demo patient/claim seeding does not work yet.
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
+/**
+ * First-run screen after registration.
+ */
 export default function OnboardingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);

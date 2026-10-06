@@ -4,27 +4,47 @@ __pycache__/
 *.pyo
 .Python
 *.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
 
-# Environments
+# Environments (templates are committed)
 .env
-.env.local
+.env.*
 *.env
-
-# Conda
+!.env.example
+venv/
+.venv/
 envs/
 
-# VS Code
+# Editors / local tooling
 .vscode/
+.idea/
+.claude/
 
-# Node
+# Node / Next.js
 node_modules/
 .next/
+out/
 npm-debug.log*
+*.tsbuildinfo
 
-# ML models
+# Data — synthetic datasets and raw exports stay out of git
+data/
+*.csv
+*.xlsx
+
+# ML artifacts — only the active versioned model (*.joblib + feature-order *.json) is committed
 *.pkl
 *.pt
 *.h5
+
+# Private notes — never published
+*.local.md
+audit_securite.md
+
+# Generated / scratch
+file-list.txt
+bordereau_*.pdf
 
 # OS
 .DS_Store

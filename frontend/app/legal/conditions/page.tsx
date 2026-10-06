@@ -1,5 +1,10 @@
+// Legal page: terms of use. Static.
+
 import Link from "next/link";
 
+/**
+ * Terms of use.
+ */
 export default function ConditionsPage() {
   return (
     <div style={s.page}>

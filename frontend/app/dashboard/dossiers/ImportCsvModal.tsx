@@ -1,5 +1,8 @@
 "use client";
 
+// CSV import modal: uploads a CSV to POST /claims/import-csv and shows created / error / estimated
+// counts. Required columns: ne_number, organisme, date_entree, date_sortie, montant_total.
+
 import { useState, useRef } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -11,6 +14,11 @@ interface ImportResult {
   message: string;
 }
 
+/**
+ * Modal to bulk-import claims from a CSV file.
+ * @param props.onClose - Close the modal.
+ * @param props.onConfirm - Called after a successful import.
+ */
 export default function ImportCsvModal({
   onClose,
   onConfirm,

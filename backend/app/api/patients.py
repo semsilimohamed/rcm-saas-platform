@@ -1,3 +1,11 @@
+"""Patients router (``/patients``): pseudonymous patients identified by NE.
+
+Endpoints:
+    POST   /patients/              Create a patient (CIN / immatriculation hashed, never stored).
+    GET    /patients/              List the tenant's patients.
+    DELETE /patients/{patient_id}  Delete a patient and their claims (admin, director, chef_baf).
+"""
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -32,6 +40,7 @@ def _hash(value: Optional[str], tenant_id) -> Optional[str]:
 
 
 class DeletePatientRequest(BaseModel):
+    """Payload of ``DELETE /patients/{patient_id}``: mandatory reason."""
     reason: str
     user_email: Optional[str] = None
 
@@ -42,6 +51,16 @@ def create_patient(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Create a pseudonymous patient in the caller's tenant.
+
+    Args:
+        patient: NE number, optional CIN / immatriculation (hashed), age bucket, payer, flags.
+        current_user: Injected authenticated user.
+        db: Database session.
+
+    Returns:
+        Patient: Serialised as ``PatientResponse``.
+    """
     # Refuse tout nom en clair glissé dans ne_number (garde-fou pseudonymisation)
     new_patient = Patient(
         id=uuid.uuid4(),
@@ -62,6 +81,11 @@ def create_patient(
 
 @router.get("/", response_model=List[PatientResponse])
 def get_patients(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """List the patients of the caller's tenant.
+
+    Returns:
+        list[Patient]: Serialised as ``PatientResponse``.
+    """
     return db.query(Patient).filter(Patient.tenant_id == current_user.tenant_id).all()
 
 
@@ -72,6 +96,20 @@ def delete_patient(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Delete a patient, their claims and related training_feedback rows; log it.
+
+    Args:
+        patient_id: Patient to delete.
+        request: Mandatory reason.
+        current_user: Must be admin, director or chef_baf.
+        db: Database session.
+
+    Returns:
+        dict: Confirmation message.
+
+    Raises:
+        HTTPException: 403 for other roles, 404 if the patient is not in the tenant.
+    """
     if current_user.role not in ALLOWED_DELETE_ROLES:
         raise HTTPException(
             status_code=403,

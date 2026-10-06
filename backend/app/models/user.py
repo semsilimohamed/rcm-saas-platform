@@ -1,3 +1,5 @@
+"""ORM model for ``users``: accounts that belong to a tenant."""
+
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
@@ -5,6 +7,11 @@ from datetime import datetime
 import uuid
 
 class User(Base):
+    """A user account of a tenant.
+
+    ``role`` is one of ``admin``, ``director``, ``chef_baf``, ``biller`` (default)
+    or ``agent``. ``email`` is unique across the platform; passwords are bcrypt hashes.
+    """
     __tablename__ = "users"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

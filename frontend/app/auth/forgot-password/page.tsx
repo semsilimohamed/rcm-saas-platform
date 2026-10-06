@@ -1,9 +1,15 @@
 "use client";
+
+// Forgot-password page (/auth/forgot-password): sends the email to POST /auth/forgot-password.
+// WIP: the backend does not send an email yet.
 import { useState } from "react";
 import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
+/**
+ * Password-reset request form (WIP).
+ */
 export default function ForgotPasswordPage() {
   const [email, setEmail]     = useState("");
   const [loading, setLoading] = useState(false);

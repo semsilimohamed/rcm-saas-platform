@@ -1,5 +1,8 @@
 "use client";
 
+// Performance page (/dashboard/performance): approval / rejection rates, per-payer breakdown,
+// risk-level distribution and service analysis. Data: /claims/stats/summary, /claims/with-patients.
+
 import { useEffect, useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -29,6 +32,9 @@ function formatMAD(amount: number) {
   return amount.toLocaleString("fr-MA") + " MAD";
 }
 
+/**
+ * Billing performance analytics.
+ */
 export default function PerformancePage() {
   const [stats, setStats]   = useState<Stats | null>(null);
   const [claims, setClaims] = useState<Claim[]>([]);

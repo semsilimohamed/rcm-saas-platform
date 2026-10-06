@@ -1,3 +1,5 @@
+"""Pydantic request/response schemas for pseudonymous patients."""
+
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
@@ -5,6 +7,10 @@ from uuid import UUID
 
 
 class PatientCreate(BaseModel):
+    """Payload of ``POST /patients/``.
+
+    ``cin`` and ``immatriculation`` are optional, hashed server-side and never stored in clear.
+    """
     ne_number: str                          # Numéro d'Entrée — remplace le nom
     cin: Optional[str] = None               # entré en clair, haché puis jeté (jamais stocké)
     immatriculation: Optional[str] = None   # idem — haché en immat_hash
@@ -15,6 +21,7 @@ class PatientCreate(BaseModel):
 
 
 class PatientResponse(BaseModel):
+    """A patient as returned by the API (hashes only, no identity data)."""
     id: UUID
     tenant_id: UUID
     ne_number: str

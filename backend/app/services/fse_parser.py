@@ -1,6 +1,12 @@
 """
 app/services/fse_parser.py - Extraction OCR d'un dossier d'hospitalisation.
-Aligne sur le modele SihaIQ v2 (5 features reelles).
+Aligne sur le modele SihaIQ v3 (Random Forest, 5 champs : organisme,
+duree_sejour, part_organisme, montant_total, mois).
+
+Entree : chemin d'un PDF ou d'une image (JPG, PNG, TIFF).
+Sortie : dict {extracted, missing, needs_review, raw_text_preview} (voir parse_fse).
+Prerequis systeme : Tesseract avec le pack "fra" (chemin fixe ci-dessous)
+et Poppler pour la conversion des PDF.
 
 Principe : l'OCR PROPOSE, l'agent VALIDE.
 Les champs non detectes sont renvoyes vides (None) - l'agent les complete
@@ -62,6 +68,7 @@ _TOTAL_KEYWORDS = ["total", "montant total", "net a payer", "montant"]
 
 
 def _detect_organisme(text: str):
+    """Return the first payer (CNOPS, CNSS, FAR) whose keywords appear in the text, else None."""
     low = text.lower()
     for payer, keys in _PAYERS.items():
         if any(k in low for k in keys):
@@ -70,6 +77,7 @@ def _detect_organisme(text: str):
 
 
 def _find_dates_in(line: str):
+    """Return every date (DD/MM/YYYY or YYYY/MM/DD, any separator) found in one line."""
     out = []
     for pat in _DATE_PATTERNS:
         for m in re.finditer(pat, line):
@@ -110,6 +118,7 @@ def _extract_sejour(text: str):
 
 
 def _parse_number(raw: str):
+    """Parse a French- or English-formatted number string; return None if it cannot be parsed."""
     raw = raw.replace(" ", "").replace("\u00a0", "")
     if "," in raw and "." in raw:
         raw = raw.replace(".", "").replace(",", ".")
@@ -141,6 +150,7 @@ def _extract_montant_total(text: str):
 
 
 def _extract_part_patient(text: str, montant_total):
+    """Return the patient share found on a line with a patient-share keyword, if smaller than the total."""
     if not montant_total:
         return None
     for line in text.split("\n"):

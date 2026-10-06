@@ -1,4 +1,8 @@
 "use client";
+
+// Login page (/auth/login): email + password form posting to POST /auth/login, with an animated
+// illustration of the scoring pipeline. Stores sihaiq_token / sihaiq_user / sihaiq_tenant_id in
+// localStorage and redirects to sihaiq_redirect (if set) or /dashboard.
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -57,6 +61,9 @@ function LogoMark({ size = 36 }: { size?: number }) {
   );
 }
 
+/**
+ * Login screen; redirects to the intended page after authentication.
+ */
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail]       = useState("");
@@ -433,7 +440,7 @@ export default function LoginPage() {
                 <div style={{ marginLeft: 24 }}>
                   <div style={s.vzStageTitle}>Score SihaIQ</div>
                   <div className="vz-niveau" style={s.vzNiveau}>RISQUE ÉLEVÉ</div>
-                  <div style={s.vzStageSub}>7 features · AUC 0.768</div>
+                  <div style={s.vzStageSub}>5 variables · Random Forest</div>
                 </div>
               </div>
 

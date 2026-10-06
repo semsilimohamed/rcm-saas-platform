@@ -1,5 +1,9 @@
 "use client";
 
+// Prediction page (/dashboard/prediction): simulate a claim with the 5 model fields and show the
+// score, risk level, danger/safe zone, SHAP factors and recommended action (POST /claims/predict).
+// The batch tab is a placeholder (WIP).
+
 import { useState } from "react";
 import Link from "next/link";
 
@@ -37,6 +41,9 @@ const MOIS_LABELS = [
   "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
 ];
 
+/**
+ * AI rejection-risk simulator.
+ */
 export default function PredictionPage() {
   const [activeTab, setActiveTab] = useState<"single" | "batch">("single");
 
