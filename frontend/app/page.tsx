@@ -684,7 +684,7 @@ export default function LandingPage() {
                   "Prédiction IA des rejets SihaIQ (Random Forest)",
                   "Explicabilité SHAP en français — zéro boîte noire",
                   "Saisie unifiée : formulaire, import CSV, scan OCR",
-                  "Forclusion engine — alertes J-15 à J-1",
+                  "Suivi des échéances J-15…J-1 dans le tableau de bord",
                   "Bordereau PDF de soumission automatique",
                   "Disposition codes : contestation → recouvrement",
                 ].map(f => (
@@ -733,7 +733,8 @@ export default function LandingPage() {
       <section className="problem-section">
         <div className="problem-inner">
           <div className="eyebrow" style={{ color: "var(--orange)" }}>Le problème</div>
-          <h2 className="section-h2" style={{ marginTop: 10 }}>48 millions de MAD rejetés<br/>chaque jour au Maroc</h2>
+          <h2 className="section-h2" style={{ marginTop: 10 }}>30 à 50 % des dossiers présentent<br/>des anomalies avant envoi</h2>
+          <p className="section-sub" style={{ marginTop: 6 }}>Diagnostic terrain, BAF d{"\u2019"}un CHU marocain, 2026</p>
           <p className="section-sub" style={{ marginTop: 12, margin: "12px 0 0" }}>
             SihaIQ prédit, explique, et récupère.
           </p>
@@ -823,10 +824,10 @@ export default function LandingPage() {
               {[
                 { icon: "🧠", cls: "feat-icon-v", title: "Prédiction SihaIQ", desc: "Durée de séjour, montant, part organisme, mois et organisme analysés à la saisie. Score ÉLEVÉ / MODÉRÉ / FAIBLE par dossier." },
                 { icon: "💡", cls: "feat-icon-o", title: "SHAP Explicabilité", desc: "Top 3 facteurs de rejet en français avec recommandations d'action concrètes. Zéro boîte noire." },
-                { icon: "📋", cls: "feat-icon-v", title: "Saisie unifiée", desc: "Formulaire, import CSV ou scan OCR : un seul dossier, identifié par le Numéro d’Entrée." },
-                { icon: "⏰", cls: "feat-icon-o", title: "Forclusion Engine", desc: "Buckets 0–60j. Alertes J-15, J-7, J-3, J-1. Zéro perte légale évitable." },
+                { icon: "📋", cls: "feat-icon-v", title: "Saisie unifiée", desc: "Formulaire, import CSV ou scan OCR : un seul dossier, identifié par le Numéro d\u2019Entrée." },
+                { icon: "⏰", cls: "feat-icon-o", title: "Forclusion Engine", desc: "Buckets 0–60j. Suivi des échéances J-15…J-1 dans le tableau de bord. Zéro perte légale évitable." },
                 { icon: "🔄", cls: "feat-icon-v", title: "Feedback Loop ML", desc: "Boucle de feedback : chaque décision BAF devient un label." },
-                { icon: "🔒", cls: "feat-icon-o", title: "CNDP Loi 09-08", desc: "Données synthétiques, conformité Loi 09-08. Audit immuable. Isolation multi-tenant (tenant_id issu du JWT)." },
+                { icon: "🔒", cls: "feat-icon-o", title: "CNDP Loi 09-08", desc: "Données synthétiques, conformité Loi 09-08. Journal d\u2019audit. Isolation multi-tenant (tenant_id issu du JWT)." },
               ].map(f => (
                 <div key={f.title} className="feat">
                   <div className={`feat-icon ${f.cls}`}>{f.icon}</div>

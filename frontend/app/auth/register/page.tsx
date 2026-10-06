@@ -306,7 +306,7 @@ export default function RegisterPage() {
             {[
               { icon: "🧠", title: "Prédiction IA des rejets", desc: "SihaIQ analyse durée de séjour, montant, part organisme, mois et organisme de vos dossiers BAF avant soumission." },
               { icon: "📊", title: "Tableau de bord financier", desc: "Encours A/R, taux de rejet, vieillissement — en temps réel." },
-              { icon: "⚠️", title: "Alertes forclusion", desc: "Notifications automatiques J-15, J-7, J-1 avant le délai légal." },
+              { icon: "⚠️", title: "Alertes forclusion", desc: "Suivi des échéances J-15…J-1 dans le tableau de bord avant le délai légal." },
               { icon: "🔒", title: "Conforme CNDP Loi 09-08", desc: "Aucune donnée patient réelle. Architecture souveraine." },
             ].map(f => (
               <div key={f.title} className="reg-feature" style={s.featureItem}>
