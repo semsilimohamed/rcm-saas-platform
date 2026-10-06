@@ -2,12 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db
-from app.api.auth import get_current_user
+from app.api.auth import get_current_user, require_role
 from app.models.user import User
 from uuid import UUID
 from datetime import datetime, timedelta
 
-router = APIRouter(prefix="/financier", tags=["Financier"], dependencies=[Depends(get_current_user)])
+router = APIRouter(
+    prefix="/financier",
+    tags=["Financier"],
+    dependencies=[Depends(get_current_user), Depends(require_role(["admin", "director"]))],
+)
 
 def get_period_filter(period: str):
     now = datetime.utcnow()

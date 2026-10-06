@@ -79,6 +79,13 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
     return user
 
+def require_role(allowed_roles: list[str]):
+    def role_checker(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(status_code=403, detail="Accès non autorisé pour ce rôle")
+        return current_user
+    return role_checker
+
 # ---------- Endpoints ----------
 
 @router.post("/register", response_model=LoginResponse)
@@ -177,33 +184,9 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
         "expires": datetime.utcnow() + timedelta(minutes=30),
     }
 
-    print(f"[RESET] token pour {email_norm} : {token}")
+    print(f"[RESET] token généré pour user_id={user.id}")
 
     return generic_response
-
-    token = secrets.token_urlsafe(32)
-    reset_tokens[token] = {
-        "email": request.email,
-        "expires": datetime.utcnow() + timedelta(minutes=30),
-    }
-
-    # Le token n'est JAMAIS renvoyé au client.
-    # En attendant l'envoi d'email, il est loggé côté serveur uniquement.
-    print(f"[RESET] token pour {request.email} : {token}")
-
-    return generic_response
-    
-    token = secrets.token_urlsafe(32)
-    reset_tokens[token] = {
-        "email": request.email,
-        "expires": datetime.utcnow() + timedelta(minutes=30)
-    }
-    # In production: send email. For now return token directly.
-    return {
-        "message": "Token de réinitialisation généré.",
-        "reset_token": token,
-        "reset_url": f"http://localhost:3000/auth/reset-password?token={token}"
-    }
 
 @router.post("/reset-password")
 def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):

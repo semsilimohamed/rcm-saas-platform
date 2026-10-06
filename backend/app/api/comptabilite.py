@@ -2,14 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db
-from app.api.auth import get_current_user
+from app.api.auth import get_current_user, require_role
 from app.models.user import User
 from pydantic import BaseModel
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
 
-router = APIRouter(prefix="/comptabilite", tags=["Comptabilite"], dependencies=[Depends(get_current_user)])
+router = APIRouter(
+    prefix="/comptabilite",
+    tags=["Comptabilite"],
+    dependencies=[Depends(get_current_user), Depends(require_role(["admin", "director"]))],
+)
 
 # ── GET SUMMARY ────────────────────────────────────────────────────────────
 @router.get("/summary")
